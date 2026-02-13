@@ -8,9 +8,22 @@ const hasUrl = !!supabaseUrl;
 const isPlaceholder = supabaseUrl?.includes('REPLACE');
 const isHttps = supabaseUrl?.startsWith('https://');
 
+// Diagnostics for the user
+console.log('🔍 Supabase URL Check:', {
+    exists: hasUrl,
+    startsHttps: isHttps,
+    prefix: supabaseUrl ? supabaseUrl.substring(0, 8) + '...' : 'none'
+});
+
+console.log('🔍 Supabase Key Check:', {
+    exists: !!supabaseAnonKey,
+    length: supabaseAnonKey ? supabaseAnonKey.length : 0,
+    prefix: supabaseAnonKey ? supabaseAnonKey.substring(0, 10) + '...' : 'none'
+});
+
 if (!hasUrl) console.error('❌ Supabase Error: VITE_SUPABASE_URL is missing in Vercel settings.');
 else if (isPlaceholder) console.error('❌ Supabase Error: VITE_SUPABASE_URL is still set to placeholder.');
-else if (!isHttps) console.error('❌ Supabase Error: VITE_SUPABASE_URL must start with https:// - You likely pasted the Project ID instead of the full URL.');
+else if (!isHttps) console.error('❌ Supabase Error: VITE_SUPABASE_URL must start with https://');
 
 if (!supabaseAnonKey) console.error('❌ Supabase Error: VITE_SUPABASE_ANON_KEY is missing in Vercel settings.');
 
