@@ -52,6 +52,8 @@ const App: React.FC = () => {
   const [showJoinPrompt, setShowJoinPrompt] = useState(false);
   const [isPlayingState, setIsPlayingState] = useState(false); // Global station play state
   const [cloudStatus, setCloudStatus] = useState<string>('Initializing Satellite...');
+  const [sessionId] = useState(() => Math.random().toString(36).substring(7));
+  const [adminConflict, setAdminConflict] = useState(false);
 
   const aiAudioContextRef = useRef<AudioContext | null>(null);
   const isSyncingRef = useRef(false);
@@ -199,6 +201,12 @@ const App: React.FC = () => {
             setCloudStatus('📡 Station Standby');
           }
           setIsPlayingState(newState.is_playing);
+
+          // Conflict Detection: If someone else is pulsing as Admin with a different sessionId
+          if (role === UserRole.ADMIN && newState.timestamp > (Date.now() - 30000)) {
+            // If the state was updated recently by someone else (id logic needs schema update, for now we use name or just warn)
+            // Ideally we'd have broad_caster_id in schema
+          }
         }
       })
       .subscribe((status) => {
@@ -254,8 +262,8 @@ const App: React.FC = () => {
       // Initial sync on change
       syncStation();
 
-      // HEARTBEAT: Pulse every 15 seconds to keep listeners and Supabase channel alive
-      const pulseInterval = setInterval(syncStation, 15000);
+      // HEARTBEAT: Pulse every 8 seconds (Increased frequency for faster device join)
+      const pulseInterval = setInterval(syncStation, 8000);
       return () => clearInterval(pulseInterval);
     }
   }, [isPlaying, isTvActive, activeTrackId, currentTrackName, role, activeTrackUrl, activeVideoId]);
@@ -320,10 +328,21 @@ const App: React.FC = () => {
       setCurrentTrackName(cleanTrackName(track.name));
       setIsPlaying(true);
 
-      // If we are listener, we just advanced local view. 
-      // If we are admin, the useEffect will sync this to cloud.
+      // CRITICAL: Push to cloud IMMEDIATELY so listeners don't wait for pulse
+      if (role === UserRole.ADMIN && supabase) {
+        const isUrl = track.url && (track.url.startsWith('http') || track.url.startsWith('https'));
+        const isCloudUrl = isUrl && !track.url?.startsWith('blob:');
+
+        dbService.updateStationState({
+          is_playing: true,
+          current_track_id: track.id,
+          current_track_name: track.name,
+          current_track_url: isCloudUrl ? track.url : null,
+          timestamp: Date.now()
+        }).catch(err => console.error("❌ Immediate Advancement Sync Fail:", err));
+      }
     }
-  }, [activeTrackId, isShuffle, allMedia, role]);
+  }, [activeTrackId, isShuffle, allMedia, role, supabase]);
 
   const handlePlayAll = () => {
     setHasInteracted(true);

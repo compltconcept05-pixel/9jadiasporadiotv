@@ -61,23 +61,21 @@ const TVOverlay: React.FC<TVOverlayProps> = ({ isPlaying, onTogglePlay, channelN
                 </div>
             </div>
 
-            {/* 4. BOTTOM RIGHT: PLAYBACK CONTROLS (ALWAYS VISIBLE) */}
-            <div className="absolute bottom-8 right-3 flex items-center space-x-2 pointer-events-auto">
-                {/* Mute Toggle REMOVED as per request "mute and speaker button is not place on the screen when tv is on air" */}
-
+            {/* 4. BOTTOM RIGHT: PLAYBACK CONTROLS (LARGER & ALWAYS VISIBLE) */}
+            <div className="absolute bottom-10 right-4 flex items-center space-x-3 pointer-events-auto z-50">
                 {/* Play/Pause */}
                 <button
                     onClick={(e) => {
                         e.stopPropagation();
                         onTogglePlay();
                     }}
-                    className="w-10 h-10 bg-white/10 hover:bg-green-500/80 backdrop-blur-xl border border-white/30 rounded-full flex items-center justify-center text-white shadow-2xl transition-all active:scale-90"
+                    className="w-14 h-14 bg-white/20 hover:bg-green-600/90 backdrop-blur-2xl border-2 border-white/40 rounded-full flex items-center justify-center text-white shadow-[0_0_20px_rgba(0,0,0,0.5)] transition-all active:scale-90"
                     title={isPlaying ? "Pause" : "Play"}
                 >
                     {isPlaying ? (
-                        <i className="fas fa-pause text-[10px]"></i>
+                        <i className="fas fa-pause text-lg"></i>
                     ) : (
-                        <i className="fas fa-play text-[10px] ml-0.5"></i>
+                        <i className="fas fa-play text-lg ml-1"></i>
                     )}
                 </button>
             </div>
