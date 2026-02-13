@@ -208,17 +208,16 @@ const RadioPlayer: React.FC<RadioPlayerProps> = ({
         const isLocal = targetSrc.startsWith('blob:') || targetSrc.startsWith('data:');
         isStreamRef.current = !isLocal;
 
-        // CRITICAL FIX: Handle crossOrigin properly
         if (isLocal) {
           audioRef.current.crossOrigin = null;
         } else {
           audioRef.current.removeAttribute('crossorigin');
         }
 
-        if (targetSrc) {
-          audioRef.current.src = targetSrc;
-          audioRef.current.load();
-        }
+        // Robust transition: pause and clear before loading new src
+        audioRef.current.pause();
+        audioRef.current.src = targetSrc;
+        audioRef.current.load();
 
         if (isPlaying || forcePlaying) {
           // Only init audio context for local files

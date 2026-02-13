@@ -87,25 +87,28 @@ const App: React.FC = () => {
         }
       }
 
-      const [l, m, msg, rep, cloudNews] = await Promise.all([
+      const [l, m, msg, rep, cloudNews, sState] = await Promise.all([
         dbService.getLogs(),
         dbService.getMediaCloud(), // Cloud sync
         dbService.getAdminMessagesCloud(), // Cloud sync
         dbService.getReportsCloud(),        // Cloud sync
-        dbService.getNewsFromCloud()        // Cloud sync
+        dbService.getNewsFromCloud(),       // Cloud sync
+        dbService.getStationState()         // Initial track sync
       ]);
 
       setNews(cloudNews || []);
 
       const mediaItems = m || [];
       const processedMedia = mediaItems.map(item => {
+        // Only use blob URL if we don't have a real one or as a backup
         if (item.file) {
           let url = mediaUrlCache.current.get(item.id);
           if (!url) {
             url = URL.createObjectURL(item.file);
             mediaUrlCache.current.set(item.id, url);
           }
-          return { ...item, url };
+          // Don't overwrite item.url if it already has a cloud URL
+          return { ...item, url: item.url || url };
         }
         return item;
       });
@@ -116,7 +119,17 @@ const App: React.FC = () => {
       setAudioPlaylist(processedMedia.filter(item => item.type === 'audio'));
       setAdminMessages(msg || []);
       setReports(rep || []);
-      // News will be populated by NDRTVEngine on first scan
+
+      // Apply initial station state for sync
+      if (sState) {
+        setIsPlaying(sState.is_playing);
+        setIsTvActive(sState.is_tv_active);
+        setActiveTrackId(sState.current_track_id);
+        setCurrentTrackName(sState.current_track_name || 'Station Standby');
+        if (sState.current_track_url) {
+          setActiveTrackUrl(sState.current_track_url);
+        }
+      }
 
       const ms = await dbService.getManualScript();
       setManualScript(ms || '');
@@ -124,14 +137,14 @@ const App: React.FC = () => {
       const history = await dbService.getNewsHistory();
       setNewsHistory(history || []);
 
-      if (activeTrackId) {
+      if (activeTrackId && !activeTrackUrl) {
         const activeTrack = processedMedia.find(t => t.id === activeTrackId);
         if (activeTrack) setActiveTrackUrl(activeTrack.url);
       }
     } catch (err) {
       console.error("Data fetch error", err);
     }
-  }, [activeTrackId]);
+  }, [activeTrackId, activeTrackUrl]);
 
   // --- SUPABASE REAL-TIME SYNC ---
   useEffect(() => {
@@ -243,27 +256,37 @@ const App: React.FC = () => {
   }, [handleLogAdd]);
 
   const handlePlayNext = useCallback(() => {
+    console.log('⏭️ [App] handlePlayNext triggered. Role:', role);
     // Use all audio files from allMedia
     const audioFiles = allMedia.filter(m => m.type === 'audio');
-    playlistRef.current = audioFiles;
-    const list = audioFiles;
-
-    if (list.length === 0) {
+    if (audioFiles.length === 0) {
+      console.warn('⚠️ No audio files found for playlist.');
       setActiveTrackId(null);
       setActiveTrackUrl(null);
-      setCurrentTrackName('Live Stream');
+      setCurrentTrackName('Station Standby');
       return;
     }
-    const currentIndex = list.findIndex(t => t.id === activeTrackId);
-    let nextIndex = isShuffle ? Math.floor(Math.random() * list.length) : (currentIndex + 1) % list.length;
-    const track = list[nextIndex];
+
+    const currentIndex = audioFiles.findIndex(t => t.id === activeTrackId);
+    let nextIndex = isShuffle ? Math.floor(Math.random() * audioFiles.length) : (currentIndex + 1) % audioFiles.length;
+
+    // Safety: If it's the same index and not shuffle, try to force next
+    if (!isShuffle && nextIndex === currentIndex && audioFiles.length > 1) {
+      nextIndex = (currentIndex + 1) % audioFiles.length;
+    }
+
+    const track = audioFiles[nextIndex];
     if (track) {
+      console.log('🎵 [App] Advancing to next track:', track.name, 'URL:', track.url);
       setActiveTrackId(track.id);
       setActiveTrackUrl(track.url);
       setCurrentTrackName(cleanTrackName(track.name));
-      setIsPlaying(true); // Use isPlaying for radio
+      setIsPlaying(true);
+
+      // If we are listener, we just advanced local view. 
+      // If we are admin, the useEffect will sync this to cloud.
     }
-  }, [activeTrackId, isShuffle, allMedia]);
+  }, [activeTrackId, isShuffle, allMedia, role]);
 
   const handlePlayAll = () => {
     setHasInteracted(true);
