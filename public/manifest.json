@@ -1,0 +1,21 @@
+{
+    "short_name": "NDR",
+    "name": "Nigeria Diaspora Radio",
+    "icons": [
+        {
+            "src": "/logo.png",
+            "type": "image/png",
+            "sizes": "192x192"
+        },
+        {
+            "src": "/logo.png",
+            "type": "image/png",
+            "sizes": "512x512"
+        }
+    ],
+    "start_url": "/",
+    "background_color": "#f0fff4",
+    "display": "standalone",
+    "theme_color": "#008751",
+    "description": "Premium Nigerian Radio and TV Broadcasting from the Diaspora."
+}

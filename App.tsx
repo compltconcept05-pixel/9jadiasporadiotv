@@ -49,6 +49,8 @@ const App: React.FC = () => {
   const [manualNewsTriggerCount, setManualNewsTriggerCount] = useState(0);
   const [stopTriggerCount, setStopTriggerCount] = useState(0);
   const [activeVideoId, setActiveVideoId] = useState<string | null>(null);
+  const [showJoinPrompt, setShowJoinPrompt] = useState(false);
+  const [isPlayingState, setIsPlayingState] = useState(false); // Global station play state
 
   const aiAudioContextRef = useRef<AudioContext | null>(null);
   const isSyncingRef = useRef(false);
@@ -171,6 +173,12 @@ const App: React.FC = () => {
             setActiveTrackUrl(newState.current_track_url);
             setCurrentTrackName(newState.current_track_name);
           }
+
+          // If station is playing but listener hasn't joined, show prompt
+          if (newState.is_playing && !listenerHasPlayed && !isPlayingState) {
+            setShowJoinPrompt(true);
+          }
+          setIsPlayingState(newState.is_playing);
         }
       })
       .subscribe();
@@ -503,6 +511,7 @@ const App: React.FC = () => {
               setIsPlaying(playing);
             } else {
               setListenerHasPlayed(playing);
+              if (playing) setShowJoinPrompt(false);
             }
             if (playing) {
               setIsTvActive(false);
@@ -514,13 +523,31 @@ const App: React.FC = () => {
           isDucking={isDucking}
           forcePlaying={role === UserRole.ADMIN ? isPlaying : listenerHasPlayed}
           isAdmin={role === UserRole.ADMIN}
-          showPlayButton={role !== UserRole.ADMIN} // Hide play button on Admin (reverting as per Step 204 request implied, or strictly following Step 214? User said "remove it from admin section" in Step 197, but Step 214 says "music should be audible when admin is playing only". Step 204 revert was "showPlayButton={!isAdmin}". Let's stick to !isAdmin to hide it if that was the consensus). 
-        // Actually, if Admin buttons are hidden, how do they unmute if needed? 
-        // Step 197: "remove it from admin section... let it only play when its on the listener view"
-        // Step 214: "music should be audible when admin is playing"
-        // If I hide the button, Admin can't manually start if autoplay fails. But user insisted on removing it.
-        // I will use role !== UserRole.ADMIN to hide it.
+          showPlayButton={role !== UserRole.ADMIN}
         />
+
+        {/* Join Broadcast Overlay for Listeners */}
+        {role === UserRole.LISTENER && showJoinPrompt && !listenerHasPlayed && isPlayingState && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-md animate-scale-in">
+            <div className="bg-white rounded-3xl p-8 max-w-[80%] text-center shadow-2xl border border-green-100">
+              <div className="w-20 h-20 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-[0_0_20px_rgba(0,135,81,0.5)] animate-pulse">
+                <i className="fas fa-play text-white text-3xl ml-1"></i>
+              </div>
+              <h2 className="text-xl font-black text-green-900 mb-2 uppercase tracking-tight">Station is LIVE</h2>
+              <p className="text-xs text-green-700/70 mb-8 font-medium">The broadcast is currently active. Tap below to join now.</p>
+              <button
+                onClick={() => {
+                  setListenerHasPlayed(true);
+                  setShowJoinPrompt(false);
+                  setHasInteracted(true);
+                }}
+                className="w-full bg-[#008751] text-white py-4 rounded-2xl font-black uppercase tracking-widest hover:scale-105 active:scale-95 transition-all shadow-lg"
+              >
+                Join Broadcast
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* LISTENER VIEW (Always mounted to keep TV/Audio alive) */}
         <div className={role === UserRole.LISTENER ? 'block' : 'hidden'}>
