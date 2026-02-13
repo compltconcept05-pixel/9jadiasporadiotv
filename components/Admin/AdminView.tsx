@@ -644,18 +644,26 @@ const AdminView: React.FC<AdminViewProps> = ({
               </button>
               <button
                 onClick={async () => {
+                  console.log('🔌 [Diagnostic] Testing Cloud Connection...');
                   setInternalStatus('Testing Storage Connection...');
                   try {
-                    const { data, error } = await (window as any).supabase.storage.listBuckets();
+                    const sb = (window as any).supabase;
+                    if (!sb) {
+                      setInternalStatus('❌ Error: Supabase client not initialized');
+                      return;
+                    }
+                    const { data, error } = await sb.storage.listBuckets();
                     if (error) throw error;
                     const buckets = data.map((b: any) => b.name).join(', ');
                     setInternalStatus(`✅ Buckets found: ${buckets}`);
+                    console.log('✅ [Diagnostic] Success:', buckets);
                   } catch (e: any) {
+                    console.error('❌ [Diagnostic] Failure:', e);
                     setInternalStatus(`❌ Connection Error: ${e.message}`);
                   }
-                  setTimeout(() => setInternalStatus(''), 5000);
+                  setTimeout(() => setInternalStatus(''), 8000);
                 }}
-                className="px-4 bg-gray-50 rounded-xl border border-gray-100 flex items-center justify-center hover:bg-gray-100 transition-colors"
+                className="px-4 bg-gray-50 rounded-xl border border-gray-100 flex items-center justify-center hover:bg-gray-100 transition-all active:scale-90 cursor-pointer relative z-10"
                 title="Cloud Diagnostic"
               >
                 <i className="fas fa-plug text-gray-400"></i>
