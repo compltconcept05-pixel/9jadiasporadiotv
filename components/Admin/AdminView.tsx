@@ -99,6 +99,7 @@ const AdminView: React.FC<AdminViewProps> = ({
     setInternalStatus(`Uploading ${files.length} items...`);
 
     try {
+      console.log('🚀 Starting upload for', files.length, 'files');
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
         let type: 'audio' | 'video' | 'image' = 'audio';
@@ -108,11 +109,15 @@ const AdminView: React.FC<AdminViewProps> = ({
         const folder = type === 'audio' ? 'music' : type === 'video' ? 'videos' : 'images';
         setInternalStatus(`Uploading ${file.name}...`);
 
+        console.log(`📤 Uploading file: ${file.name} to folder: ${folder}`);
         const publicUrl = await dbService.uploadMediaToCloud(file, folder);
 
         if (!publicUrl) {
-          throw new Error(`Upload failed for ${file.name}.`);
+          throw new Error(`Upload failed: Storage returned no URL for ${file.name}`);
         }
+
+        console.log(`✅ File uploaded to Storage. URL: ${publicUrl}`);
+        setInternalStatus(`Saving ${file.name} to database...`);
 
         const newMedia: MediaFile = {
           id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
@@ -124,16 +129,18 @@ const AdminView: React.FC<AdminViewProps> = ({
         };
 
         await dbService.addMediaCloud(newMedia);
+        console.log(`✅ Database record created for: ${file.name}`);
       }
       onRefreshData();
       setInternalStatus('✅ Cloud Upload complete!');
     } catch (error: any) {
-      console.error('❌ Upload failed:', error);
-      setInternalStatus(`❌ Error: ${error.message || 'Upload failed'}`);
+      console.error('❌ Cloud Process failed:', error);
+      setInternalStatus(`❌ Error: ${error.message || 'Check connection'}`);
     } finally {
       setIsProcessing(false);
-      // Keep error message visible longer if it failed
-      setTimeout(() => setInternalStatus(''), internalStatus.includes('❌') ? 10000 : 2000);
+      // Increased timeout for errors
+      const isErr = internalStatus && internalStatus.includes('❌');
+      setTimeout(() => setInternalStatus(''), isErr ? 15000 : 3000);
       if (fileInputRef.current) fileInputRef.current.value = '';
     }
   };
@@ -624,6 +631,35 @@ const AdminView: React.FC<AdminViewProps> = ({
                   <i className="fas fa-folder-open mr-1"></i> {mediaSubTab === 'audio' ? 'Music' : 'Video'} Folder
                 </label>
               </div>
+            </div>
+
+            <div className="flex space-x-2">
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isProcessing}
+                className="flex-1 bg-green-50 aspect-video rounded-xl border border-dashed border-green-200 flex flex-col items-center justify-center hover:bg-green-100/50 transition-colors"
+              >
+                <i className="fas fa-music text-green-800 text-xl mb-2"></i>
+                <span className="text-[9px] font-black uppercase text-green-900 tracking-widest">Main Library</span>
+              </button>
+              <button
+                onClick={async () => {
+                  setInternalStatus('Testing Storage Connection...');
+                  try {
+                    const { data, error } = await (window as any).supabase.storage.listBuckets();
+                    if (error) throw error;
+                    const buckets = data.map((b: any) => b.name).join(', ');
+                    setInternalStatus(`✅ Buckets found: ${buckets}`);
+                  } catch (e: any) {
+                    setInternalStatus(`❌ Connection Error: ${e.message}`);
+                  }
+                  setTimeout(() => setInternalStatus(''), 5000);
+                }}
+                className="px-4 bg-gray-50 rounded-xl border border-gray-100 flex items-center justify-center hover:bg-gray-100 transition-colors"
+                title="Cloud Diagnostic"
+              >
+                <i className="fas fa-plug text-gray-400"></i>
+              </button>
             </div>
 
             {/* Master Play All Button */}

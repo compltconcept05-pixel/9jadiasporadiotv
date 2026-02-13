@@ -362,13 +362,19 @@ class DBService {
     if (!supabase) return null;
     const fileName = `${folder}/${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.]/g, '_')}`;
 
+    console.log(`📡 [dbService] Attempting upload of ${file.name} to bucket 'media', path: ${fileName}`);
     const { data, error } = await supabase.storage
       .from('media')
       .upload(fileName, file);
 
     if (error) {
-      console.error('❌ Cloud Upload Error:', error.message);
-      throw new Error(`Cloud Upload Error: ${error.message}`);
+      console.error('❌ Cloud Upload Error:', error.message, error);
+      throw new Error(`Cloud Upload Error: ${error.message} (Bucket: 'media')`);
+    }
+
+    if (!data) {
+      console.error('❌ Cloud Upload Error: No data returned from Supabase');
+      throw new Error('Cloud Upload Error: Storage returned no confirmation data');
     }
 
     const { data: urlData } = supabase.storage
