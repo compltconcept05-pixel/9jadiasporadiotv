@@ -174,8 +174,10 @@ const RadioPlayer: React.FC<RadioPlayerProps> = ({
         audio.removeAttribute('crossorigin');
       }
 
-      audio.preload = 'metadata';
-      audio.load();
+      if (targetSrc) {
+        audio.preload = 'metadata';
+        audio.load();
+      }
     };
 
     setupSource(activeTrackUrl);
@@ -213,8 +215,10 @@ const RadioPlayer: React.FC<RadioPlayerProps> = ({
           audioRef.current.removeAttribute('crossorigin');
         }
 
-        audioRef.current.src = targetSrc;
-        audioRef.current.load();
+        if (targetSrc) {
+          audioRef.current.src = targetSrc;
+          audioRef.current.load();
+        }
 
         if (isPlaying || forcePlaying) {
           // Only init audio context for local files
