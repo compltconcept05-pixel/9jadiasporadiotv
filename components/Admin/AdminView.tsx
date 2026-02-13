@@ -105,24 +105,20 @@ const AdminView: React.FC<AdminViewProps> = ({
         if (file.type.startsWith('video')) type = 'video';
         else if (file.type.startsWith('image')) type = 'image';
 
-        // Filter out non-media files if in a folder
-        if (isFolder && !file.type.startsWith('audio/') && !file.type.startsWith('video/') && !file.type.startsWith('image/')) {
-          continue;
-        }
-
         const folder = type === 'audio' ? 'music' : type === 'video' ? 'videos' : 'images';
+        setInternalStatus(`Uploading ${file.name}...`);
+
         const publicUrl = await dbService.uploadMediaToCloud(file, folder);
 
         if (!publicUrl) {
-          console.error('Cloud upload failed for', file.name);
-          continue;
+          // Failure here usually means the 'media' bucket is missing in Supabase
+          throw new Error(`Upload failed for ${file.name}. Check if 'media' bucket exists!`);
         }
 
         const newMedia: MediaFile = {
           id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
           name: file.name,
-          url: publicUrl, // Cloud URL
-          // file: file, // No longer need to store the local file blob in state
+          url: publicUrl,
           type: type,
           timestamp: Date.now(),
           likes: 0
@@ -131,13 +127,14 @@ const AdminView: React.FC<AdminViewProps> = ({
         await dbService.addMediaCloud(newMedia);
       }
       onRefreshData();
-      setInternalStatus('Cloud Upload complete!');
-    } catch (error) {
-      console.error('Upload failed:', error);
-      setInternalStatus('Upload failed.');
+      setInternalStatus('✅ Cloud Upload complete!');
+    } catch (error: any) {
+      console.error('❌ Upload failed:', error);
+      setInternalStatus(`❌ Error: ${error.message || 'Upload failed'}`);
     } finally {
       setIsProcessing(false);
-      setTimeout(() => setInternalStatus(''), 2000);
+      // Keep error message visible longer if it failed
+      setTimeout(() => setInternalStatus(''), internalStatus.includes('❌') ? 10000 : 2000);
       if (fileInputRef.current) fileInputRef.current.value = '';
     }
   };
