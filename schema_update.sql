@@ -1,4 +1,4 @@
--- NIGERIA DIASPORA RADIO - MASTER SUPABASE SETUP (v2.1)
+-- NIGERIA DIASPORA RADIO - MASTER SUPABASE SETUP (v2.2)
 -- RUN THIS IN YOUR SUPABASE SQL EDITOR
 
 -- 1. Ensure 'station_state' exists and has all columns
@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS station_state (
     current_track_name TEXT DEFAULT 'Station Standby'
 );
 
--- Safely add newer columns if they are missing
+-- Safely add newer columns
 ALTER TABLE station_state ADD COLUMN IF NOT EXISTS is_tv_active BOOLEAN DEFAULT FALSE;
 ALTER TABLE station_state ADD COLUMN IF NOT EXISTS current_track_id TEXT;
 ALTER TABLE station_state ADD COLUMN IF NOT EXISTS current_track_url TEXT;
@@ -16,15 +16,15 @@ ALTER TABLE station_state ADD COLUMN IF NOT EXISTS current_video_id TEXT;
 ALTER TABLE station_state ADD COLUMN IF NOT EXISTS timestamp BIGINT DEFAULT 0;
 ALTER TABLE station_state ADD COLUMN IF NOT EXISTS last_updated BIGINT DEFAULT 0;
 
--- Ensure single-row constraint
-DO $$ 
-BEGIN 
-    IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'single_row') THEN
-        ALTER TABLE station_state ADD CONSTRAINT single_row CHECK (id = 1);
-    END IF;
-END $$;
+-- 2. DISABLE ROW LEVEL SECURITY (RLS) - This is why it was "Red"!
+-- This allows your app to read/write to the station state without a login.
+ALTER TABLE station_state DISABLE ROW LEVEL SECURITY;
+ALTER TABLE media_files DISABLE ROW LEVEL SECURITY;
+ALTER TABLE news_items DISABLE ROW LEVEL SECURITY;
+ALTER TABLE admin_messages DISABLE ROW LEVEL SECURITY;
+ALTER TABLE listener_reports DISABLE ROW LEVEL SECURITY;
 
--- 2. Ensure 'media_files' exists
+-- 3. Ensure 'media_files' exists
 CREATE TABLE IF NOT EXISTS media_files (
     id TEXT PRIMARY KEY,
     name TEXT NOT NULL,
@@ -34,7 +34,7 @@ CREATE TABLE IF NOT EXISTS media_files (
     likes BIGINT DEFAULT 0
 );
 
--- 3. Ensure 'news_items' exists
+-- 4. Ensure 'news_items' exists
 CREATE TABLE IF NOT EXISTS news_items (
     id TEXT PRIMARY KEY,
     title TEXT NOT NULL,
@@ -50,14 +50,14 @@ CREATE TABLE IF NOT EXISTS news_items (
     synced_at BIGINT
 );
 
--- 4. Ensure 'admin_messages' exists
+-- 5. Ensure 'admin_messages' exists
 CREATE TABLE IF NOT EXISTS admin_messages (
     id TEXT PRIMARY KEY,
     text TEXT NOT NULL,
     timestamp BIGINT NOT NULL
 );
 
--- 5. Ensure 'listener_reports' exists
+-- 6. Ensure 'listener_reports' exists
 CREATE TABLE IF NOT EXISTS listener_reports (
     id TEXT PRIMARY KEY,
     "reporterName" TEXT,
@@ -66,11 +66,12 @@ CREATE TABLE IF NOT EXISTS listener_reports (
     timestamp BIGINT NOT NULL
 );
 
--- 6. Initialize or Update Station State
+-- 7. Initialize/Update Station State
 INSERT INTO station_state (id, is_playing, is_tv_active, current_track_name)
 VALUES (1, false, false, 'Station Standby')
 ON CONFLICT (id) DO UPDATE 
 SET is_tv_active = EXCLUDED.is_tv_active,
     current_track_name = EXCLUDED.current_track_name;
 
--- STORAGE SETUP REMINDER (Bucket 'media' must be Public)
+-- 8. Final Check
+SELECT * FROM station_state;

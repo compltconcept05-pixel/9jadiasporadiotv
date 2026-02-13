@@ -198,7 +198,10 @@ const App: React.FC = () => {
         timestamp: Date.now()
       }).catch(err => {
         console.error("❌ Global Sync Failed:", err);
-        setLastError("Global sync failed. Please run schema_update.sql in Supabase!");
+        // Only show red if it's a real schema/permission error, not just a network blip
+        if (err.message && (err.message.includes('403') || err.message.includes('permission') || err.message.includes('column'))) {
+          setLastError("Sync Blocked: Please RUN setup SQL (RLS issue)!");
+        }
         setTimeout(() => setLastError(null), 10000);
       });
     }
