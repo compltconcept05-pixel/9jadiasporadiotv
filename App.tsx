@@ -51,6 +51,7 @@ const App: React.FC = () => {
   const [activeVideoId, setActiveVideoId] = useState<string | null>(null);
   const [showJoinPrompt, setShowJoinPrompt] = useState(false);
   const [isPlayingState, setIsPlayingState] = useState(false); // Global station play state
+  const [cloudStatus, setCloudStatus] = useState<string>('Initializing Satellite...');
 
   const aiAudioContextRef = useRef<AudioContext | null>(null);
   const isSyncingRef = useRef(false);
@@ -130,6 +131,10 @@ const App: React.FC = () => {
         setCurrentTrackName(sState.current_track_name || 'Station Standby');
         if (sState.current_track_url) {
           setActiveTrackUrl(sState.current_track_url);
+        } else if (sState.current_track_id && processedMedia.length > 0) {
+          // Fallback: Find it in our processed list if URL didn't sync directly
+          const track = processedMedia.find(m => m.id === sState.current_track_id);
+          if (track && track.url) setActiveTrackUrl(track.url);
         }
       }
 
@@ -168,20 +173,35 @@ const App: React.FC = () => {
             setActiveVideoId(newState.current_video_id);
           }
 
-          if (newState.current_track_id && newState.current_track_id !== activeTrackId) {
+          if (newState.current_track_id) {
             setActiveTrackId(newState.current_track_id);
             setActiveTrackUrl(newState.current_track_url);
             setCurrentTrackName(newState.current_track_name);
+
+            // Re-sync URL from library if the cloud URL is missing but ID is present
+            if (!newState.current_track_url && allMedia.length > 0) {
+              const track = allMedia.find(m => m.id === newState.current_track_id);
+              if (track && track.url) setActiveTrackUrl(track.url);
+            }
           }
 
-          // If station is playing but listener hasn't joined, show prompt
-          if (newState.is_playing && !listenerHasPlayed && !isPlayingState) {
+          // Force join prompt if not played yet and station is live
+          if (newState.is_playing && !listenerHasPlayed) {
             setShowJoinPrompt(true);
+            setCloudStatus('📡 BROADCAST LIVE - TAP TO JOIN');
+          } else if (newState.is_playing) {
+            setCloudStatus(`🎵 Live: ${newState.current_track_name || 'Music'}`);
+          } else {
+            setCloudStatus('📡 Station Standby');
           }
           setIsPlayingState(newState.is_playing);
         }
       })
-      .subscribe();
+      .subscribe((status) => {
+        console.log("🔥 [Supabase] Subscription Status:", status);
+        if (status === 'SUBSCRIBED') setCloudStatus('✅ Satellite Connected');
+        else if (status === 'CHANNEL_ERROR') setCloudStatus('❌ Satellite Error');
+      });
 
     // 2. News Subscription
     const newsChannel = supabase
@@ -490,6 +510,11 @@ const App: React.FC = () => {
           <h1 className="text-base font-black italic uppercase leading-none text-green-950">{APP_NAME}</h1>
         </div>
         <div className="flex items-center space-x-2">
+          {role === UserRole.LISTENER && (
+            <span className="text-[7px] bg-green-950/80 text-white px-2 py-0.5 rounded-full font-black uppercase tracking-widest border border-green-800/30 shadow-sm whitespace-nowrap">
+              {cloudStatus}
+            </span>
+          )}
           {!supabase && <span className="text-[7px] bg-amber-500 text-white px-1.5 py-0.5 rounded font-black uppercase animate-pulse">Cloud Offline</span>}
           {isDucking && <span className="text-[7px] font-black uppercase text-red-500 animate-pulse bg-red-50 px-1 rounded shadow-sm border border-red-100">Live Broadcast</span>}
           <button
