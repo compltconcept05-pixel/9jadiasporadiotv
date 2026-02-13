@@ -47,10 +47,8 @@ const RadioPlayer: React.FC<RadioPlayerProps> = ({
     try {
       if (!audioRef.current) return;
 
-      // ALLOW visualization for cloud hosted files (Supabase/Vercel)
-      // Only exclude REAL live streams (Icecast/Zeno)
-      const isRealStream = activeTrackUrl && (activeTrackUrl.includes('zeno.fm') || activeTrackUrl.includes('shoutcast') || activeTrackUrl.includes('icecast'));
-      if (isRealStream && isStreamRef.current) return;
+      // Safer visualization guard: Only for local files by default
+      if (isStreamRef.current) return;
 
       if (!audioContextRef.current || audioContextRef.current.state === 'closed') {
         audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
@@ -219,13 +217,11 @@ const RadioPlayer: React.FC<RadioPlayerProps> = ({
       console.log('📻 RadioPlayer received URL:', targetSrc);
       if (audioRef.current.src !== targetSrc) {
         const isLocal = targetSrc.startsWith('blob:') || targetSrc.startsWith('data:');
-        const isCloud = targetSrc.includes('.supabase.co') || targetSrc.includes('vercel.app') || targetSrc.includes('ndradiotv');
+        isStreamRef.current = !isLocal;
 
-        // Only mark as "Stream" if not local and not from our own cloud (to allow viz)
-        isStreamRef.current = !isLocal && !isCloud;
-
+        // Critical: Set crossOrigin for local/blob properly
         if (isLocal) {
-          audioRef.current.crossOrigin = null;
+          audioRef.current.crossOrigin = 'anonymous'; // Try anonymous for local to allow viz
         } else {
           audioRef.current.removeAttribute('crossorigin');
         }
@@ -236,8 +232,14 @@ const RadioPlayer: React.FC<RadioPlayerProps> = ({
         audioRef.current.load();
 
         if (isPlaying || forcePlaying) {
-          // Initialize for all suitable sources
-          initAudioContext();
+          try {
+            // ONLY init for local files to be 100% safe for Admin
+            if (!isStreamRef.current) {
+              initAudioContext();
+            }
+          } catch (vErr) {
+            console.warn("Visualizer init failed, continuing to play...", vErr);
+          }
 
           audioRef.current.play().catch(err => {
             console.warn("Autoplay blocked or stream error:", err);
