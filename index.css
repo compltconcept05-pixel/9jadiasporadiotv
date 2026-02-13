@@ -1,0 +1,28 @@
+@keyframes tvPop {
+  0% { transform: scale(1); }
+  5% { transform: scale(1.2); }
+  10% { transform: scale(1); }
+  100% { transform: scale(1); }
+}
+
+.animate-tv-pop {
+  animation: tvPop 5s infinite;
+}
+
+@keyframes tv-marquee {
+  0% { transform: translateX(100%); }
+  100% { transform: translateX(-100%); }
+}
+
+.animate-tv-marquee {
+  animation: tv-marquee 25s linear infinite;
+}
+
+@keyframes marquee {
+  0% { transform: translateX(100%); }
+  100% { transform: translateX(-100%); }
+}
+
+.animate-marquee {
+  animation: marquee 30s linear infinite;
+}

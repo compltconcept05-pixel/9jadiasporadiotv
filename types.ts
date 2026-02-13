@@ -1,13 +1,17 @@
 
+
 export interface NewsItem {
   id: string;
   title: string;
   content: string;
-  category: 'Nigeria' | 'Diaspora' | 'Culture' | 'Economy' | 'Listener Report' | 'Sports' | 'Global';
+  category: 'Nigeria' | 'Diaspora' | 'Culture' | 'Economy' | 'Listener Report' | 'Sports' | 'Global' | 'Politics' | 'Business' | 'Security' | 'Technology' | 'Breaking';
   timestamp: number;
   location?: string;
   sources?: string[];
   isVerified?: boolean;
+  priority?: number;
+  summary?: string;
+  source?: string;
 }
 
 export interface MediaFile {
