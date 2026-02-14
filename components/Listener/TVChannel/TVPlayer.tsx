@@ -112,15 +112,21 @@ const TVPlayer: React.FC<TVPlayerProps> = ({
     if (!currentTrack) {
         return (
             <div className="relative aspect-video bg-black overflow-hidden group select-none shadow-2xl">
-                {/* Overlays (ON AIR MODE: No Mute Controls as requested) */}
-                <TVOverlay
-                    isPlaying={isPlaying}
-                    onTogglePlay={togglePlay}
-                    onToggleFullscreen={toggleFullscreen}
-                    channelName="NDRTV"
-                    news={news}
-                    adminMessages={adminMessages}
+                {/* OFFLINE MODE: Loop, Controls Visible, Controlled Mute */}
+                <TVStinger
+                    variant="loop"
+                    isMuted={isMuted}
+                    onToggleMute={toggleMute}
+                    showControls={true}
                 />
+
+                {/* Optional minimal offline status overlay */}
+                <div className="absolute top-4 right-4 z-50">
+                    <div className="flex items-center space-x-2 bg-black/60 backdrop-blur-md px-3 py-1 rounded-full border border-white/10">
+                        <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
+                        <span className="text-[8px] font-bold text-white/80 uppercase tracking-widest">Signal Offline</span>
+                    </div>
+                </div>
             </div>
         );
     }

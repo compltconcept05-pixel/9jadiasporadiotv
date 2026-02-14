@@ -642,7 +642,7 @@ const App: React.FC = () => {
             activeVideo={allMedia.find(m => m.id === activeVideoId) || null}
             isNewsPlaying={isDucking}
             isTvActive={isTvActive}
-            allVideos={sponsoredMedia}
+            allVideos={allMedia}
             isRadioPlaying={listenerHasPlayed}
             onRadioToggle={handleRadioToggle}
             onTvToggle={handleVideoToggle}
