@@ -23,10 +23,23 @@ const TVOverlay: React.FC<TVOverlayProps> = ({
 }) => {
     return (
         <div className="absolute inset-0 z-40 pointer-events-none group select-none">
-            {/* 1. TOP LEFT: STATION BUG (Animated & 20% Bigger) */}
+            {/* 1. TOP LEFT: 3D EARTH LOGO (Realistic Rotating Globe) */}
             <div className={`absolute top-2 left-2 animate-tv-pop z-20 transition-opacity duration-500 ${isVisible ? 'opacity-100' : 'opacity-0'}`}>
-                <div className="flex items-center bg-black/40 backdrop-blur-sm px-2 py-1 border border-white/10 shadow-lg scale-125 origin-left">
-                    <span className="text-[11px] font-black tracking-tighter drop-shadow-md flex italic animate-logo-rotate">
+                <div className="flex items-center bg-black/60 backdrop-blur-md px-2 py-1.5 border border-white/10 shadow-[0_0_15px_rgba(0,0,0,0.5)] scale-125 origin-left rounded-sm">
+                    {/* The 3D Globe Container */}
+                    <div className="relative w-7 h-7 rounded-full overflow-hidden mr-2 shadow-[0_0_8px_rgba(79,172,254,0.4)] ring-1 ring-white/10">
+                        {/* Rotating Earth Map */}
+                        <div
+                            className="absolute inset-0 bg-[url('https://upload.wikimedia.org/wikipedia/commons/thumb/c/c4/Earth_Cloud_Free.jpg/2048px-Earth_Cloud_Free.jpg')] bg-[length:auto_100%] animate-earth-spin"
+                            style={{ backgroundRepeat: 'repeat-x' }}
+                        ></div>
+                        {/* Spherical Shadow / Atmospheric Depth */}
+                        <div className="absolute inset-0 rounded-full shadow-[inset_-5px_-3px_12px_rgba(0,0,0,0.9),_inset_3px_2px_8px_rgba(255,255,255,0.2)]"></div>
+                        {/* Atmospheric Edge Glow */}
+                        <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-blue-500/10 via-transparent to-transparent opacity-40"></div>
+                    </div>
+
+                    <span className="text-[11px] font-black tracking-tighter drop-shadow-md flex italic">
                         <span className="text-[#008751]">ND</span>
                         <span className="text-white">R</span>
                         <span className="text-[#008751]">TV</span>
@@ -114,16 +127,16 @@ const TVOverlay: React.FC<TVOverlayProps> = ({
                     0% { transform: translateX(0); } 
                     100% { transform: translateX(-50%); } 
                 }
-                @keyframes rotate-360 {
-                    from { transform: rotate(0deg); }
-                    to { transform: rotate(360deg); }
+                @keyframes earth-spin {
+                    from { background-position: 0% center; }
+                    to { background-position: -200% center; }
                 }
                 .animate-tv-marquee { 
                     display: inline-flex; 
                     animation: tv-marquee 40s linear infinite; 
                 }
-                .animate-logo-rotate {
-                    animation: rotate-360 8s linear infinite;
+                .animate-earth-spin {
+                    animation: earth-spin 20s linear infinite;
                 }
             `}} />
         </div>
