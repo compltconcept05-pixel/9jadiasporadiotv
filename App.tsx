@@ -619,7 +619,7 @@ const App: React.FC = () => {
       <header className="p-4 sticky top-0 z-40 bg-white/90 backdrop-blur-md flex justify-between items-center border-b border-green-50 shadow-sm">
         <div className="flex flex-col">
           <h1 className="text-base font-black italic uppercase leading-none text-green-950">{APP_NAME}</h1>
-          <span className="text-[6px] font-black text-green-700/50 uppercase tracking-[0.3em] mt-0.5">V4-STABLE-HEARTBEAT</span>
+          <span className="text-[6px] font-black text-green-700/50 uppercase tracking-[0.3em] mt-0.5">V5-EXCLUSIVITY-LOCKED</span>
         </div>
         <div className="flex items-center space-x-2">
           {role === UserRole.LISTENER && (
