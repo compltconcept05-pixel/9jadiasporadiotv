@@ -161,19 +161,11 @@ const App: React.FC = () => {
     fetchData();
   }, [fetchData]);
 
-  // --- ADMIN LIVE HEARTBEAT ---
+  // LIVE OFFSET TRACKING REF
+  const radioCurrentTimeRef = useRef(0);
   useEffect(() => {
-    if (role === UserRole.ADMIN && isPlaying && activeTrackId) {
-      const interval = setInterval(() => {
-        dbService.updateStationState({
-          current_offset: radioCurrentTime,
-          is_playing: true,
-          timestamp: Date.now()
-        }).catch(err => console.debug("Heartbeat sync failed:", err));
-      }, 5000); // Pulse every 5s
-      return () => clearInterval(interval);
-    }
-  }, [role, isPlaying, activeTrackId, radioCurrentTime]);
+    radioCurrentTimeRef.current = radioCurrentTime;
+  }, [radioCurrentTime]);
 
   useEffect(() => {
     if (role === UserRole.ADMIN) {
@@ -282,6 +274,7 @@ const App: React.FC = () => {
           current_track_name: currentTrackName,
           current_track_url: isCloudUrl ? activeTrackUrl : (isJingle ? activeTrackUrl : null),
           current_video_id: activeVideoId,
+          current_offset: radioCurrentTimeRef.current, // Merged heartbeat
           timestamp: Date.now()
         }).catch(err => console.error("❌ Station Sync error", err));
       };
