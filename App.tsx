@@ -323,6 +323,10 @@ const App: React.FC = () => {
   }, [handleLogAdd]);
 
   const handlePlayNext = useCallback(() => {
+    if (isTvActive) {
+      console.log('🚫 [App] handlePlayNext blocked (TV is active)');
+      return;
+    }
     console.log('⏭️ [App] handlePlayNext triggered. Role:', role);
     // Use stable ref for media library to avoid stale closures
     const audioFiles = allMediaRef.current.filter(m => m.type === 'audio');
@@ -368,6 +372,10 @@ const App: React.FC = () => {
   }, [activeTrackId, isShuffle, allMedia, role, supabase]);
 
   const handlePlayAll = () => {
+    if (isTvActive) {
+      console.log('🚫 [App] handlePlayAll blocked (TV is active)');
+      return;
+    }
     setHasInteracted(true);
     // Use all audio files from allMedia
     const audioFiles = allMedia.filter(m => m.type === 'audio');
