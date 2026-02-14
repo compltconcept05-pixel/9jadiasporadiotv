@@ -38,7 +38,7 @@ interface AdminViewProps {
   activeVideoId?: string | null;
   onPlayVideo?: (track: MediaFile) => void;
   isTvActive?: boolean;
-  onToggleTv?: () => void;
+  onToggleTv?: (active: boolean) => void;
   reports?: ListenerReport[];
 }
 
@@ -175,7 +175,7 @@ const AdminView: React.FC<AdminViewProps> = ({
           onClick={() => setActiveTab('command')}
           className={`flex-1 min-w-[50px] py-2 text-center text-[7px] font-bold uppercase transition-colors rounded ${activeTab === 'command' ? 'bg-green-600 text-white shadow-inner' : 'bg-white text-green-800 hover:bg-green-50'}`}
         >
-          Studio v2.2
+          Studio v2.2.1
         </button>
         <button
           onClick={() => setActiveTab('bulletin')}
@@ -260,7 +260,7 @@ const AdminView: React.FC<AdminViewProps> = ({
                 </button>
 
                 <button
-                  onClick={onToggleTv}
+                  onClick={() => onToggleTv?.(!isTvActive)}
                   className={`flex-1 py-3 rounded-lg text-white font-black text-[10px] uppercase shadow-md transition-transform active:scale-95 ${isTvActive ? 'bg-indigo-600 hover:bg-indigo-700 border-indigo-500' : 'bg-gray-500 hover:bg-gray-600 border-gray-400'} border-b-2`}
                 >
                   {isTvActive ? 'Stop TV' : 'Start TV'}

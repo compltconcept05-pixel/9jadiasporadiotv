@@ -278,9 +278,14 @@ class DBService {
 
   async updateStationState(state: Partial<StationState>): Promise<void> {
     if (!supabase) return;
+    const sanitizedState = { ...state };
+    if (sanitizedState.is_tv_active !== undefined) {
+      sanitizedState.is_tv_active = !!sanitizedState.is_tv_active;
+    }
+
     const { error } = await supabase
       .from('station_state')
-      .upsert({ id: 1, ...state, last_updated: Date.now() }); // Always row ID 1
+      .upsert({ id: 1, ...sanitizedState, last_updated: Date.now() }); // Always row ID 1
 
     if (error) {
       console.error('❌ Error updating station state:', error.message);
