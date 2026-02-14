@@ -293,6 +293,14 @@ const RadioPlayer: React.FC<RadioPlayerProps> = ({
     }
   }, [activeTrackUrl, activeTrackId]);
 
+  // NEWS EXCLUSIVITY: Pause music when News starts (ducking)
+  useEffect(() => {
+    if (isDucking && audioRef.current && !audioRef.current.paused) {
+      console.log("🦆 [RadioPlayer] News detected - Pausing music...");
+      audioRef.current.pause();
+    }
+  }, [isDucking]);
+
   // RESUME ON DUCK END
   useEffect(() => {
     if (!isDucking && forcePlaying && audioRef.current && audioRef.current.paused) {

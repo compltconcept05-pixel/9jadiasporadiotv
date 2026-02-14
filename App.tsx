@@ -683,9 +683,8 @@ const App: React.FC = () => {
         isOnline={supabase}
       />
 
-      {/* DEBUG BANNER - TEMPORARY */}
-      <div className="bg-yellow-400 text-black text-[10px] font-black text-center py-1 uppercase tracking-widest sticky top-0 z-50">
-        ⚠️ DEBUG MODE: V2.3.1 - If you see this, update worked! ⚠️
+      <div className="bg-red-600 text-white text-[12px] font-black text-center py-2 uppercase tracking-[0.5em] sticky top-0 z-50 animate-pulse border-b-4 border-yellow-400">
+        🚀 DEPLOY-FORCE-FLUSH V2.3.5 - REFRESH NOW 🚀
       </div>
 
       <header className="p-4 sticky top-4 z-40 bg-white/90 backdrop-blur-md flex justify-between items-center border-b border-green-50 shadow-sm">
