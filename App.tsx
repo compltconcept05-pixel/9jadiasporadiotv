@@ -164,7 +164,7 @@ const App: React.FC = () => {
         // STATE GUARD: Only apply remote state if:
         // 1. We are a listener (listeners must follow the station)
         // 2. OR we are an admin but have NOT done our initial sync yet
-        const isActuallyNone = !activeTrackId && !activeTrackUrl;
+        const isActuallyNone = !activeTrackIdRef.current && !activeTrackUrlRef.current;
         const shouldApplySync = (role === UserRole.LISTENER) || (role === UserRole.ADMIN && !hasInitialSyncRef.current && isActuallyNone);
 
         if (shouldApplySync) {
@@ -186,14 +186,14 @@ const App: React.FC = () => {
       const history = await dbService.getNewsHistory();
       setNewsHistory(history || []);
 
-      if (activeTrackId && !activeTrackUrl) {
-        const activeTrack = processedMedia.find(t => t.id === activeTrackId);
+      if (activeTrackIdRef.current && !activeTrackUrlRef.current) {
+        const activeTrack = processedMedia.find(t => t.id === activeTrackIdRef.current);
         if (activeTrack) updateTrackUrl(activeTrack.id, activeTrack.url, activeTrack.name);
       }
     } catch (err) {
       console.error("Data fetch error", err);
     }
-  }, [role, updateTrackUrl, activeTrackId, activeTrackUrl, currentLocation]); // Added missing deps to avoid stale closure
+  }, [role, updateTrackUrl, currentLocation]); // Removed activeTrackId/Url to break loop
 
   useEffect(() => {
     fetchData();
