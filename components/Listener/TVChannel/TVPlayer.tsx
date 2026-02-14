@@ -196,13 +196,13 @@ const TVPlayer: React.FC<TVPlayerProps> = ({
 
     if (!isActive) {
         return (
-            <div className="relative aspect-video bg-black flex flex-col items-center justify-center overflow-hidden group select-none shadow-2xl rounded-xl">
-                {/* Visual indicator for Radio Mode */}
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_#001a00_0%,_#000000_100%)] opacity-50"></div>
-                <div className="z-10 flex flex-col items-center animate-pulse">
-                    <span className="text-[10px] font-black text-[#008751]/80 uppercase tracking-[0.5em] italic">Station Live</span>
-                    <span className="text-[8px] font-bold text-white/20 uppercase tracking-widest mt-2">Radio Mode Active</span>
-                </div>
+            <div className="relative bg-black overflow-hidden group select-none shadow-2xl rounded-xl" style={{ height: '100%' }}>
+                {/* Looping Stinger instead of static "Station Live" */}
+                <TVStinger
+                    variant="loop"
+                    isMuted={true}
+                    showControls={false}
+                />
             </div>
         );
     }

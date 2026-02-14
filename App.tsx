@@ -415,6 +415,12 @@ const App: React.FC = () => {
       updateTrackUrl(track.id, track.url, cleanTrackName(track.name));
       setIsPlaying(true);
 
+      // UNIVERSAL: Keep listener playback alive on track transition
+      if (role === UserRole.LISTENER) {
+        setListenerHasPlayed(true);
+        console.log('🔄 [App] Listener auto-advancing to next track:', track.name);
+      }
+
       // CRITICAL: Push to cloud IMMEDIATELY so listeners don't wait for pulse
       if (role === UserRole.ADMIN && supabase) {
         const isUrl = track.url && (track.url.startsWith('http') || track.url.startsWith('https'));

@@ -120,44 +120,9 @@ const ListenerView: React.FC<ListenerViewProps> = ({
 
   return (
     <div className="flex-grow flex flex-col space-y-6 pt-2 pb-8 px-4 text-[#008751]">
-      {/* 1. STATUS BAR */}
-      <div className="flex justify-between items-center bg-white p-3 rounded-2xl border border-green-100 shadow-sm relative overflow-hidden shrink-0">
-        <div className="flex flex-col z-10">
-          <span className="text-[9px] font-black uppercase tracking-widest text-green-600">{location}</span>
-          <span className="text-[10px] font-mono text-green-900 font-black">{localTime}</span>
-        </div>
-        <button
-          onClick={handleShare}
-          className="relative z-10 bg-[#008751] hover:bg-green-700 text-white px-6 py-2 rounded-full text-[10px] font-black uppercase tracking-widest shadow-md active:scale-95 transition-all flex items-center space-x-1"
-        >
-          <i className="fas fa-paper-plane text-[10px]"></i>
-          <span>{shareFeedback || 'Invite Friends'}</span>
-        </button>
-      </div>
-
-      {/* 2. NEWS TICKER (RADIO ONLY) */}
-      <section className={`bg-green-50/30 rounded-xl border border-green-100/50 h-10 flex items-center overflow-hidden shrink-0 transition-opacity duration-500 ${isRadioPlaying ? 'opacity-100' : 'opacity-0'}`}>
-        <div className={`flex whitespace-nowrap items-center ${isRadioPlaying ? 'animate-marquee' : ''}`}>
-          <span className="text-xs font-black text-green-800 uppercase px-12 tracking-widest inline-block">{CHANNEL_INTRO}</span>
-          {adminMessages.map((msg, i) => (
-            <span key={`admin-${i}`} className="text-xs text-red-600 font-black uppercase px-12 flex items-center inline-block">
-              <i className="fas fa-bullhorn mr-2"></i> {msg.text}
-              <span className="ml-12 text-green-200">|</span>
-            </span>
-          ))}
-          {news.map((n, i) => (
-            <span key={`ticker-${i}`} className="text-xs text-green-700 font-bold uppercase px-12 flex items-center inline-block">
-              <span className="w-2 h-2 bg-red-500 rounded-full mr-3 animate-pulse"></span>
-              {n.title}
-              <span className="ml-12 text-green-200">|</span>
-            </span>
-          ))}
-        </div>
-      </section>
-
-      {/* 3. TV SECTION (Square Corners) - ALWAYS VISIBLE, TVPlayer handles power-off state */}
+      {/* 1. TV SECTION (MOVED TO TOP, INCREASED HEIGHT) */}
       <section className="shrink-0 animate-tv-flicker scale-105">
-        <div className="bg-black shadow-2xl aspect-video mx-auto overflow-hidden">
+        <div className="bg-black shadow-2xl mx-auto overflow-hidden" style={{ height: '50vh' }}>
           <TVPlayer
             activeVideo={activeVideo}
             allVideos={allVideos.filter(v => v.type === 'video')}
@@ -175,6 +140,41 @@ const ListenerView: React.FC<ListenerViewProps> = ({
             isActive={isTvActive}
             isAdmin={isAdmin}
           />
+        </div>
+      </section>
+
+      {/* 2. INVITE FRIENDS (MOVED BELOW TV) */}
+      <div className="flex justify-between items-center bg-white p-3 rounded-2xl border border-green-100 shadow-sm relative overflow-hidden shrink-0">
+        <div className="flex flex-col z-10">
+          <span className="text-[9px] font-black uppercase tracking-widest text-green-600">{location}</span>
+          <span className="text-[10px] font-mono text-green-900 font-black">{localTime}</span>
+        </div>
+        <button
+          onClick={handleShare}
+          className="relative z-10 bg-[#008751] hover:bg-green-700 text-white px-6 py-2 rounded-full text-[10px] font-black uppercase tracking-widest shadow-md active:scale-95 transition-all flex items-center space-x-1"
+        >
+          <i className="fas fa-paper-plane text-[10px]"></i>
+          <span>{shareFeedback || 'Invite Friends'}</span>
+        </button>
+      </div>
+
+      {/* 3. NEWS TICKER (RADIO ONLY) */}
+      <section className={`bg-green-50/30 rounded-xl border border-green-100/50 h-10 flex items-center overflow-hidden shrink-0 transition-opacity duration-500 ${isRadioPlaying ? 'opacity-100' : 'opacity-0'}`}>
+        <div className={`flex whitespace-nowrap items-center ${isRadioPlaying ? 'animate-marquee' : ''}`}>
+          <span className="text-xs font-black text-green-800 uppercase px-12 tracking-widest inline-block">{CHANNEL_INTRO}</span>
+          {adminMessages.map((msg, i) => (
+            <span key={`admin-${i}`} className="text-xs text-red-600 font-black uppercase px-12 flex items-center inline-block">
+              <i className="fas fa-bullhorn mr-2"></i> {msg.text}
+              <span className="ml-12 text-green-200">|</span>
+            </span>
+          ))}
+          {news.map((n, i) => (
+            <span key={`ticker-${i}`} className="text-xs text-green-700 font-bold uppercase px-12 flex items-center inline-block">
+              <span className="w-2 h-2 bg-red-500 rounded-full mr-3 animate-pulse"></span>
+              {n.title}
+              <span className="ml-12 text-green-200">|</span>
+            </span>
+          ))}
         </div>
       </section>
 

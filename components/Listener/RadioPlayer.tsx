@@ -551,6 +551,24 @@ const RadioPlayer: React.FC<RadioPlayerProps> = ({
           <i className="fas fa-volume-up text-green-800 text-xs"></i>
         </div>
       </div>
+
+      {/* FIXED PLAY/PAUSE BUTTON - BOTTOM RIGHT */}
+      {showPlayButton && (
+        <button
+          onClick={handlePlayPause}
+          className="fixed bottom-6 right-6 z-[90] w-14 h-14 rounded-full flex items-center justify-center shadow-2xl transition-all active:scale-90 hover:scale-110"
+          style={{
+            background: isPlaying
+              ? 'linear-gradient(135deg, #dc2626, #991b1b)'
+              : 'linear-gradient(135deg, #008751, #005a34)',
+            boxShadow: isPlaying
+              ? '0 0 20px rgba(220, 38, 38, 0.5)'
+              : '0 0 20px rgba(0, 135, 81, 0.5)',
+          }}
+        >
+          <i className={`fas ${isPlaying ? 'fa-pause' : 'fa-play ml-0.5'} text-white text-lg`}></i>
+        </button>
+      )}
     </div>
   );
 };
