@@ -222,6 +222,29 @@ const TVPlayer: React.FC<TVPlayerProps> = ({
                         <i className="fas fa-play text-white text-2xl ml-1"></i>
                     </button>
                 </div>
+                {/* PERMANENT CONTROLS - ALWAYS VISIBLE (Z-60) */}
+                <div className="absolute bottom-4 right-4 z-[60] flex items-center space-x-3 pointer-events-auto">
+                    <button
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            // If offline/standby, playing starts radio
+                            if (!isActive) onRadioPlay?.();
+                            else togglePlay();
+                        }}
+                        className="w-10 h-10 bg-black/60 hover:bg-[#008751] backdrop-blur-md rounded-full flex items-center justify-center text-white border border-white/20 shadow-xl transition-all active:scale-95"
+                    >
+                        {isActive && isPlaying ? <i className="fas fa-pause text-xs"></i> : <i className="fas fa-play text-xs ml-0.5"></i>}
+                    </button>
+                    <button
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            toggleFullscreen();
+                        }}
+                        className="w-10 h-10 bg-black/60 hover:bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center text-white border border-white/20 shadow-xl transition-all active:scale-95"
+                    >
+                        <i className="fas fa-expand text-xs"></i>
+                    </button>
+                </div>
             </div>
         );
     }
@@ -248,6 +271,29 @@ const TVPlayer: React.FC<TVPlayerProps> = ({
                     >
                         <i className="fas fa-play text-white text-2xl ml-1"></i>
                     </button>
+                    {/* PERMANENT CONTROLS - ALWAYS VISIBLE (Z-60) */}
+                    <div className="absolute bottom-4 right-4 z-[60] flex items-center space-x-3 pointer-events-auto">
+                        <button
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                // If offline/standby, playing starts radio
+                                if (!isActive) onRadioPlay?.();
+                                else togglePlay();
+                            }}
+                            className="w-10 h-10 bg-black/60 hover:bg-[#008751] backdrop-blur-md rounded-full flex items-center justify-center text-white border border-white/20 shadow-xl transition-all active:scale-95"
+                        >
+                            {isActive && isPlaying ? <i className="fas fa-pause text-xs"></i> : <i className="fas fa-play text-xs ml-0.5"></i>}
+                        </button>
+                        <button
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                toggleFullscreen();
+                            }}
+                            className="w-10 h-10 bg-black/60 hover:bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center text-white border border-white/20 shadow-xl transition-all active:scale-95"
+                        >
+                            <i className="fas fa-expand text-xs"></i>
+                        </button>
+                    </div>
                 </div>
 
                 {/* Optional minimal offline status overlay */}
@@ -255,7 +301,76 @@ const TVPlayer: React.FC<TVPlayerProps> = ({
                     <div className="flex items-center space-x-2 bg-black/60 backdrop-blur-md px-3 py-1 rounded-full border border-white/10">
                         <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
                         <span className="text-[8px] font-bold text-white/80 uppercase tracking-widest">Signal Offline</span>
+                        {/* PERMANENT CONTROLS - ALWAYS VISIBLE (Z-60) */}
+                        <div className="absolute bottom-4 right-4 z-[60] flex items-center space-x-3 pointer-events-auto">
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    // If offline/standby, playing starts radio
+                                    if (!isActive) onRadioPlay?.();
+                                    else togglePlay();
+                                }}
+                                className="w-10 h-10 bg-black/60 hover:bg-[#008751] backdrop-blur-md rounded-full flex items-center justify-center text-white border border-white/20 shadow-xl transition-all active:scale-95"
+                            >
+                                {isActive && isPlaying ? <i className="fas fa-pause text-xs"></i> : <i className="fas fa-play text-xs ml-0.5"></i>}
+                            </button>
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    toggleFullscreen();
+                                }}
+                                className="w-10 h-10 bg-black/60 hover:bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center text-white border border-white/20 shadow-xl transition-all active:scale-95"
+                            >
+                                <i className="fas fa-expand text-xs"></i>
+                            </button>
+                        </div>
                     </div>
+                    {/* PERMANENT CONTROLS - ALWAYS VISIBLE (Z-60) */}
+                    <div className="absolute bottom-4 right-4 z-[60] flex items-center space-x-3 pointer-events-auto">
+                        <button
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                // If offline/standby, playing starts radio
+                                if (!isActive) onRadioPlay?.();
+                                else togglePlay();
+                            }}
+                            className="w-10 h-10 bg-black/60 hover:bg-[#008751] backdrop-blur-md rounded-full flex items-center justify-center text-white border border-white/20 shadow-xl transition-all active:scale-95"
+                        >
+                            {isActive && isPlaying ? <i className="fas fa-pause text-xs"></i> : <i className="fas fa-play text-xs ml-0.5"></i>}
+                        </button>
+                        <button
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                toggleFullscreen();
+                            }}
+                            className="w-10 h-10 bg-black/60 hover:bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center text-white border border-white/20 shadow-xl transition-all active:scale-95"
+                        >
+                            <i className="fas fa-expand text-xs"></i>
+                        </button>
+                    </div>
+                </div>
+                {/* PERMANENT CONTROLS - ALWAYS VISIBLE (Z-60) */}
+                <div className="absolute bottom-4 right-4 z-[60] flex items-center space-x-3 pointer-events-auto">
+                    <button
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            // If offline/standby, playing starts radio
+                            if (!isActive) onRadioPlay?.();
+                            else togglePlay();
+                        }}
+                        className="w-10 h-10 bg-black/60 hover:bg-[#008751] backdrop-blur-md rounded-full flex items-center justify-center text-white border border-white/20 shadow-xl transition-all active:scale-95"
+                    >
+                        {isActive && isPlaying ? <i className="fas fa-pause text-xs"></i> : <i className="fas fa-play text-xs ml-0.5"></i>}
+                    </button>
+                    <button
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            toggleFullscreen();
+                        }}
+                        className="w-10 h-10 bg-black/60 hover:bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center text-white border border-white/20 shadow-xl transition-all active:scale-95"
+                    >
+                        <i className="fas fa-expand text-xs"></i>
+                    </button>
                 </div>
             </div>
         );
