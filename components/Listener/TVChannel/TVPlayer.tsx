@@ -9,6 +9,7 @@ interface TVPlayerProps {
     news: NewsItem[];
     adminMessages: AdminMessage[];
     onPlayStateChange?: (isPlaying: boolean) => void;
+    onRadioPlay?: () => void; // Start radio playback from TV play button
     onVideoAdvance?: (index: number) => void; // Sync for Admin
     isNewsPlaying: boolean;
     isActive: boolean;
@@ -21,6 +22,7 @@ const TVPlayer: React.FC<TVPlayerProps> = ({
     news,
     adminMessages,
     onPlayStateChange,
+    onRadioPlay,
     onVideoAdvance,
     isNewsPlaying,
     isActive,
@@ -207,16 +209,12 @@ const TVPlayer: React.FC<TVPlayerProps> = ({
                     isMuted={true}
                     showControls={false}
                 />
-                {/* PLAY BUTTON ON TV - ALWAYS VISIBLE */}
+                {/* PLAY BUTTON ON TV - STARTS RADIO */}
                 <div className="absolute inset-0 z-40 flex items-center justify-center">
                     <button
                         onClick={() => {
-                            onPlayStateChange?.(true);
-                            setIsPlaying(true);
-                            setIsMuted(false);
-                            if (containerRef.current && !document.fullscreenElement) {
-                                containerRef.current.requestFullscreen().catch(() => { });
-                            }
+                            // Start RADIO playback (produces sound)
+                            onRadioPlay?.();
                         }}
                         className="w-16 h-16 rounded-full flex items-center justify-center bg-[#008751]/80 hover:bg-[#008751] backdrop-blur-md shadow-2xl transition-all active:scale-90 border-2 border-white/30"
                         style={{ boxShadow: '0 0 30px rgba(0,135,81,0.5)' }}
@@ -239,15 +237,11 @@ const TVPlayer: React.FC<TVPlayerProps> = ({
                     showControls={true}
                 />
 
-                {/* PLAY BUTTON ON TV - OFFLINE */}
+                {/* PLAY BUTTON ON TV - OFFLINE - STARTS RADIO */}
                 <div className="absolute inset-0 z-40 flex items-center justify-center">
                     <button
                         onClick={() => {
-                            setIsPlaying(true);
-                            setIsMuted(false);
-                            if (containerRef.current && !document.fullscreenElement) {
-                                containerRef.current.requestFullscreen().catch(() => { });
-                            }
+                            onRadioPlay?.();
                         }}
                         className="w-16 h-16 rounded-full flex items-center justify-center bg-[#008751]/80 hover:bg-[#008751] backdrop-blur-md shadow-2xl transition-all active:scale-90 border-2 border-white/30"
                         style={{ boxShadow: '0 0 30px rgba(0,135,81,0.5)' }}

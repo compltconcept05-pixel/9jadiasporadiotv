@@ -135,6 +135,10 @@ const ListenerView: React.FC<ListenerViewProps> = ({
                 onTvToggle(true);
               }
             }}
+            onRadioPlay={() => {
+              // Start radio audio from TV play button
+              onRadioToggle(true);
+            }}
             onVideoAdvance={onVideoAdvance}
             isNewsPlaying={isNewsPlaying}
             isActive={isTvActive}
