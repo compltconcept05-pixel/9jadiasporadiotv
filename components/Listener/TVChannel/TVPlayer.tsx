@@ -354,10 +354,9 @@ const TVPlayer: React.FC<TVPlayerProps> = ({
 
             {/* PERMANENT CONTROLS - VISIBILITY LOGIC:
                 - Offline/Standby (!isActive): ALWAYS SHOW
-                - Active & Playing: Show only when 'showControls' is true (mouse hover)
-                - Active & Paused: ALWAYS SHOW
+                - Active (Playing/Paused): HIDE (User requested to only show when offline)
              */}
-            <div className={`absolute bottom-4 right-4 z-[60] flex items-center space-x-3 pointer-events-auto transition-opacity duration-300 ${(!isActive || !isPlaying || showControls) ? 'opacity-100' : 'opacity-0'}`}>
+            <div className={`absolute bottom-4 right-4 z-[60] flex items-center space-x-3 transition-opacity duration-300 ${!isActive ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}>
                 <button
                     onClick={(e) => {
                         e.stopPropagation();
