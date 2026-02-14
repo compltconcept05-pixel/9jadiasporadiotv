@@ -303,6 +303,28 @@ const TVPlayer: React.FC<TVPlayerProps> = ({
                 onClick={resetHideTimer}
                 onMouseMove={resetHideTimer}
             />
+
+            {/* PERMANENT CONTROLS - ALWAYS VISIBLE (Z-60) */}
+            <div className="absolute bottom-4 right-4 z-[60] flex items-center space-x-3 pointer-events-auto">
+                <button
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        togglePlay();
+                    }}
+                    className="w-10 h-10 bg-black/60 hover:bg-[#008751] backdrop-blur-md rounded-full flex items-center justify-center text-white border border-white/20 shadow-xl transition-all active:scale-95"
+                >
+                    {isPlaying ? <i className="fas fa-pause text-xs"></i> : <i className="fas fa-play text-xs ml-0.5"></i>}
+                </button>
+                <button
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        toggleFullscreen();
+                    }}
+                    className="w-10 h-10 bg-black/60 hover:bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center text-white border border-white/20 shadow-xl transition-all active:scale-95"
+                >
+                    <i className="fas fa-expand text-xs"></i>
+                </button>
+            </div>
         </div>
     );
 };
