@@ -37,6 +37,8 @@ interface AdminViewProps {
   status?: string;
   activeVideoId?: string | null;
   onPlayVideo?: (track: MediaFile) => void;
+  isTvActive?: boolean;
+  onToggleTv?: () => void;
   reports?: ListenerReport[];
 }
 
@@ -71,7 +73,7 @@ const AdminView: React.FC<AdminViewProps> = ({
   onAddNews,
   onUpdateNews,
   onDeleteNews,
-  mediaFiles = [], status, onRefreshWire, activeVideoId, onPlayVideo, onDeleteMedia, reports
+  mediaFiles = [], status, onRefreshWire, activeVideoId, onPlayVideo, isTvActive, onToggleTv, onDeleteMedia, reports
 }) => {
   const [activeTab, setActiveTab] = useState<Tab>('command');
   const [mediaSubTab, setMediaSubTab] = useState<MediaSubTab>('audio');
@@ -173,7 +175,7 @@ const AdminView: React.FC<AdminViewProps> = ({
           onClick={() => setActiveTab('command')}
           className={`flex-1 min-w-[50px] py-2 text-center text-[7px] font-bold uppercase transition-colors rounded ${activeTab === 'command' ? 'bg-green-600 text-white shadow-inner' : 'bg-white text-green-800 hover:bg-green-50'}`}
         >
-          Studio v2.1
+          Studio v2.2
         </button>
         <button
           onClick={() => setActiveTab('bulletin')}
@@ -254,7 +256,14 @@ const AdminView: React.FC<AdminViewProps> = ({
                   onClick={onToggleRadio}
                   className={`flex-1 py-3 rounded-lg text-white font-black text-[10px] uppercase shadow-md transition-transform active:scale-95 ${isRadioPlaying ? 'bg-red-500 hover:bg-red-600 border-red-400' : 'bg-green-500 hover:bg-green-600 border-green-400'} border-b-2`}
                 >
-                  {isRadioPlaying ? 'Stop Broadcast' : 'Start Broadcast'}
+                  {isRadioPlaying ? 'Stop Radio' : 'Start Radio'}
+                </button>
+
+                <button
+                  onClick={onToggleTv}
+                  className={`flex-1 py-3 rounded-lg text-white font-black text-[10px] uppercase shadow-md transition-transform active:scale-95 ${isTvActive ? 'bg-indigo-600 hover:bg-indigo-700 border-indigo-500' : 'bg-gray-500 hover:bg-gray-600 border-gray-400'} border-b-2`}
+                >
+                  {isTvActive ? 'Stop TV' : 'Start TV'}
                 </button>
 
                 <button

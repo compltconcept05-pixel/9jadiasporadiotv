@@ -816,6 +816,8 @@ const App: React.FC = () => {
             }}
             activeVideoId={activeVideoId}
             onPlayVideo={handlePlayVideo}
+            isTvActive={isTvActive}
+            onToggleTv={handleVideoToggle}
             reports={reports}
           />
         )}
