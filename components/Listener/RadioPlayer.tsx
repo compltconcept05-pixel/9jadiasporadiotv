@@ -522,7 +522,7 @@ const RadioPlayer: React.FC<RadioPlayerProps> = ({
       <div className="flex flex-col items-center space-y-4 mt-8 relative z-20 w-full px-8">
         {/* Track Info Display */}
         <div className="bg-white/40 backdrop-blur-sm px-6 py-3 rounded-2xl border border-white/60 w-full overflow-hidden shadow-lg flex items-center justify-center text-center">
-          <span className="text-xs font-black uppercase text-green-900 tracking-[0.2em] line-clamp-1">
+          <span className="text-[9px] font-black uppercase text-green-900 tracking-normal line-clamp-1">
             NOW PLAYING: {currentTrackName}
           </span>
         </div>
