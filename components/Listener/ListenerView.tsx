@@ -120,9 +120,9 @@ const ListenerView: React.FC<ListenerViewProps> = ({
 
   return (
     <div className="flex-grow flex flex-col space-y-6 pt-2 pb-8 px-4 text-[#008751]">
-      {/* 1. TV SECTION (MOVED TO TOP, INCREASED HEIGHT) */}
-      <section className="shrink-0 animate-tv-flicker scale-105">
-        <div className="bg-black shadow-2xl mx-auto overflow-hidden" style={{ height: '50vh' }}>
+      {/* 1. TV SECTION (MOVED TO TOP, MOBILE-FRIENDLY) */}
+      <section className="shrink-0 w-full">
+        <div className="bg-black shadow-2xl w-full aspect-video overflow-hidden">
           <TVPlayer
             activeVideo={activeVideo}
             allVideos={allVideos.filter(v => v.type === 'video')}

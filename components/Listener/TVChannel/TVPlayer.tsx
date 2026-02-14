@@ -186,6 +186,10 @@ const TVPlayer: React.FC<TVPlayerProps> = ({
         if (newIsPlaying && isMuted) {
             setIsMuted(false); // Force unmute on manual play interaction
         }
+        // Auto-fullscreen on mobile when user taps play
+        if (newIsPlaying && containerRef.current && !document.fullscreenElement) {
+            containerRef.current.requestFullscreen().catch(() => { });
+        }
     };
 
     const toggleMute = () => {
@@ -196,20 +200,37 @@ const TVPlayer: React.FC<TVPlayerProps> = ({
 
     if (!isActive) {
         return (
-            <div className="relative bg-black overflow-hidden group select-none shadow-2xl rounded-xl" style={{ height: '100%' }}>
+            <div ref={containerRef} className="relative bg-black overflow-hidden group select-none shadow-2xl rounded-xl w-full h-full">
                 {/* Looping Stinger instead of static "Station Live" */}
                 <TVStinger
                     variant="loop"
                     isMuted={true}
                     showControls={false}
                 />
+                {/* PLAY BUTTON ON TV - ALWAYS VISIBLE */}
+                <div className="absolute inset-0 z-40 flex items-center justify-center">
+                    <button
+                        onClick={() => {
+                            onPlayStateChange?.(true);
+                            setIsPlaying(true);
+                            setIsMuted(false);
+                            if (containerRef.current && !document.fullscreenElement) {
+                                containerRef.current.requestFullscreen().catch(() => { });
+                            }
+                        }}
+                        className="w-16 h-16 rounded-full flex items-center justify-center bg-[#008751]/80 hover:bg-[#008751] backdrop-blur-md shadow-2xl transition-all active:scale-90 border-2 border-white/30"
+                        style={{ boxShadow: '0 0 30px rgba(0,135,81,0.5)' }}
+                    >
+                        <i className="fas fa-play text-white text-2xl ml-1"></i>
+                    </button>
+                </div>
             </div>
         );
     }
 
     if (!currentTrack) {
         return (
-            <div className="relative aspect-video bg-black overflow-hidden group select-none shadow-2xl">
+            <div ref={containerRef} className="relative bg-black overflow-hidden group select-none shadow-2xl w-full h-full">
                 {/* OFFLINE MODE: Loop, Controls Visible, Controlled Mute */}
                 <TVStinger
                     variant="loop"
@@ -217,6 +238,23 @@ const TVPlayer: React.FC<TVPlayerProps> = ({
                     onToggleMute={toggleMute}
                     showControls={true}
                 />
+
+                {/* PLAY BUTTON ON TV - OFFLINE */}
+                <div className="absolute inset-0 z-40 flex items-center justify-center">
+                    <button
+                        onClick={() => {
+                            setIsPlaying(true);
+                            setIsMuted(false);
+                            if (containerRef.current && !document.fullscreenElement) {
+                                containerRef.current.requestFullscreen().catch(() => { });
+                            }
+                        }}
+                        className="w-16 h-16 rounded-full flex items-center justify-center bg-[#008751]/80 hover:bg-[#008751] backdrop-blur-md shadow-2xl transition-all active:scale-90 border-2 border-white/30"
+                        style={{ boxShadow: '0 0 30px rgba(0,135,81,0.5)' }}
+                    >
+                        <i className="fas fa-play text-white text-2xl ml-1"></i>
+                    </button>
+                </div>
 
                 {/* Optional minimal offline status overlay */}
                 <div className="absolute top-4 right-4 z-50">
