@@ -57,6 +57,20 @@ const App: React.FC = () => {
   const [sessionId] = useState(() => Math.random().toString(36).substring(7));
   const [adminConflict, setAdminConflict] = useState(false);
 
+  const isPlayingRef = useRef(isPlaying);
+  const isTvActiveRef = useRef(isTvActive);
+  const activeTrackIdRef = useRef(activeTrackId);
+  const currentTrackNameRef = useRef(currentTrackName);
+  const activeTrackUrlRef = useRef(activeTrackUrl);
+  const activeVideoIdRef = useRef(activeVideoId);
+
+  useEffect(() => { isPlayingRef.current = isPlaying; }, [isPlaying]);
+  useEffect(() => { isTvActiveRef.current = isTvActive; }, [isTvActive]);
+  useEffect(() => { activeTrackIdRef.current = activeTrackId; }, [activeTrackId]);
+  useEffect(() => { currentTrackNameRef.current = currentTrackName; }, [currentTrackName]);
+  useEffect(() => { activeTrackUrlRef.current = activeTrackUrl; }, [activeTrackUrl]);
+  useEffect(() => { activeVideoIdRef.current = activeVideoId; }, [activeVideoId]);
+
   const aiAudioContextRef = useRef<AudioContext | null>(null);
   const isSyncingRef = useRef(false);
   const pendingAudioRef = useRef<Uint8Array | null>(null);
@@ -283,20 +297,21 @@ const App: React.FC = () => {
   useEffect(() => {
     if (role === UserRole.ADMIN && supabase) {
       const syncStation = () => {
-        const isUrl = activeTrackUrl && (activeTrackUrl.startsWith('http') || activeTrackUrl.startsWith('https'));
-        const isCloudUrl = isUrl && !activeTrackUrl?.startsWith('blob:');
-        const isJingle = activeTrackId === 'jingle' || (!isUrl && activeTrackUrl && activeTrackUrl.toLowerCase().includes('.mp3'));
+        const urlToSync = activeTrackUrlRef.current;
+        const isUrl = urlToSync && (urlToSync.startsWith('http') || urlToSync.startsWith('https'));
+        const isCloudUrl = isUrl && !urlToSync?.startsWith('blob:');
+        const isJingle = activeTrackIdRef.current === 'jingle' || (!isUrl && urlToSync && urlToSync.toLowerCase().includes('.mp3'));
 
         console.log("📤 [App] Admin Pulsing State...", isCloudUrl ? "Cloud" : isJingle ? "Jingle" : "None");
 
         dbService.updateStationState({
-          is_playing: isPlaying,
-          is_tv_active: isTvActive,
-          current_track_id: activeTrackId,
-          current_track_name: currentTrackName,
-          current_track_url: isCloudUrl ? activeTrackUrl : (isJingle ? activeTrackUrl : null),
-          current_video_id: activeVideoId,
-          current_offset: radioCurrentTimeRef.current, // Merged heartbeat
+          is_playing: isPlayingRef.current,
+          is_tv_active: isTvActiveRef.current,
+          current_track_id: activeTrackIdRef.current,
+          current_track_name: currentTrackNameRef.current,
+          current_track_url: isCloudUrl ? urlToSync : (isJingle ? urlToSync : null),
+          current_video_id: activeVideoIdRef.current,
+          current_offset: radioCurrentTimeRef.current,
           timestamp: Date.now()
         }).catch(err => console.error("❌ Station Sync error", err));
       };
@@ -304,11 +319,11 @@ const App: React.FC = () => {
       // Initial sync on change
       syncStation();
 
-      // HEARTBEAT: Pulse every 8 seconds (Increased frequency for faster device join)
+      // HEARTBEAT: Pulse every 8 seconds
       const pulseInterval = setInterval(syncStation, 8000);
       return () => clearInterval(pulseInterval);
     }
-  }, [isPlaying, isTvActive, activeTrackId, currentTrackName, role, activeTrackUrl, activeVideoId]);
+  }, [role, supabase]); // Only depends on role/client presence
 
   const handleLogAdd = useCallback((action: string) => {
     // We'll keep logs local for now, but AdminMessages should be cloud
