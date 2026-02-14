@@ -293,6 +293,17 @@ const RadioPlayer: React.FC<RadioPlayerProps> = ({
     }
   }, [activeTrackUrl, activeTrackId]);
 
+  // RESUME ON DUCK END
+  useEffect(() => {
+    if (!isDucking && forcePlaying && audioRef.current && audioRef.current.paused) {
+      console.log("🦆 [RadioPlayer] Ducking ended - Resuming playback...");
+      // Add a slight delay to ensure the news audio has cleared the buffer/context
+      setTimeout(() => {
+        audioRef.current?.play().catch(e => console.warn("Resume failed:", e));
+      }, 500);
+    }
+  }, [isDucking, forcePlaying]);
+
   // LIVE SYNC DRIFT CHECK
   useEffect(() => {
     if (startTime > 0 && audioRef.current && !isAdmin && isPlaying) {
