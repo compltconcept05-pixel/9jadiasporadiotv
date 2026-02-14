@@ -383,7 +383,20 @@ const App: React.FC = () => {
     setActiveTrackId(track.id);
     setActiveTrackUrl(track.url);
     setCurrentTrackName(cleanTrackName(track.name));
-    setIsPlaying(true); // Use isPlaying for radio
+    setIsPlaying(true);
+
+    // CRITICAL: Force cloud sync immediately
+    if (role === UserRole.ADMIN && supabase) {
+      dbService.updateStationState({
+        is_playing: true,
+        is_tv_active: false,
+        current_track_id: track.id,
+        current_track_name: track.name,
+        current_track_url: track.url,
+        current_offset: 0,
+        timestamp: Date.now()
+      }).catch(err => console.error("❌ Play All Sync Error", err));
+    }
   };
 
 
@@ -474,22 +487,22 @@ const App: React.FC = () => {
   const handleRadioToggle = useCallback((play: boolean) => {
     console.log(`📻 Radio Master Control: ${play ? 'ON' : 'OFF'}`);
     handleStopNews(); // Stop any pending news on toggle
+
     if (play) {
       setIsTvActive(false);
-      handlePlayAll(); // Load and play a track from the media menu
+      handlePlayAll(); // This sets isPlaying(true) and updates cloud
     } else {
       setIsPlaying(false);
       setListenerHasPlayed(false);
+      // Sync STOP state to cloud
+      if (role === UserRole.ADMIN && supabase) {
+        dbService.updateStationState({
+          is_playing: false,
+          timestamp: Date.now()
+        }).catch(err => console.error("❌ Radio Stop Sync error", err));
+      }
     }
-    // Broadcaster sync
-    if (role === UserRole.ADMIN) {
-      dbService.updateStationState({
-        is_playing: play,
-        is_tv_active: play ? false : isTvActive,
-        timestamp: Date.now()
-      });
-    }
-  }, [handleStopNews, handlePlayAll, role, isTvActive]);
+  }, [handleStopNews, handlePlayAll, role, supabase]);
 
   const handleVideoToggle = useCallback((active: boolean) => {
     setIsTvActive(active);
@@ -498,14 +511,14 @@ const App: React.FC = () => {
       setListenerHasPlayed(false);
     }
     // Broadcaster sync
-    if (role === UserRole.ADMIN) {
+    if (role === UserRole.ADMIN && supabase) {
       dbService.updateStationState({
         is_tv_active: active,
         is_playing: active ? false : isPlaying,
         timestamp: Date.now()
-      });
+      }).catch(err => console.error("❌ Video Toggle Sync error", err));
     }
-  }, [role, isPlaying]);
+  }, [role, isPlaying, supabase]);
 
   const handlePlayVideo = useCallback((track: MediaFile | number) => {
     handleStopNews(); // Ensure news stops
