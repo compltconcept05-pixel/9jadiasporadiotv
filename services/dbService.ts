@@ -282,7 +282,10 @@ class DBService {
       .from('station_state')
       .upsert({ id: 1, ...state, last_updated: Date.now() }); // Always row ID 1
 
-    if (error) console.error('❌ Error updating station state:', error.message);
+    if (error) {
+      console.error('❌ Error updating station state:', error.message);
+      throw new Error(`Station State Sync Error: ${error.message}`);
+    }
   }
 
   async syncNewsToCloud(news: NewsItem[]): Promise<void> {
@@ -291,7 +294,10 @@ class DBService {
       .from('news_items')
       .upsert(news.map(n => ({ ...n, synced_at: Date.now() })));
 
-    if (error) console.error('❌ Error syncing news to cloud:', error.message);
+    if (error) {
+      console.error('❌ Error syncing news to cloud:', error.message);
+      throw new Error(`News Sync Error: ${error.message}`);
+    }
   }
 
   async getNewsFromCloud(): Promise<NewsItem[]> {
@@ -318,7 +324,10 @@ class DBService {
       .from('admin_messages')
       .insert([msg]);
 
-    if (error) console.error('❌ Error adding cloud message:', error.message);
+    if (error) {
+      console.error('❌ Error adding cloud message:', error.message);
+      throw new Error(`Admin Message Sync Error: ${error.message}`);
+    }
   }
 
   async getAdminMessagesCloud(): Promise<AdminMessage[]> {
@@ -342,7 +351,10 @@ class DBService {
       .from('listener_reports')
       .insert([report]);
 
-    if (error) console.error('❌ Error adding cloud report:', error.message);
+    if (error) {
+      console.error('❌ Error adding cloud report:', error.message);
+      throw new Error(`Listener Report Sync Error: ${error.message}`);
+    }
   }
 
   async getReportsCloud(): Promise<ListenerReport[]> {
@@ -394,7 +406,10 @@ class DBService {
       .from('media_files')
       .upsert([fileInfo]);
 
-    if (error) console.error('❌ Error saving cloud media record:', error.message);
+    if (error) {
+      console.error('❌ Error saving cloud media record:', error.message);
+      throw new Error(`Database Record Sync Error: ${error.message} - This usually means the 'category' column is missing from your Supabase 'media_files' table.`);
+    }
   }
 
   async getMediaCloud(): Promise<MediaFile[]> {
