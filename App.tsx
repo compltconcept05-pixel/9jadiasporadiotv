@@ -292,10 +292,20 @@ const App: React.FC = () => {
       })
       .subscribe();
 
+    // 4. Media Files Subscription (CRITICAL for Listener Sync)
+    const mediaChannel = supabase
+      .channel('media_files_changes')
+      .on('postgres_changes' as any, { event: '*', schema: 'public', table: 'media_files' }, (payload: any) => {
+        console.log("🎵 [Supabase] Media Library Update:", payload.eventType);
+        fetchData();
+      })
+      .subscribe();
+
     return () => {
       supabase.removeChannel(stateChannel);
       supabase.removeChannel(newsChannel);
       supabase.removeChannel(msgChannel);
+      supabase.removeChannel(mediaChannel);
     };
   }, [role, fetchData]); // fetchData is stable from useCallback
 
