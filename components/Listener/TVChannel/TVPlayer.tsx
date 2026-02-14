@@ -87,6 +87,7 @@ const TVPlayer: React.FC<TVPlayerProps> = ({
             const now = Date.now();
 
             // 1. ADVERT TIMER (10 minutes = 600,000ms)
+            // Only play if we have adverts and enough time passed
             if (!isAdvertPlaying && (now - lastAdvertTimestamp >= 600000)) {
                 const adverts = allVideos.filter(v => v.category === 'adverts');
                 if (adverts.length > 0) {
@@ -94,22 +95,20 @@ const TVPlayer: React.FC<TVPlayerProps> = ({
                     const randomAd = adverts[Math.floor(Math.random() * adverts.length)];
                     const adIndex = allVideos.findIndex(v => v.id === randomAd.id);
                     if (adIndex !== -1) {
-                        setOriginalTrackIndex(currentIndex);
+                        setOriginalTrackIndex(currentIndex); // Remember where we were
                         setCurrentIndex(adIndex);
                         setIsAdvertPlaying(true);
                         setLastAdvertTimestamp(now);
-                        // No stinger for ads, just cut to it
-                        if (videoRef.current) {
-                            videoRef.current.currentTime = 0;
-                        }
+                        // No stinger for ads, just cut to them for seamless feel
+                        if (videoRef.current) videoRef.current.currentTime = 0;
                     }
                 } else {
-                    // Reset timestamp even if no ads to avoid constant checking
-                    setLastAdvertTimestamp(now);
+                    setLastAdvertTimestamp(now); // Reset if no ads found to prevent loop
                 }
             }
 
             // 2. STINGER TIMER (15 minutes = 900,000ms)
+            // Plays stinger overlay while video continues underneath (or pauses, depending on logic)
             if (now - lastStingerTimestamp >= 900000) {
                 console.log("🎬 [TVPlayer] Triggering Scheduled Stinger...");
                 setShowStinger(true);
@@ -120,21 +119,23 @@ const TVPlayer: React.FC<TVPlayerProps> = ({
         return () => clearInterval(interval);
     }, [isActive, isPlaying, isNewsPlaying, isAdmin, lastAdvertTimestamp, lastStingerTimestamp, isAdvertPlaying, allVideos, currentIndex]);
 
-    // 2. Sync with Admin Broadcast & Active State (Memory Erase & Start Logic)
+    // 2. Sync with Admin Broadcast & Active State (Force Stinger on Start)
     useEffect(() => {
         if (!isActive) {
             setIsPlaying(false);
             setShowStinger(false);
         } else if (activeVideo) {
-            // "Erase Memory" - Reset queue when starting fresh or new video forced
+            // Check if this is a "Fresh" start of TV execution
+            // We can infer this if we weren't playing before
             const idx = allVideos.findIndex(v => v.id === activeVideo.id);
             if (idx !== -1) {
-                // If this is a new broadcast start, play Stinger first
-                // We detect "new start" if we weren't playing or if ID changed significantly
-                // ideally we just force stinger on new activeVideo
-                setCurrentIndex(idx);
-                setShowStinger(true); // START WITH STINGER
-                setIsPlaying(true);
+                // ONLY RESET IF ID CHANGED OR WE ARE STARTING
+                if (currentIndex !== idx || !isPlaying) {
+                    setCurrentIndex(idx);
+                    setShowStinger(true); // FORCE STINGER ON START
+                    setLastStingerTimestamp(Date.now()); // Reset stinger timer on start
+                    setIsPlaying(true);
+                }
             }
         }
     }, [activeVideo?.id, allVideos, isActive]);
@@ -351,8 +352,12 @@ const TVPlayer: React.FC<TVPlayerProps> = ({
                 onMouseMove={resetHideTimer}
             />
 
-            {/* PERMANENT CONTROLS - ALWAYS VISIBLE (Z-60) */}
-            <div className="absolute bottom-4 right-4 z-[60] flex items-center space-x-3 pointer-events-auto">
+            {/* PERMANENT CONTROLS - VISIBILITY LOGIC:
+                - Offline/Standby (!isActive): ALWAYS SHOW
+                - Active & Playing: Show only when 'showControls' is true (mouse hover)
+                - Active & Paused: ALWAYS SHOW
+             */}
+            <div className={`absolute bottom-4 right-4 z-[60] flex items-center space-x-3 pointer-events-auto transition-opacity duration-300 ${(!isActive || !isPlaying || showControls) ? 'opacity-100' : 'opacity-0'}`}>
                 <button
                     onClick={(e) => {
                         e.stopPropagation();

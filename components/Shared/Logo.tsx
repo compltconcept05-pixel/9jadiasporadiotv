@@ -45,7 +45,7 @@ const Logo: React.FC<LogoProps> = ({
 
         <div className="flex items-center justify-center space-x-2 w-full">
           {/* LEFT SIDE VISUALIZER WALL - Wider for visual impact */}
-          <div className={`w-16 h-28 transition-opacity duration-700 ${isPlaying ? 'opacity-100' : 'opacity-40'}`}>
+          <div className={`w-16 h-28 transition-opacity duration-700 ${isPlaying ? 'opacity-100' : 'opacity-60'}`}>
             <AudioVisualizer analyser={analyser || null} isActive={isPlaying} variant="sides" />
           </div>
 
@@ -86,7 +86,7 @@ const Logo: React.FC<LogoProps> = ({
           </div>
 
           {/* RIGHT SIDE VISUALIZER WALL */}
-          <div className={`w-16 h-28 transition-opacity duration-700 ${isPlaying ? 'opacity-100' : 'opacity-40'} transform scale-x-[-1]`}>
+          <div className={`w-16 h-28 transition-opacity duration-700 ${isPlaying ? 'opacity-100' : 'opacity-60'} transform scale-x-[-1]`}>
             <AudioVisualizer analyser={analyser || null} isActive={isPlaying} variant="sides" />
           </div>
         </div>
