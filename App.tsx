@@ -680,6 +680,7 @@ const App: React.FC = () => {
         onDuckingChange={setIsDuckingFavour}
         isAllowedToPlay={role === UserRole.ADMIN ? isPlaying : listenerHasPlayed}
         mediaFiles={allMedia}
+        isOnline={supabase}
       />
 
       <header className="p-4 sticky top-0 z-40 bg-white/90 backdrop-blur-md flex justify-between items-center border-b border-green-50 shadow-sm">

@@ -17,6 +17,7 @@ interface RadioPlayerProps {
   isAdmin?: boolean;
   isDucking?: boolean;
   showPlayButton?: boolean;
+  isOnline?: boolean;
 }
 
 const RadioPlayer: React.FC<RadioPlayerProps> = ({
@@ -505,6 +506,7 @@ const RadioPlayer: React.FC<RadioPlayerProps> = ({
         status={status}
         onTogglePlayback={handlePlayPause}
         showPlayButton={true}
+        isOnline={props.isOnline}
       />
 
       <div className="w-full px-8 mt-6 relative z-20">
