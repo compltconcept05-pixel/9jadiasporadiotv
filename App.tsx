@@ -635,7 +635,6 @@ const App: React.FC = () => {
               setActiveTrackId(t.id);
               setActiveTrackUrl(t.url);
               setCurrentTrackName(cleanTrackName(t.name));
-              setIsPlayingState(true);
               setListenerHasPlayed(true);
               setIsTvActive(false);
             }}

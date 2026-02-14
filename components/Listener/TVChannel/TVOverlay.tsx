@@ -62,34 +62,35 @@ const TVOverlay: React.FC<TVOverlayProps> = ({ isPlaying, onTogglePlay, onToggle
                 </div>
             </div>
 
-            {/* 4. BOTTOM RIGHT: PLAYBACK CONTROLS (LARGER & ALWAYS VISIBLE) */}
-            <div className="absolute bottom-10 right-4 flex items-center space-x-3 pointer-events-auto z-50">
-                {/* Play/Pause */}
+            {/* 4. BOTTOM LEFT: PLAY/PAUSE (Moved to corners) */}
+            <div className="absolute bottom-10 left-4 pointer-events-auto z-50">
                 <button
                     onClick={(e) => {
                         e.stopPropagation();
                         onTogglePlay();
                     }}
-                    className="w-14 h-14 bg-white/20 hover:bg-green-600/90 backdrop-blur-2xl border-2 border-white/40 rounded-full flex items-center justify-center text-white shadow-[0_0_20px_rgba(0,0,0,0.5)] transition-all active:scale-90"
+                    className="w-12 h-12 bg-white/20 hover:bg-green-600/90 backdrop-blur-2xl border-2 border-white/40 rounded-full flex items-center justify-center text-white shadow-[0_0_20px_rgba(0,0,0,0.5)] transition-all active:scale-90"
                     title={isPlaying ? "Pause" : "Play"}
                 >
                     {isPlaying ? (
-                        <i className="fas fa-pause text-lg"></i>
+                        <i className="fas fa-pause text-base"></i>
                     ) : (
-                        <i className="fas fa-play text-lg ml-1"></i>
+                        <i className="fas fa-play text-base ml-1"></i>
                     )}
                 </button>
+            </div>
 
-                {/* Fullscreen Toggle */}
+            {/* 5. BOTTOM RIGHT: FULLSCREEN (Moved to corners) */}
+            <div className="absolute bottom-10 right-4 pointer-events-auto z-50">
                 <button
                     onClick={(e) => {
                         e.stopPropagation();
                         onToggleFullscreen?.();
                     }}
-                    className="w-14 h-14 bg-white/20 hover:bg-white/40 backdrop-blur-2xl border-2 border-white/40 rounded-full flex items-center justify-center text-white shadow-[0_0_20px_rgba(0,0,0,0.5)] transition-all active:scale-90"
+                    className="w-12 h-12 bg-white/20 hover:bg-white/40 backdrop-blur-2xl border-2 border-white/40 rounded-full flex items-center justify-center text-white shadow-[0_0_20px_rgba(0,0,0,0.5)] transition-all active:scale-90"
                     title="Fullscreen"
                 >
-                    <i className="fas fa-expand text-lg"></i>
+                    <i className="fas fa-expand text-base"></i>
                 </button>
             </div>
 

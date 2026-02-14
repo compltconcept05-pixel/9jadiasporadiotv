@@ -274,14 +274,14 @@ const ListenerView: React.FC<ListenerViewProps> = ({
         </div>
       </section>
 
-      {/* FOOTER - Condensed to single line */}
-      <footer className="text-center pb-8 mt-6">
-        <div className="inline-flex flex-wrap items-center justify-center gap-2 px-4 py-2 bg-white/30 backdrop-blur-sm rounded-full border border-white/40 shadow-sm mx-auto">
-          <span className="text-[9px] font-black uppercase text-green-950/60 tracking-tight">{APP_NAME}</span>
-          <span className="text-green-950/20">|</span>
-          <span className="text-[9px] font-bold text-green-800 uppercase tracking-tight">Designed by Thompson Obosa</span>
-          <span className="text-green-950/20">|</span>
-          <span className="text-[8px] text-green-600/60 font-mono">© 2026</span>
+      {/* FOOTER - Spec-aligned single line at the absolute bottom */}
+      <footer className="text-center pb-6 mt-auto">
+        <div className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-white/20 backdrop-blur-sm rounded-full border border-white/30 shadow-sm mx-auto">
+          <span className="text-[7.5px] font-black uppercase text-green-950/60 tracking-tighter">{APP_NAME}</span>
+          <span className="text-green-950/10 scale-y-125 px-0.5">|</span>
+          <span className="text-[7.5px] text-green-700/60 font-mono tracking-tighter">© 2026</span>
+          <span className="text-green-950/10 scale-y-125 px-0.5">|</span>
+          <span className="text-[7.5px] font-bold text-green-800/80 uppercase tracking-tighter">Designed by Obosa Thompson</span>
         </div>
       </footer>
 

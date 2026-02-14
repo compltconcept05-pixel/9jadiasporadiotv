@@ -112,21 +112,15 @@ const TVPlayer: React.FC<TVPlayerProps> = ({
     if (!currentTrack) {
         return (
             <div className="relative aspect-video bg-black overflow-hidden group select-none shadow-2xl">
-                {/* OFFLINE MODE: Loop, Controls Visible, Controlled Mute */}
-                <TVStinger
-                    variant="loop"
-                    isMuted={isMuted}
-                    onToggleMute={toggleMute}
-                    showControls={true}
+                {/* Overlays (ON AIR MODE: No Mute Controls as requested) */}
+                <TVOverlay
+                    isPlaying={isPlaying}
+                    onTogglePlay={togglePlay}
+                    onToggleFullscreen={toggleFullscreen}
+                    channelName="NDRTV"
+                    news={news}
+                    adminMessages={adminMessages}
                 />
-
-                {/* Optional minimal offline status overlay - Moved to Top Right to avoid Mute Button overlap */}
-                <div className="absolute top-4 right-4 z-50">
-                    <div className="flex items-center space-x-2 bg-black/60 backdrop-blur-md px-3 py-1 rounded-full border border-white/10">
-                        <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
-                        <span className="text-[8px] font-bold text-white/80 uppercase tracking-widest">Signal Offline</span>
-                    </div>
-                </div>
             </div>
         );
     }
@@ -164,24 +158,6 @@ const TVPlayer: React.FC<TVPlayerProps> = ({
                 channelName="NDRTV"
                 news={news}
                 adminMessages={adminMessages}
-            />
-
-            {/* Central Big Play Button (Manual Start Only) */}
-            {!isPlaying && (
-                <div className="absolute inset-0 flex items-center justify-center bg-black/60 z-20 pointer-events-none animate-fade-in">
-                    <button
-                        onClick={(e) => { e.stopPropagation(); togglePlay(); }}
-                        className="w-20 h-20 rounded-full bg-white/20 backdrop-blur-md border-4 border-white/40 flex items-center justify-center text-white text-3xl hover:scale-110 active:scale-95 transition-all pointer-events-auto shadow-[0_0_30px_rgba(0,0,0,0.5)]"
-                    >
-                        <i className="fas fa-play ml-2"></i>
-                    </button>
-                </div>
-            )}
-
-            {/* Surface click to toggle */}
-            <div
-                className="absolute inset-0 z-0 cursor-pointer"
-                onClick={togglePlay}
             />
         </div>
     );
