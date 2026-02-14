@@ -206,20 +206,23 @@ const TVPlayer: React.FC<TVPlayerProps> = ({
                 {/* Looping Stinger instead of static "Station Live" */}
                 <TVStinger
                     variant="loop"
-                    isMuted={true}
+                    isMuted={isMuted} // Updated to follow player state
+                    isPlaying={isPlaying}
                     showControls={false}
                 />
-                {/* PLAY BUTTON ON TV - STARTS RADIO */}
+                {/* PLAY BUTTON ON TV - NOW TV-ONLY (NO RADIO FALLBACK) */}
                 <div className="absolute inset-0 z-40 flex items-center justify-center">
                     <button
-                        onClick={() => {
-                            // Start RADIO playback (produces sound)
-                            onRadioPlay?.();
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            togglePlay(); // Strictly play/pause local loop
                         }}
                         className="w-16 h-16 rounded-full flex items-center justify-center bg-[#008751]/80 hover:bg-[#008751] backdrop-blur-md shadow-2xl transition-all active:scale-90 border-2 border-white/30"
                         style={{ boxShadow: '0 0 30px rgba(0,135,81,0.5)' }}
                     >
-                        <i className="fas fa-play text-white text-2xl ml-1"></i>
+                        {/* {isPlaying ? <i className="fas fa-pause text-white text-2xl ml-1"></i> : <i className="fas fa-play text-white text-2xl ml-1"></i>} */}
+                        {/* Always show "Play" icon if loop is paused or just to invite interaction */}
+                        <i className={`fas ${isPlaying ? 'fa-pause' : 'fa-play'} text-white text-2xl ml-1`}></i>
                     </button>
                 </div>
                 {/* PERMANENT CONTROLS - ALWAYS VISIBLE (Z-60) */}
@@ -227,13 +230,11 @@ const TVPlayer: React.FC<TVPlayerProps> = ({
                     <button
                         onClick={(e) => {
                             e.stopPropagation();
-                            // If offline/standby, playing starts radio
-                            if (!isActive) onRadioPlay?.();
-                            else togglePlay();
+                            togglePlay();
                         }}
                         className="w-10 h-10 bg-black/60 hover:bg-[#008751] backdrop-blur-md rounded-full flex items-center justify-center text-white border border-white/20 shadow-xl transition-all active:scale-95"
                     >
-                        {isActive && isPlaying ? <i className="fas fa-pause text-xs"></i> : <i className="fas fa-play text-xs ml-0.5"></i>}
+                        {isPlaying ? <i className="fas fa-pause text-xs"></i> : <i className="fas fa-play text-xs ml-0.5"></i>}
                     </button>
                     <button
                         onClick={(e) => {
@@ -260,40 +261,18 @@ const TVPlayer: React.FC<TVPlayerProps> = ({
                     showControls={true}
                 />
 
-                {/* PLAY BUTTON ON TV - OFFLINE - STARTS RADIO */}
+                {/* PLAY BUTTON ON TV - OFFLINE ACTIVE - NOW TV-ONLY */}
                 <div className="absolute inset-0 z-40 flex items-center justify-center">
                     <button
-                        onClick={() => {
-                            onRadioPlay?.();
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            togglePlay();
                         }}
                         className="w-16 h-16 rounded-full flex items-center justify-center bg-[#008751]/80 hover:bg-[#008751] backdrop-blur-md shadow-2xl transition-all active:scale-90 border-2 border-white/30"
                         style={{ boxShadow: '0 0 30px rgba(0,135,81,0.5)' }}
                     >
-                        <i className="fas fa-play text-white text-2xl ml-1"></i>
+                        <i className={`fas ${isPlaying ? 'fa-pause' : 'fa-play'} text-white text-2xl ml-1`}></i>
                     </button>
-                    {/* PERMANENT CONTROLS - ALWAYS VISIBLE (Z-60) */}
-                    <div className="absolute bottom-4 right-4 z-[60] flex items-center space-x-3 pointer-events-auto">
-                        <button
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                // If offline/standby, playing starts radio
-                                if (!isActive) onRadioPlay?.();
-                                else togglePlay();
-                            }}
-                            className="w-10 h-10 bg-black/60 hover:bg-[#008751] backdrop-blur-md rounded-full flex items-center justify-center text-white border border-white/20 shadow-xl transition-all active:scale-95"
-                        >
-                            {isActive && isPlaying ? <i className="fas fa-pause text-xs"></i> : <i className="fas fa-play text-xs ml-0.5"></i>}
-                        </button>
-                        <button
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                toggleFullscreen();
-                            }}
-                            className="w-10 h-10 bg-black/60 hover:bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center text-white border border-white/20 shadow-xl transition-all active:scale-95"
-                        >
-                            <i className="fas fa-expand text-xs"></i>
-                        </button>
-                    </div>
                 </div>
 
                 {/* Optional minimal offline status overlay */}
@@ -301,65 +280,12 @@ const TVPlayer: React.FC<TVPlayerProps> = ({
                     <div className="flex items-center space-x-2 bg-black/60 backdrop-blur-md px-3 py-1 rounded-full border border-white/10">
                         <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
                         <span className="text-[8px] font-bold text-white/80 uppercase tracking-widest">Signal Offline</span>
-                        {/* PERMANENT CONTROLS - ALWAYS VISIBLE (Z-60) */}
-                        <div className="absolute bottom-4 right-4 z-[60] flex items-center space-x-3 pointer-events-auto">
-                            <button
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    // If offline/standby, playing starts radio
-                                    if (!isActive) onRadioPlay?.();
-                                    else togglePlay();
-                                }}
-                                className="w-10 h-10 bg-black/60 hover:bg-[#008751] backdrop-blur-md rounded-full flex items-center justify-center text-white border border-white/20 shadow-xl transition-all active:scale-95"
-                            >
-                                {isActive && isPlaying ? <i className="fas fa-pause text-xs"></i> : <i className="fas fa-play text-xs ml-0.5"></i>}
-                            </button>
-                            <button
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    toggleFullscreen();
-                                }}
-                                className="w-10 h-10 bg-black/60 hover:bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center text-white border border-white/20 shadow-xl transition-all active:scale-95"
-                            >
-                                <i className="fas fa-expand text-xs"></i>
-                            </button>
-                        </div>
-                    </div>
-                    {/* PERMANENT CONTROLS - ALWAYS VISIBLE (Z-60) */}
-                    <div className="absolute bottom-4 right-4 z-[60] flex items-center space-x-3 pointer-events-auto">
-                        <button
-                            onClick={(e) => {
-                                e.stopPropagation();
                                 // If offline/standby, playing starts radio
-                                if (!isActive) onRadioPlay?.();
-                                else togglePlay();
+                        if (!isActive) onRadioPlay?.();
+                        else togglePlay();
                             }}
-                            className="w-10 h-10 bg-black/60 hover:bg-[#008751] backdrop-blur-md rounded-full flex items-center justify-center text-white border border-white/20 shadow-xl transition-all active:scale-95"
-                        >
-                            {isActive && isPlaying ? <i className="fas fa-pause text-xs"></i> : <i className="fas fa-play text-xs ml-0.5"></i>}
-                        </button>
-                        <button
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                toggleFullscreen();
-                            }}
-                            className="w-10 h-10 bg-black/60 hover:bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center text-white border border-white/20 shadow-xl transition-all active:scale-95"
-                        >
-                            <i className="fas fa-expand text-xs"></i>
-                        </button>
-                    </div>
-                </div>
-                {/* PERMANENT CONTROLS - ALWAYS VISIBLE (Z-60) */}
-                <div className="absolute bottom-4 right-4 z-[60] flex items-center space-x-3 pointer-events-auto">
-                    <button
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            // If offline/standby, playing starts radio
-                            if (!isActive) onRadioPlay?.();
-                            else togglePlay();
-                        }}
                         className="w-10 h-10 bg-black/60 hover:bg-[#008751] backdrop-blur-md rounded-full flex items-center justify-center text-white border border-white/20 shadow-xl transition-all active:scale-95"
-                    >
+                        >
                         {isActive && isPlaying ? <i className="fas fa-pause text-xs"></i> : <i className="fas fa-play text-xs ml-0.5"></i>}
                     </button>
                     <button
@@ -373,75 +299,99 @@ const TVPlayer: React.FC<TVPlayerProps> = ({
                     </button>
                 </div>
             </div>
+                {/* PERMANENT CONTROLS - ALWAYS VISIBLE (Z-60) */ }
+        <div className="absolute bottom-4 right-4 z-[60] flex items-center space-x-3 pointer-events-auto">
+            <button
+                onClick={(e) => {
+                    e.stopPropagation();
+                    // If offline/standby, playing starts radio
+                    if (!isActive) onRadioPlay?.();
+                    else togglePlay();
+                }}
+                className="w-10 h-10 bg-black/60 hover:bg-[#008751] backdrop-blur-md rounded-full flex items-center justify-center text-white border border-white/20 shadow-xl transition-all active:scale-95"
+            >
+                {isActive && isPlaying ? <i className="fas fa-pause text-xs"></i> : <i className="fas fa-play text-xs ml-0.5"></i>}
+            </button>
+            <button
+                onClick={(e) => {
+                    e.stopPropagation();
+                    toggleFullscreen();
+                }}
+                className="w-10 h-10 bg-black/60 hover:bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center text-white border border-white/20 shadow-xl transition-all active:scale-95"
+            >
+                <i className="fas fa-expand text-xs"></i>
+            </button>
+        </div>
+            </div >
         );
     }
 
-    return (
-        <div ref={containerRef} className="relative aspect-video bg-black overflow-hidden group select-none shadow-2xl">
-            {/* STRICT OVERFLOW CONTROL */}
-            <video
-                ref={videoRef}
-                key={currentTrack.url}
-                src={currentTrack.url}
-                className="w-full h-full object-cover pointer-events-none"
-                autoPlay={false}
-                muted={isMuted}
-                playsInline
-                onEnded={handleEnded}
+return (
+    <div ref={containerRef} className="relative aspect-video bg-black overflow-hidden group select-none shadow-2xl">
+        {/* STRICT OVERFLOW CONTROL */}
+        <video
+            ref={videoRef}
+            key={currentTrack.url}
+            src={currentTrack.url}
+            className="w-full h-full object-cover pointer-events-none"
+            autoPlay={false}
+            muted={isMuted}
+            playsInline
+            onEnded={handleEnded}
+        />
+
+
+        {/* Stinger Overlay (ON AIR MODE: Sequence, No Controls, Controlled Mute) */}
+        {showStinger && (
+            <TVStinger
+                onComplete={handleStingerComplete}
+                variant="sequence"
+                isMuted={isMuted}
+                showControls={false}
             />
+        )}
 
+        {/* Overlays (ON AIR MODE: No Mute Controls as requested) */}
+        <TVOverlay
+            isPlaying={isPlaying}
+            onTogglePlay={togglePlay}
+            onToggleFullscreen={toggleFullscreen}
+            channelName="NDRTV"
+            news={news}
+            adminMessages={adminMessages}
+            isVisible={showControls}
+        />
 
-            {/* Stinger Overlay (ON AIR MODE: Sequence, No Controls, Controlled Mute) */}
-            {showStinger && (
-                <TVStinger
-                    onComplete={handleStingerComplete}
-                    variant="sequence"
-                    isMuted={isMuted}
-                    showControls={false}
-                />
-            )}
+        {/* Tap surface to show controls */}
+        <div
+            className="absolute inset-0 z-30 cursor-pointer"
+            onClick={resetHideTimer}
+            onMouseMove={resetHideTimer}
+        />
 
-            {/* Overlays (ON AIR MODE: No Mute Controls as requested) */}
-            <TVOverlay
-                isPlaying={isPlaying}
-                onTogglePlay={togglePlay}
-                onToggleFullscreen={toggleFullscreen}
-                channelName="NDRTV"
-                news={news}
-                adminMessages={adminMessages}
-                isVisible={showControls}
-            />
-
-            {/* Tap surface to show controls */}
-            <div
-                className="absolute inset-0 z-30 cursor-pointer"
-                onClick={resetHideTimer}
-                onMouseMove={resetHideTimer}
-            />
-
-            {/* PERMANENT CONTROLS - ALWAYS VISIBLE (Z-60) */}
-            <div className="absolute bottom-4 right-4 z-[60] flex items-center space-x-3 pointer-events-auto">
-                <button
-                    onClick={(e) => {
-                        e.stopPropagation();
-                        togglePlay();
-                    }}
-                    className="w-10 h-10 bg-black/60 hover:bg-[#008751] backdrop-blur-md rounded-full flex items-center justify-center text-white border border-white/20 shadow-xl transition-all active:scale-95"
-                >
-                    {isPlaying ? <i className="fas fa-pause text-xs"></i> : <i className="fas fa-play text-xs ml-0.5"></i>}
-                </button>
-                <button
-                    onClick={(e) => {
-                        e.stopPropagation();
-                        toggleFullscreen();
-                    }}
-                    className="w-10 h-10 bg-black/60 hover:bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center text-white border border-white/20 shadow-xl transition-all active:scale-95"
-                >
-                    <i className="fas fa-expand text-xs"></i>
-                </button>
-            </div>
+        {/* PERMANENT CONTROLS - ALWAYS VISIBLE (Z-60) */}
+        <div className="absolute bottom-4 right-4 z-[60] flex items-center space-x-3 pointer-events-auto">
+            <button
+                onClick={(e) => {
+                    e.stopPropagation();
+                    togglePlay();
+                }}
+                className="w-10 h-10 bg-black/60 hover:bg-[#008751] backdrop-blur-md rounded-full flex items-center justify-center text-white border border-white/20 shadow-xl transition-all active:scale-95"
+            >
+                {isPlaying ? <i className="fas fa-pause text-xs"></i> : <i className="fas fa-play text-xs ml-0.5"></i>}
+            </button>
+            <button
+                onClick={(e) => {
+                    e.stopPropagation();
+                    toggleFullscreen();
+                }}
+                className="w-10 h-10 bg-black/60 hover:bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center text-white border border-white/20 shadow-xl transition-all active:scale-95"
+            >
+                <i className="fas fa-expand text-xs"></i>
+            </button>
         </div>
-    );
+    </div>
+);
 };
 
 export default TVPlayer;
