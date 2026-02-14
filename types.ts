@@ -20,6 +20,7 @@ export interface MediaFile {
   url: string; // This will hold the Object URL in-memory
   file?: File | Blob; // The persistent binary data
   type: 'audio' | 'video' | 'image';
+  category?: string; // e.g., 'adverts', 'music', 'stinger'
   timestamp: number;
   likes?: number;
 }

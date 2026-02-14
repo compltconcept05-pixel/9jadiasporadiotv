@@ -23,10 +23,10 @@ const TVOverlay: React.FC<TVOverlayProps> = ({
 }) => {
     return (
         <div className="absolute inset-0 z-40 pointer-events-none group select-none">
-            {/* 1. TOP LEFT: STATION BUG (Reduced Size & Tighter Position) */}
+            {/* 1. TOP LEFT: STATION BUG (Animated & 20% Bigger) */}
             <div className={`absolute top-2 left-2 animate-tv-pop z-20 transition-opacity duration-500 ${isVisible ? 'opacity-100' : 'opacity-0'}`}>
-                <div className="flex items-center bg-black/40 backdrop-blur-sm px-1.5 py-0.5 border border-white/10 shadow-lg">
-                    <span className="text-[9px] font-black tracking-tighter drop-shadow-md flex italic">
+                <div className="flex items-center bg-black/40 backdrop-blur-sm px-2 py-1 border border-white/10 shadow-lg scale-125 origin-left">
+                    <span className="text-[11px] font-black tracking-tighter drop-shadow-md flex italic animate-logo-rotate">
                         <span className="text-[#008751]">ND</span>
                         <span className="text-white">R</span>
                         <span className="text-[#008751]">TV</span>
@@ -110,13 +110,20 @@ const TVOverlay: React.FC<TVOverlayProps> = ({
             {/* Marquee Animation */}
             <style dangerouslySetInnerHTML={{
                 __html: `
-                @keyframes tv-marquee { 
+                 @keyframes tv-marquee { 
                     0% { transform: translateX(0); } 
                     100% { transform: translateX(-50%); } 
+                }
+                @keyframes rotate-360 {
+                    from { transform: rotate(0deg); }
+                    to { transform: rotate(360deg); }
                 }
                 .animate-tv-marquee { 
                     display: inline-flex; 
                     animation: tv-marquee 40s linear infinite; 
+                }
+                .animate-logo-rotate {
+                    animation: rotate-360 8s linear infinite;
                 }
             `}} />
         </div>

@@ -85,6 +85,7 @@ const AdminView: React.FC<AdminViewProps> = ({
   const [newItem, setNewItem] = useState({ title: '', content: '', category: 'Manual' });
   const [selectedJingleUrl, setSelectedJingleUrl] = useState<string>('');
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const folderInputRef = useRef<HTMLSelectElement>(null);
 
   // Auto-sync manualText when prop changes
   React.useEffect(() => {
@@ -106,7 +107,10 @@ const AdminView: React.FC<AdminViewProps> = ({
         if (file.type.startsWith('video')) type = 'video';
         else if (file.type.startsWith('image')) type = 'image';
 
-        const folder = type === 'audio' ? 'music' : type === 'video' ? 'videos' : 'images';
+        // Detect if we are uploading to the Adverts folder
+        const category = activeTab === 'media' && mediaSubTab === 'video' && folderInputRef.current?.value === 'adverts' ? 'adverts' : undefined;
+
+        const folder = category === 'adverts' ? 'adverts' : (type === 'audio' ? 'music' : type === 'video' ? 'videos' : 'images');
         setInternalStatus(`Uploading ${file.name}...`);
 
         console.log(`📤 Uploading file: ${file.name} to folder: ${folder}`);
@@ -124,6 +128,7 @@ const AdminView: React.FC<AdminViewProps> = ({
           name: file.name,
           url: publicUrl,
           type: type,
+          category: category,
           timestamp: Date.now(),
           likes: 0
         };
@@ -595,6 +600,20 @@ const AdminView: React.FC<AdminViewProps> = ({
                 Videos
               </button>
             </div>
+
+            {/* Folder Selection for Upload */}
+            {mediaSubTab === 'video' && (
+              <div className="mb-3 bg-green-50 p-2 rounded-lg border border-green-100 flex items-center justify-between">
+                <span className="text-[7px] font-black uppercase text-green-800">Target Folder:</span>
+                <select
+                  ref={folderInputRef}
+                  className="text-[7px] font-bold p-1 bg-white border border-green-200 rounded uppercase outline-none focus:ring-1 focus:ring-green-500"
+                >
+                  <option value="main">🎬 Main Library</option>
+                  <option value="adverts">📺 Adverts</option>
+                </select>
+              </div>
+            )}
 
             <div className="grid grid-cols-2 gap-2 mb-3">
               <div>

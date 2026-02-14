@@ -67,10 +67,56 @@ const TVPlayer: React.FC<TVPlayerProps> = ({
         };
     }, [isPlaying]);
 
+    const [lastAdvertTimestamp, setLastAdvertTimestamp] = useState(Date.now());
+    const [lastStingerTimestamp, setLastStingerTimestamp] = useState(Date.now());
+    const [isAdvertPlaying, setIsAdvertPlaying] = useState(false);
+    const [originalTrackIndex, setOriginalTrackIndex] = useState(0);
+
     // 1. Sync Play State to Parent
     useEffect(() => {
         onPlayStateChange?.(isPlaying);
     }, [isPlaying, onPlayStateChange]);
+
+    // TIMER LOGIC: Adverts (10m) and Stingers (15m)
+    useEffect(() => {
+        if (!isActive || !isPlaying || isNewsPlaying || !isAdmin) return;
+
+        const interval = setInterval(() => {
+            const now = Date.now();
+
+            // 1. ADVERT TIMER (10 minutes = 600,000ms)
+            if (!isAdvertPlaying && (now - lastAdvertTimestamp >= 600000)) {
+                const adverts = allVideos.filter(v => v.category === 'adverts');
+                if (adverts.length > 0) {
+                    console.log("📺 [TVPlayer] Triggering Advert Rotation...");
+                    const randomAd = adverts[Math.floor(Math.random() * adverts.length)];
+                    const adIndex = allVideos.findIndex(v => v.id === randomAd.id);
+                    if (adIndex !== -1) {
+                        setOriginalTrackIndex(currentIndex);
+                        setCurrentIndex(adIndex);
+                        setIsAdvertPlaying(true);
+                        setLastAdvertTimestamp(now);
+                        // No stinger for ads, just cut to it
+                        if (videoRef.current) {
+                            videoRef.current.currentTime = 0;
+                        }
+                    }
+                } else {
+                    // Reset timestamp even if no ads to avoid constant checking
+                    setLastAdvertTimestamp(now);
+                }
+            }
+
+            // 2. STINGER TIMER (15 minutes = 900,000ms)
+            if (now - lastStingerTimestamp >= 900000) {
+                console.log("🎬 [TVPlayer] Triggering Scheduled Stinger...");
+                setShowStinger(true);
+                setLastStingerTimestamp(now);
+            }
+        }, 5000); // Check every 5s
+
+        return () => clearInterval(interval);
+    }, [isActive, isPlaying, isNewsPlaying, isAdmin, lastAdvertTimestamp, lastStingerTimestamp, isAdvertPlaying, allVideos, currentIndex]);
 
     // 2. Sync with Admin Broadcast & Active State (Memory Erase & Start Logic)
     useEffect(() => {
@@ -108,13 +154,6 @@ const TVPlayer: React.FC<TVPlayerProps> = ({
     }, [isPlaying, currentIndex, isNewsPlaying, isActive, showStinger]);
 
     // 4. Endless Loop & Stinger Transition Logic
-    const handleEnded = () => {
-        if (allVideos.length > 0) {
-            // Video ended -> Show Stinger -> (Then Stinger onComplete triggers next video)
-            setShowStinger(true);
-        }
-    };
-
     const handleStingerComplete = () => {
         setShowStinger(false);
         // Advance to next video
@@ -125,6 +164,19 @@ const TVPlayer: React.FC<TVPlayerProps> = ({
         // ADMIN SYNC: Signal all listeners to advance
         if (isAdmin && onVideoAdvance) {
             onVideoAdvance(nextIndex);
+        }
+    };
+
+    const handleEnded = () => {
+        if (isAdvertPlaying) {
+            console.log("📺 [TVPlayer] Advert completed, returning to main sequence...");
+            setCurrentIndex(originalTrackIndex);
+            setIsAdvertPlaying(false);
+            // Show stinger when returning to main sequence for professional feel
+            setShowStinger(true);
+        } else if (allVideos.length > 0) {
+            // Video ended -> Show Stinger -> (Then Stinger onComplete triggers next video)
+            setShowStinger(true);
         }
     };
 
