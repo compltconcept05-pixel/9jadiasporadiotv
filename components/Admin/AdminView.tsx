@@ -274,6 +274,14 @@ const AdminView: React.FC<AdminViewProps> = ({
                 >
                   Hard Reset Sync
                 </button>
+
+                <button
+                  onClick={() => window.location.reload()}
+                  className="px-4 py-3 bg-blue-600 text-white rounded-lg shadow-sm border border-blue-500 hover:bg-blue-700 transition-colors text-[8px] font-black uppercase flex items-center gap-1"
+                  title="Force App Refresh"
+                >
+                  <i className="fas fa-sync-alt animate-spin-hover"></i> Update
+                </button>
               </div>
 
               {/* LIBRARY STATS */}
