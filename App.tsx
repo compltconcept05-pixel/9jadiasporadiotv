@@ -155,6 +155,17 @@ const App: React.FC = () => {
     }
   }, [activeTrackId, activeTrackUrl]);
 
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  useEffect(() => {
+    if (role === UserRole.ADMIN) {
+      console.log("👔 [App] Admin logged in, refreshing media library...");
+      fetchData();
+    }
+  }, [role, fetchData]);
+
   // --- SUPABASE REAL-TIME SYNC ---
   useEffect(() => {
     if (!supabase) return;
@@ -573,9 +584,9 @@ const App: React.FC = () => {
           }}
           activeTrackUrl={activeTrackUrl}
           currentTrackName={currentTrackName}
-          onTrackEnded={role === UserRole.ADMIN ? handlePlayNext : undefined}
+          onTrackEnded={handlePlayNext}
           isDucking={isDucking}
-          forcePlaying={role === UserRole.ADMIN ? isPlaying : listenerHasPlayed}
+          forcePlaying={role === UserRole.ADMIN ? isPlaying : (isPlayingState && listenerHasPlayed)}
           isAdmin={role === UserRole.ADMIN}
           showPlayButton={role !== UserRole.ADMIN}
         />
@@ -624,7 +635,8 @@ const App: React.FC = () => {
               setActiveTrackId(t.id);
               setActiveTrackUrl(t.url);
               setCurrentTrackName(cleanTrackName(t.name));
-              setIsPlaying(true);
+              setIsPlayingState(true);
+              setListenerHasPlayed(true);
               setIsTvActive(false);
             }}
             onPlayVideo={handlePlayVideo}

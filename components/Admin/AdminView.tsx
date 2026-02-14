@@ -714,6 +714,25 @@ const AdminView: React.FC<AdminViewProps> = ({
                     >
                       <i className="fas fa-play text-[8px]"></i>
                     </button>
+                    <button
+                      onClick={() => {
+                        const link = document.createElement('a');
+                        link.href = file.url;
+                        link.download = file.name;
+                        // For cross-origin/blob URLs, sometimes download attribute isn't enough
+                        // But since we want "as it use to do", this is the standard way.
+                        // Open in new tab if it's a cloud URL to trigger browser download
+                        if (file.url.startsWith('http')) {
+                          window.open(file.url, '_blank');
+                        } else {
+                          link.click();
+                        }
+                      }}
+                      className="w-6 h-6 rounded-full bg-blue-50 text-blue-600 hover:bg-blue-100 flex items-center justify-center transition-colors"
+                      title="Download"
+                    >
+                      <i className="fas fa-download text-[8px]"></i>
+                    </button>
                     {onDeleteMedia && (
                       <button
                         onClick={async () => {
