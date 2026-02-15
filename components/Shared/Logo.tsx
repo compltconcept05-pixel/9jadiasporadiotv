@@ -25,7 +25,7 @@ const Logo: React.FC<LogoProps> = ({
 
   return (
     <div
-      className={`flex flex-col items-center w-64 h-64 mx-auto overflow-hidden rounded-[40px] shadow-2xl bg-white relative transition-all duration-500 ${isJingle ? 'ring-2 ring-amber-400 shadow-[0_0_15px_rgba(251,191,36,0.3)] scale-105' : ''} ${status === 'ERROR' ? 'ring-2 ring-red-500' : ''}`}
+      className={`flex flex-col items-center w-[300px] h-64 mx-auto overflow-hidden rounded-[40px] shadow-2xl bg-white relative transition-all duration-500 ${isJingle ? 'ring-2 ring-amber-400 shadow-[0_0_15px_rgba(251,191,36,0.3)] scale-105' : ''} ${status === 'ERROR' ? 'ring-2 ring-red-500' : ''}`}
       style={{ transform: `scale(${scale})` }}
     >
       {/* Background: Nigerian Flag Stripes */}
@@ -39,7 +39,7 @@ const Logo: React.FC<LogoProps> = ({
       <div className={`absolute top-0 right-0 w-48 h-48 bg-yellow-200/10 blur-[80px] rounded-full transition-opacity duration-1000 ${isJingle ? 'opacity-100 animate-pulse' : 'opacity-30'}`}></div>
 
       {/* Main Content Area */}
-      <div className="relative z-10 flex flex-col items-center justify-center h-full w-full px-2">
+      <div className="relative z-10 flex flex-col items-center justify-center h-full w-full px-6">
 
         <div className="flex items-center justify-center space-x-2 w-full">
           {/* LEFT SIDE VISUALIZER WALL */}
