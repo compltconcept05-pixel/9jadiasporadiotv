@@ -104,6 +104,11 @@ const RadioPlayer: React.FC<RadioPlayerProps> = ({
       setIsPlaying(true);
       onStateChange(true);
       setErrorMessage('');
+
+      // Auto-resume AudioContext on play
+      if (audioContextRef.current && audioContextRef.current.state === 'suspended') {
+        audioContextRef.current.resume().catch(console.warn);
+      }
     };
 
     const handlePause = () => {
@@ -208,12 +213,12 @@ const RadioPlayer: React.FC<RadioPlayerProps> = ({
 
     setupSource(activeTrackUrl);
 
-    // --- WAKE LOCK (ADMIN ONLY) ---
+    // --- WAKE LOCK (UPGRADED FOR ALL USERS) ---
     const requestWakeLock = async () => {
-      if (isAdmin && 'wakeLock' in navigator) {
+      if ('wakeLock' in navigator) {
         try {
           wakeLockRef.current = await (navigator as any).wakeLock.request('screen');
-          console.log("🛡️ [RadioPlayer] WakeLock Active - Screen will stay ON.");
+          console.log("🛡️ [RadioPlayer] WakeLock Active - Screen/Audio process protected.");
         } catch (err) {
           console.warn("⚠️ WakeLock failed:", err);
         }

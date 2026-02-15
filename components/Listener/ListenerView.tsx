@@ -252,7 +252,33 @@ const ListenerView: React.FC<ListenerViewProps> = ({
       {/* 7. MUSIC GALLERY REMOVED AS REQUESTED BY USER */}
 
       {/* FOOTER - Spec-aligned single line at the absolute bottom */}
-      <footer className="w-full text-center pb-4 pt-10 mt-auto">
+      <footer className="w-full text-center pb-4 pt-10 mt-auto flex flex-col items-center space-y-4">
+        {/* DOWNLOAD SECTION */}
+        <div className="flex flex-col items-center space-y-2">
+          <span className="text-[8px] font-black uppercase text-green-800/40 tracking-widest">Get the Official App</span>
+          <div className="flex items-center space-x-3">
+            <button
+              onClick={() => window.open('https://github.com/thompsonway03-netizen/diasporadio.tv/raw/main/diaspora-radio.apk', '_blank')}
+              className="bg-black text-white px-4 py-2 rounded-xl flex items-center space-x-2 shadow-lg active:scale-95 transition-all border border-white/10"
+            >
+              <i className="fab fa-android text-xl text-green-400"></i>
+              <div className="flex flex-col items-start translate-y-[-1px]">
+                <span className="text-[6px] font-black uppercase leading-none opacity-60">Download for</span>
+                <span className="text-[10px] font-black leading-none">Android APK</span>
+              </div>
+            </button>
+            <button
+              className="bg-black text-white px-4 py-2 rounded-xl flex items-center space-x-2 shadow-lg opacity-40 cursor-not-allowed border border-white/10"
+            >
+              <i className="fab fa-apple text-xl text-blue-400"></i>
+              <div className="flex flex-col items-start translate-y-[-1px]">
+                <span className="text-[6px] font-black uppercase leading-none opacity-60">Coming soon to</span>
+                <span className="text-[10px] font-black leading-none">iOS App Store</span>
+              </div>
+            </button>
+          </div>
+        </div>
+
         <div className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-black/5 backdrop-blur-md rounded-full border border-green-900/10 shadow-sm mx-auto">
           <span className="text-[7.5px] font-black uppercase text-green-950/60 tracking-tighter">{APP_NAME}</span>
           <span className="text-green-900/10 scale-y-125 px-0.5">|</span>
