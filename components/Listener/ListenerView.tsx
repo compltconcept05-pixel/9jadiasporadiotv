@@ -139,7 +139,7 @@ const ListenerView: React.FC<ListenerViewProps> = ({
 
       {/* 1. TV SECTION (MOVED TO TOP, MOBILE-FRIENDLY) */}
       <section className={`shrink-0 w-full transition-all duration-500 ${(activeApp === 'tv' || window.innerWidth > 640) ? 'block opacity-100' : 'hidden opacity-0'}`}>
-        <div className="bg-black shadow-2xl w-full aspect-video overflow-hidden">
+        <div className={`bg-black shadow-2xl w-full overflow-hidden transition-all duration-700 ease-[cubic-bezier(0.4,0,0.2,1)] ${isTvPlaying ? 'aspect-video' : 'h-[120px] sm:aspect-video'}`}>
           <TVPlayer
             activeVideo={activeVideo}
             allVideos={allVideos.filter(v => v.type === 'video')}
@@ -304,7 +304,7 @@ const ListenerView: React.FC<ListenerViewProps> = ({
           <span className="text-green-900/10 scale-y-125 px-0.5">|</span>
           <span className="text-[7.5px] text-green-700/60 font-mono tracking-tighter">© 2026</span>
           <span className="text-green-900/10 scale-y-125 px-0.5">|</span>
-          <span className="text-[7.5px] font-bold text-green-800/80 uppercase tracking-tighter">Designed by Obosa Thompson</span>
+          <span className="text-[7.5px] font-bold text-green-800/80 uppercase tracking-tighter">Designed by {DESIGNER_NAME}</span>
         </div>
       </footer>
 

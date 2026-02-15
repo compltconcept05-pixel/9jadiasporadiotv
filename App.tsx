@@ -626,10 +626,6 @@ const App: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-[#f0fff4] flex flex-col font-sans selection:bg-[#008751] selection:text-white">
-      {/* ⚠️ CRITICAL DEPLOYMENT VERIFICATION BANNER ⚠️ */}
-      <div className="bg-yellow-400 text-black text-[11px] font-black text-center py-2 uppercase tracking-widest sticky top-0 z-[9999] shadow-lg border-b-2 border-black/10">
-        🚀 DEPLOYMENT V2.3.7 LIVE - FEB 15 @ 11:35AM 🚀
-      </div>
 
       <NDRTVEngine
         currentLocation={currentLocation}
@@ -687,15 +683,10 @@ const App: React.FC = () => {
         isOnline={supabase}
       />
 
-      {/* ⚠️ CRITICAL DEPLOYMENT VERIFICATION BANNER ⚠️ */}
-      <div className="bg-yellow-400 text-black text-[12px] font-black text-center py-2 uppercase tracking-[0.3em] sticky top-0 z-[9999] shadow-lg border-b-4 border-black/10 animate-pulse">
-        🚀 DEPLOY-FORCE-VERIFY V2.3.7 - FEB 15 @ 11:40AM 🚀
-      </div>
 
       <header className="p-4 sticky top-4 z-40 bg-white/90 backdrop-blur-md flex justify-between items-center border-b border-green-50 shadow-sm">
         <div className="flex flex-col">
           <h1 className="text-[10px] font-black uppercase leading-none text-green-950 whitespace-nowrap tracking-tight">{APP_NAME}</h1>
-          <span className="text-[6px] font-black text-green-700/50 uppercase tracking-[0.3em] mt-0.5">V2.3.7-LIVE</span>
         </div>
         <div className="flex items-center space-x-2">
           {role === UserRole.LISTENER && (
