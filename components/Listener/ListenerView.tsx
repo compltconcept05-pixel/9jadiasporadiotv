@@ -64,6 +64,7 @@ const ListenerView: React.FC<ListenerViewProps> = ({
     if (!muted) {
       console.log("🔊 [ListenerView] TV Unmuted - Pausing Radio for exclusivity");
       onRadioToggle(false);
+      onTvToggle(true); // Ensure App knows TV is active to block radio auto-advance/auto-play
     }
   };
 
@@ -73,6 +74,7 @@ const ListenerView: React.FC<ListenerViewProps> = ({
     if (playing && !isTvMuted) {
       console.log("📺 [ListenerView] TV Playing & Unmuted - Pausing Radio for exclusivity");
       onRadioToggle(false);
+      onTvToggle(true); // Ensure App knows TV is active
     }
   };
 
