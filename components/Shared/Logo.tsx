@@ -64,22 +64,6 @@ const Logo: React.FC<LogoProps> = ({
               </div>
             </div>
 
-            {/* Fresh Play Button - Only show in listener mode and NOT when TV is active */}
-            {showPlayButton && onTogglePlayback && (
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onTogglePlayback();
-                }}
-                className={`mt-4 w-14 h-14 rounded-full flex items-center justify-center transition-all duration-300 shadow-lg active:scale-90 bg-[#008751] hover:bg-green-700 ${!showPlayButton ? 'opacity-0 scale-50 pointer-events-none' : 'opacity-100 scale-100'}`}
-              >
-                {isPlaying ? (
-                  <i className="fas fa-pause text-white text-2xl"></i>
-                ) : (
-                  <i className="fas fa-play text-white text-2xl ml-1"></i>
-                )}
-              </button>
-            )}
 
             {/* Gloss Overlay */}
             <div className="absolute top-0 left-0 w-full h-1/2 bg-gradient-to-b from-white/30 to-transparent rounded-t-2xl"></div>

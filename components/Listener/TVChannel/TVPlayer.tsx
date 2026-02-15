@@ -318,7 +318,7 @@ const TVPlayer: React.FC<TVPlayerProps> = ({
     }
 
     return (
-        <div ref={containerRef} className="relative aspect-video bg-black overflow-hidden group select-none shadow-2xl">
+        <div ref={containerRef} className="relative w-full h-full bg-black overflow-hidden group select-none shadow-2xl">
             {/* STRICT OVERFLOW CONTROL */}
             <video
                 ref={videoRef}

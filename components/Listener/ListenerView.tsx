@@ -119,35 +119,35 @@ const ListenerView: React.FC<ListenerViewProps> = ({
   const currentAd = allVideos[adIndex];
 
   return (
-    <div className="flex-grow flex flex-col space-y-4">
-      {/* 2. INVITE FRIENDS */}
-      <div className="flex justify-between items-center bg-white p-3 rounded-2xl border border-green-100 shadow-sm relative overflow-hidden shrink-0">
+    <div className="flex-grow flex flex-col pt-2 pb-8 px-5 text-[#008751] space-y-4">
+      {/* 2. INVITE FRIENDS / LOCATION (MATCHING SCREENSHOT POSITION) */}
+      <div className="flex justify-between items-center bg-white/40 p-3 rounded-2xl border border-green-50 shadow-sm relative overflow-hidden shrink-0 mt-2">
         <div className="flex flex-col z-10">
-          <span className="text-[9px] font-black uppercase tracking-widest text-green-600">{location}</span>
-          <span className="text-[10px] font-mono text-green-900 font-black">{localTime}</span>
+          <span className="text-[8px] font-black uppercase tracking-widest text-green-600/60">{location}</span>
+          <span className="text-[9px] font-mono text-green-900/40 font-black">{localTime}</span>
         </div>
         <button
           onClick={handleShare}
-          className="relative z-10 bg-[#008751] hover:bg-green-700 text-white px-6 py-2 rounded-full text-[10px] font-black uppercase tracking-widest shadow-md active:scale-95 transition-all flex items-center space-x-1"
+          className="relative z-10 bg-[#008751]/80 hover:bg-green-700 text-white px-5 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest shadow-md active:scale-95 transition-all flex items-center space-x-1"
         >
-          <i className="fas fa-paper-plane text-[10px]"></i>
+          <i className="fas fa-paper-plane text-[8px]"></i>
           <span>{shareFeedback || 'Invite Friends'}</span>
         </button>
       </div>
 
       {/* 3. NEWS TICKER */}
-      <section className={`bg-green-50/30 rounded-xl border border-green-100/50 h-10 flex items-center overflow-hidden shrink-0 transition-opacity duration-500 ${isRadioPlaying ? 'opacity-100' : 'opacity-0'}`}>
+      <section className={`bg-green-50/10 rounded-xl border border-green-100/30 h-8 flex items-center overflow-hidden shrink-0 transition-opacity duration-500 ${isRadioPlaying ? 'opacity-100' : 'opacity-0'}`}>
         <div className={`flex whitespace-nowrap items-center ${isRadioPlaying ? 'animate-marquee' : ''}`}>
-          <span className="text-xs font-black text-green-800 uppercase px-12 tracking-widest inline-block">{CHANNEL_INTRO}</span>
+          <span className="text-[10px] font-black text-green-800 uppercase px-12 tracking-widest inline-block">{CHANNEL_INTRO}</span>
           {adminMessages.map((msg, i) => (
-            <span key={`admin-${i}`} className="text-xs text-red-600 font-black uppercase px-12 flex items-center inline-block">
+            <span key={`admin-${i}`} className="text-[10px] text-red-600 font-black uppercase px-12 flex items-center inline-block">
               <i className="fas fa-bullhorn mr-2"></i> {msg.text}
               <span className="ml-12 text-green-200">|</span>
             </span>
           ))}
           {news.map((n, i) => (
-            <span key={`ticker-${i}`} className="text-xs text-green-700 font-bold uppercase px-12 flex items-center inline-block">
-              <span className="w-2 h-2 bg-red-500 rounded-full mr-3 animate-pulse"></span>
+            <span key={`ticker-${i}`} className="text-[10px] text-green-700 font-bold uppercase px-12 flex items-center inline-block">
+              <span className="w-1.5 h-1.5 bg-red-500 rounded-full mr-3 animate-pulse"></span>
               {n.title}
               <span className="ml-12 text-green-200">|</span>
             </span>
@@ -155,10 +155,13 @@ const ListenerView: React.FC<ListenerViewProps> = ({
         </div>
       </section>
 
-      {/* 3.5 TV / SPONSORED HIGHLIGHTS (RESTORED TO ORIGINAL POSITION) */}
-      <section className="shrink-0 w-full mt-4">
-        <h3 className="text-[10px] font-black uppercase text-green-700/60 tracking-widest px-1 mb-2">Sponsored Highlights</h3>
-        <div className={`bg-black shadow-2xl w-full overflow-hidden rounded-2xl transition-all duration-700 ease-[cubic-bezier(0.4,0,0.2,1)] ${isTvPlaying ? 'aspect-video' : 'h-[140px]'}`}>
+      {/* 4. TV / SPONSORED HIGHLIGHTS */}
+      <section className="shrink-0 w-full mt-2 group">
+        <div className="flex items-center space-x-2 px-1 mb-2">
+          <span className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse"></span>
+          <h3 className="text-[9px] font-black uppercase text-green-700/60 tracking-[0.2em]">Sponsored Highlights</h3>
+        </div>
+        <div className={`bg-black shadow-2xl w-full overflow-hidden rounded-3xl border-4 border-white/50 transition-all duration-700 ease-[cubic-bezier(0.4,0,0.2,1)] h-[180px]`}>
           <TVPlayer
             activeVideo={activeVideo}
             allVideos={allVideos.filter(v => v.type === 'video')}
@@ -172,7 +175,6 @@ const ListenerView: React.FC<ListenerViewProps> = ({
               }
             }}
             onRadioPlay={() => {
-              // Start radio audio from TV play button
               onRadioToggle(true);
             }}
             onVideoAdvance={onVideoAdvance}
@@ -183,18 +185,21 @@ const ListenerView: React.FC<ListenerViewProps> = ({
         </div>
       </section>
 
-      {/* 4. ADS - SPACIOUS */}
-      <section className="shrink-0 bg-gray-50 border border-gray-100 rounded-2xl p-4 flex items-center justify-between overflow-hidden shadow-sm">
+      {/* 5. ADS */}
+      <section className="shrink-0 bg-white border border-gray-100 rounded-3xl p-5 flex items-center justify-between overflow-hidden shadow-sm mt-4">
         <div className="flex flex-col">
-          <span className="text-xs font-black text-gray-800 uppercase leading-none">Global Nigeria Fashion</span>
-          <span className="text-[10px] text-gray-400 font-medium mt-1">Authentic styles from Lagos.</span>
+          <span className="text-[10px] font-black text-gray-800 uppercase leading-none tracking-widest">Premium African Fashion</span>
+          <span className="text-[9px] text-gray-400 font-medium mt-1 uppercase italic">Shop the latest styles direct from Lagos</span>
         </div>
-        <button className="bg-blue-600 text-white text-[10px] px-6 py-2.5 rounded-full font-black uppercase shadow-lg">Shop Now</button>
+        <button className="bg-blue-600 text-white text-[9px] px-5 py-2 rounded-full font-black uppercase tracking-widest shadow-lg">Shop Now</button>
       </section>
 
-      {/* 5. GLOBAL FEED */}
-      <section className="flex flex-col space-y-3">
-        <h3 className="text-[10px] font-black uppercase text-green-700/60 tracking-widest px-1">Global Community Feed</h3>
+      {/* 6. GLOBAL FEED */}
+      <section className="flex flex-col space-y-3 mt-4">
+        <div className="flex items-center space-x-2 px-1">
+          <i className="fas fa-globe-africa text-green-700/60 text-[9px]"></i>
+          <h3 className="text-[9px] font-black uppercase text-green-700/60 tracking-widest">Global Community Feed</h3>
+        </div>
         <div className="bg-white/40 border border-green-50 rounded-2xl p-4 shadow-inner flex flex-col">
           {reports.length > 0 ? (
             <div className="space-y-1.5 overflow-y-auto no-scrollbar">

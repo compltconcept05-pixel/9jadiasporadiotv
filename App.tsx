@@ -684,9 +684,10 @@ const App: React.FC = () => {
       />
 
 
-      <header className="p-4 sticky top-4 z-40 bg-white/90 backdrop-blur-md flex justify-between items-center border-b border-green-50 shadow-sm">
+      <header className="px-6 py-4 bg-white/80 backdrop-blur-md flex justify-between items-center border-b border-green-50">
         <div className="flex flex-col">
           <h1 className="text-[10px] font-black uppercase leading-none text-green-950 whitespace-nowrap tracking-tight">{APP_NAME}</h1>
+          <span className="text-[7px] font-bold text-green-700/40 uppercase tracking-widest mt-1">Designed by {DESIGNER_NAME}</span>
         </div>
         <div className="flex items-center space-x-2">
           {role === UserRole.LISTENER && (
