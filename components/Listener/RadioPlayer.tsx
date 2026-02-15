@@ -178,7 +178,14 @@ const RadioPlayer: React.FC<RadioPlayerProps> = ({
     audio.addEventListener('pause', handlePause);
     audio.addEventListener('error', handleError);
     audio.addEventListener('waiting', () => setStatus('LOADING'));
-    audio.addEventListener('playing', handlePlay);
+    audio.addEventListener('playing', () => {
+      handlePlay();
+      // "Last Resorted" sync check when playback actually starts producing sound
+      if (!isAdmin && startTime > 0 && Math.abs(audio.currentTime - startTime) > 2.0) {
+        console.log(`📡 [RadioPlayer] Final Playing Sync: Correcting to ${startTime}s`);
+        audio.currentTime = startTime;
+      }
+    });
     audio.addEventListener('ended', () => onTrackEndedRef.current?.());
     audio.addEventListener('timeupdate', () => {
       setCurrentTime(audio.currentTime);
@@ -186,10 +193,22 @@ const RadioPlayer: React.FC<RadioPlayerProps> = ({
     });
     audio.addEventListener('loadedmetadata', () => {
       setDuration(audio.duration);
-      // Immediate sync for listeners on meta load
+      // Wait for metadata to be fully loaded before seeking
       if (!isAdmin && startTime > 0) {
-        console.log(`📡 [RadioPlayer] Initial Meta Sync: Seeking to ${startTime}s`);
-        audio.currentTime = startTime;
+        console.log(`📡 [RadioPlayer] Initial Meta Sync: (StartTime: ${startTime}s, Status: ${audio.readyState})`);
+        // If readyState is 0 (HAVE_NOTHING), wait for higher state
+        if (audio.readyState >= 1) {
+          audio.currentTime = startTime;
+        } else {
+          const checkReady = setInterval(() => {
+            if (audio.readyState >= 1) {
+              console.log(`📡 [RadioPlayer] Meta Seek Retry: Success!`);
+              audio.currentTime = startTime;
+              clearInterval(checkReady);
+            }
+          }, 100);
+          setTimeout(() => clearInterval(checkReady), 3000); // Guard
+        }
       }
     });
     audio.addEventListener('canplay', () => {

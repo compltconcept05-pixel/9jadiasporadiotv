@@ -641,16 +641,28 @@ const App: React.FC = () => {
     }
   }, [role, supabase]);
 
-  // --- AUDIO EXCLUSIVITY LOGIC GUARD ---
+  // --- TRIPLE-LOCK AUDIO EXCLUSIVITY ENFORCEMENT ---
   useEffect(() => {
-    // If TV audio is active (!isTvMuted) while TV is mounted (isTvActive),
-    // we MUST ensure Radio is silenced for listeners.
-    if (isTvActive && !isTvMuted && listenerHasPlayed) {
-      console.log("🛡️ [App] Logic Guard: TV Audio is ACTIVE. Force-pausing Radio.");
-      setListenerHasPlayed(false);
-      if (role === UserRole.ADMIN) setIsPlaying(false);
+    // 1. If TV is active and unmuted, Radio MUST be stopped
+    if (isTvActive && !isTvMuted) {
+      if (listenerHasPlayed) {
+        console.log("🛡️ [App] Exclusivity Guard: TV Audio ACTIVE. Stopping Radio.");
+        setListenerHasPlayed(false);
+      }
+      if (role === UserRole.ADMIN && isPlaying) {
+        console.log("🛡️ [App] Exclusivity Guard (Admin): TV Audio ACTIVE. Stopping Radio.");
+        setIsPlaying(false);
+      }
     }
-  }, [isTvActive, isTvMuted, listenerHasPlayed, role]);
+
+    // 2. If Radio is manually started, TV MUST be muted (or hidden)
+    if (listenerHasPlayed || (role === UserRole.ADMIN && isPlaying)) {
+      if (isTvActive && !isTvMuted) {
+        console.log("🛡️ [App] Exclusivity Guard: Radio ACTIVE. Muting TV.");
+        setIsTvMuted(true);
+      }
+    }
+  }, [isTvActive, isTvMuted, listenerHasPlayed, isPlaying, role]);
 
   return (
     <div className="min-h-[100dvh] bg-[#f0fff4] text-[#008751] flex flex-col max-w-md mx-auto relative shadow-2xl border-x border-green-100/30 pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]">
