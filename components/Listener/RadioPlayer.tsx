@@ -17,6 +17,8 @@ interface RadioPlayerProps {
   isAdmin?: boolean;
   isDucking?: boolean;
   showPlayButton?: boolean;
+  isTvActive?: boolean;
+  isTvMuted?: boolean;
 }
 
 const RadioPlayer: React.FC<RadioPlayerProps> = ({
@@ -30,7 +32,9 @@ const RadioPlayer: React.FC<RadioPlayerProps> = ({
   activeTrackId,
   isAdmin = false,
   isDucking = false,
-  showPlayButton = true
+  showPlayButton = true,
+  isTvActive = false,
+  isTvMuted = false
 }) => {
   const [isPlaying, setIsPlaying] = useState(forcePlaying);
   const [volume, setVolume] = useState(1.0);
@@ -416,20 +420,19 @@ const RadioPlayer: React.FC<RadioPlayerProps> = ({
 
   useEffect(() => {
     if (audioRef.current) {
-      // FIX: Don't pause music during ducking, just let the volume attenuation handle it
-      // This allows the "Background Bed" effect the user wants
       const shouldBePlaying = forcePlaying;
 
-      // Validate audio source before attempting to play
-      if (shouldBePlaying && audioRef.current.paused) {
-        // Check if we have a valid source
+      if (!shouldBePlaying && !audioRef.current.paused) {
+        console.log('📡 [RadioPlayer] EXCLUSIVITY LOCK: Pausing Radio audio (TV or Manual Pause active).');
+        audioRef.current.pause();
+      } else if (shouldBePlaying && audioRef.current.paused) {
+        // Validate audio source before attempting to play
         if (!audioRef.current.src || audioRef.current.src === '' || audioRef.current.src === window.location.href) {
           console.warn('📡 [RadioPlayer] No valid audio source, skipping auto-play');
           return;
         }
 
-        console.log('📡 [RadioPlayer] Attempting Playback of:', audioRef.current.src);
-
+        console.log('📡 [RadioPlayer] EXCLUSIVITY UNLOCKED: Playing Radio audio.');
         // Only init audio context for local files
         if (!isStreamRef.current) {
           initAudioContext();
@@ -437,18 +440,14 @@ const RadioPlayer: React.FC<RadioPlayerProps> = ({
 
         audioRef.current.play().catch((err) => {
           console.error("❌ [RadioPlayer] Play failed:", err.message, "URL:", audioRef.current?.src);
-          // If it's a "no supported sources" or 403, we keep the previous status or set error
           if (err.name !== 'AbortError') {
             setStatus('ERROR');
             setErrorMessage('Playback Error: Check Cloud Connection');
           }
         });
-      } else if (!shouldBePlaying && !audioRef.current.paused) {
-        console.log('📡 [RadioPlayer] Pausing playback.');
-        audioRef.current.pause();
       }
     }
-  }, [forcePlaying, isDucking]); // Keeping isDucking in deps to respond to changes if needed, but logic currently ignores it for pausing
+  }, [forcePlaying, isDucking]);
 
   useEffect(() => {
     // Apply volume settings - FULL SILENCE during News as requested

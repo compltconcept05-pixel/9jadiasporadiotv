@@ -18,6 +18,8 @@ interface ListenerViewProps {
   isRadioPlaying: boolean;
   onRadioToggle: (play: boolean) => void;
   onTvToggle: (active: boolean) => void;
+  isTvMuted: boolean;
+  onTvMuteChange: (muted: boolean) => void;
   onVideoAdvance?: (index: number) => void;
   isAdmin?: boolean;
   onReport?: (report: ListenerReport) => Promise<void>;
@@ -37,6 +39,8 @@ const ListenerView: React.FC<ListenerViewProps> = ({
   isRadioPlaying,
   onRadioToggle,
   onTvToggle,
+  isTvMuted,
+  onTvMuteChange,
   onVideoAdvance,
   isAdmin = false,
   onReport
@@ -48,18 +52,9 @@ const ListenerView: React.FC<ListenerViewProps> = ({
   const [adIndex, setAdIndex] = useState(0);
   const [shareFeedback, setShareFeedback] = useState('');
   const [isTvPlaying, setIsTvPlaying] = useState(false);
-  const [isTvMuted, setIsTvMuted] = useState(false);
-
-  // COORDINATION: Radio plays -> TV mutes
-  useEffect(() => {
-    if (isRadioPlaying) {
-      setIsTvMuted(true);
-    }
-  }, [isRadioPlaying]);
-
   // COORDINATION: TV audio starts -> Radio pauses
   const handleTvMuteChange = (muted: boolean) => {
-    setIsTvMuted(muted);
+    onTvMuteChange(muted);
     // If we are unmuting TV audio AND TV is actually playing OR TV is starting, pause radio
     if (!muted) {
       console.log("🔊 [ListenerView] TV Unmuted - Pausing Radio for exclusivity");

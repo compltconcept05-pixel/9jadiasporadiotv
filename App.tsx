@@ -41,6 +41,7 @@ const App: React.FC = () => {
   const [hasInteracted, setHasInteracted] = useState(false);
   const [audioStatus, setAudioStatus] = useState<string>('Ready');
   const [isTvActive, setIsTvActive] = useState(false); // TV Active State
+  const [isTvMuted, setIsTvMuted] = useState(false); // TV Audio Exclusivity State
   const [lastError, setLastError] = useState<string>('');
   const [isDuckingNDR, setIsDuckingNDR] = useState(false);
   const [isDuckingThompson, setIsDuckingThompson] = useState(false);
@@ -563,7 +564,7 @@ const App: React.FC = () => {
     handleStopNews(); // Stop any pending news on toggle
 
     if (play) {
-      setIsTvActive(false);
+      setIsTvMuted(true); // Priority: Radio on -> TV Mutes
       handlePlayAll(true); // Pass force=true to bypass batching block
     } else {
       setIsPlaying(false);
@@ -580,7 +581,8 @@ const App: React.FC = () => {
 
   const handleVideoToggle = useCallback((active: boolean) => {
     setIsTvActive(active);
-    if (active) {
+    if (active && !isTvMuted) {
+      // If TV becomes active and is unmuted, stop radio
       setIsPlaying(false);
       setListenerHasPlayed(false);
     }
@@ -588,11 +590,11 @@ const App: React.FC = () => {
     if (role === UserRole.ADMIN && supabase) {
       dbService.updateStationState({
         is_tv_active: active,
-        is_playing: active ? false : isPlaying,
+        is_playing: (active && !isTvMuted) ? false : isPlaying,
         timestamp: Date.now()
       }).catch(err => console.error("❌ Video Toggle Sync error", err));
     }
-  }, [role, isPlaying, supabase]);
+  }, [role, isPlaying, supabase, isTvMuted]);
 
   const handlePlayVideo = useCallback((track: MediaFile | number) => {
     handleStopNews(); // Ensure news stops
@@ -623,6 +625,17 @@ const App: React.FC = () => {
     }
     handleLogAdd(`TV Feed: Now Broadcasting ${video.name}`);
   }, [handleRadioToggle, handleLogAdd, handleStopNews, role]);
+
+  // --- AUDIO EXCLUSIVITY LOGIC GUARD ---
+  useEffect(() => {
+    // If TV audio is active (!isTvMuted) while TV is mounted (isTvActive),
+    // we MUST ensure Radio is silenced for listeners.
+    if (isTvActive && !isTvMuted && listenerHasPlayed) {
+      console.log("🛡️ [App] Logic Guard: TV Audio is ACTIVE. Force-pausing Radio.");
+      setListenerHasPlayed(false);
+      if (role === UserRole.ADMIN) setIsPlaying(false);
+    }
+  }, [isTvActive, isTvMuted, listenerHasPlayed, role]);
 
   return (
     <div className="min-h-[100dvh] bg-[#f0fff4] text-[#008751] flex flex-col max-w-md mx-auto relative shadow-2xl border-x border-green-100/30 pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]">
@@ -732,9 +745,6 @@ const App: React.FC = () => {
               setListenerHasPlayed(playing);
               if (playing) setShowJoinPrompt(false);
             }
-            if (playing) {
-              setIsTvActive(false); // Mutual Exclusivity
-            }
           }}
           onTimeUpdate={(time) => {
             if (role === UserRole.ADMIN) setRadioCurrentTime(time);
@@ -745,7 +755,7 @@ const App: React.FC = () => {
           onTrackEnded={handlePlayNext}
           activeTrackId={activeTrackId}
           isDucking={isDucking}
-          forcePlaying={role === UserRole.ADMIN ? isPlaying : (isPlayingState && listenerHasPlayed && !isTvActive)}
+          forcePlaying={role === UserRole.ADMIN ? isPlaying : (isPlayingState && listenerHasPlayed && (!isTvActive || isTvMuted))}
           isAdmin={role === UserRole.ADMIN}
           showPlayButton={role !== UserRole.ADMIN}
         />
@@ -804,6 +814,8 @@ const App: React.FC = () => {
             isRadioPlaying={listenerHasPlayed}
             onRadioToggle={handleRadioToggle}
             onTvToggle={handleVideoToggle}
+            isTvMuted={isTvMuted}
+            onTvMuteChange={setIsTvMuted}
             isAdmin={role === UserRole.ADMIN}
             onReport={async (report) => {
               await dbService.addReportCloud(report);
