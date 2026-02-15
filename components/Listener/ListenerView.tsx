@@ -48,6 +48,7 @@ const ListenerView: React.FC<ListenerViewProps> = ({
   const [adIndex, setAdIndex] = useState(0);
   const [shareFeedback, setShareFeedback] = useState('');
   const [isTvPlaying, setIsTvPlaying] = useState(false);
+  const [activeApp, setActiveApp] = useState<'radio' | 'tv'>('radio'); // Mobile App Switcher State
 
   const timerRef = useRef<number | null>(null);
 
@@ -119,9 +120,25 @@ const ListenerView: React.FC<ListenerViewProps> = ({
   const currentAd = allVideos[adIndex];
 
   return (
-    <div className="flex-grow flex flex-col space-y-6 pt-2 pb-8 px-4 text-[#008751]">
+    <div className="flex-grow flex flex-col space-y-4 pt-2 pb-8 px-4 text-[#008751]">
+      {/* MOBILE APP SWITCHER */}
+      <nav className="flex items-center justify-center p-1 bg-white/60 backdrop-blur-md rounded-2xl border border-green-100 shadow-sm sm:hidden shrink-0">
+        <button
+          onClick={() => setActiveApp('radio')}
+          className={`flex-1 py-3 px-4 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeApp === 'radio' ? 'bg-[#008751] text-white shadow-lg scale-105' : 'text-green-800 hover:bg-green-50'}`}
+        >
+          <i className="fas fa-radio mr-2"></i> Radio App
+        </button>
+        <button
+          onClick={() => setActiveApp('tv')}
+          className={`flex-1 py-3 px-4 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeApp === 'tv' ? 'bg-[#008751] text-white shadow-lg scale-105' : 'text-green-800 hover:bg-green-50'}`}
+        >
+          <i className="fas fa-tv mr-2"></i> TV App
+        </button>
+      </nav>
+
       {/* 1. TV SECTION (MOVED TO TOP, MOBILE-FRIENDLY) */}
-      <section className="shrink-0 w-full">
+      <section className={`shrink-0 w-full transition-all duration-500 ${(activeApp === 'tv' || window.innerWidth > 640) ? 'block opacity-100' : 'hidden opacity-0'}`}>
         <div className="bg-black shadow-2xl w-full aspect-video overflow-hidden">
           <TVPlayer
             activeVideo={activeVideo}
@@ -147,8 +164,8 @@ const ListenerView: React.FC<ListenerViewProps> = ({
         </div>
       </section>
 
-      {/* 2. INVITE FRIENDS (MOVED BELOW TV) */}
-      <div className="flex justify-between items-center bg-white p-3 rounded-2xl border border-green-100 shadow-sm relative overflow-hidden shrink-0">
+      {/* 2. INVITE FRIENDS (RADIO ONLY) */}
+      <div className={`flex justify-between items-center bg-white p-3 rounded-2xl border border-green-100 shadow-sm relative overflow-hidden shrink-0 ${activeApp === 'radio' ? 'block' : 'hidden md:flex'}`}>
         <div className="flex flex-col z-10">
           <span className="text-[9px] font-black uppercase tracking-widest text-green-600">{location}</span>
           <span className="text-[10px] font-mono text-green-900 font-black">{localTime}</span>
@@ -162,97 +179,126 @@ const ListenerView: React.FC<ListenerViewProps> = ({
         </button>
       </div>
 
-      {/* 3. NEWS TICKER (RADIO ONLY) */}
-      <section className={`bg-green-50/30 rounded-xl border border-green-100/50 h-10 flex items-center overflow-hidden shrink-0 transition-opacity duration-500 ${isRadioPlaying ? 'opacity-100' : 'opacity-0'}`}>
-        <div className={`flex whitespace-nowrap items-center ${isRadioPlaying ? 'animate-marquee' : ''}`}>
-          <span className="text-xs font-black text-green-800 uppercase px-12 tracking-widest inline-block">{CHANNEL_INTRO}</span>
-          {adminMessages.map((msg, i) => (
-            <span key={`admin-${i}`} className="text-xs text-red-600 font-black uppercase px-12 flex items-center inline-block">
-              <i className="fas fa-bullhorn mr-2"></i> {msg.text}
-              <span className="ml-12 text-green-200">|</span>
-            </span>
-          ))}
-          {news.map((n, i) => (
-            <span key={`ticker-${i}`} className="text-xs text-green-700 font-bold uppercase px-12 flex items-center inline-block">
-              <span className="w-2 h-2 bg-red-500 rounded-full mr-3 animate-pulse"></span>
-              {n.title}
-              <span className="ml-12 text-green-200">|</span>
-            </span>
-          ))}
-        </div>
-      </section>
-
-      {/* 4. ADS - SPACIOUS */}
-      <section className="shrink-0 bg-gray-50 border border-gray-100 rounded-2xl p-4 flex items-center justify-between overflow-hidden shadow-sm">
-        <div className="flex flex-col">
-          <span className="text-xs font-black text-gray-800 uppercase leading-none">Global Nigeria Fashion</span>
-          <span className="text-[10px] text-gray-400 font-medium mt-1">Authentic styles from Lagos.</span>
-        </div>
-        <button className="bg-blue-600 text-white text-[10px] px-6 py-2.5 rounded-full font-black uppercase shadow-lg">Shop Now</button>
-      </section>
-
-      {/* 5. GLOBAL FEED */}
-      <section className="flex flex-col space-y-3">
-        <h3 className="text-[10px] font-black uppercase text-green-700/60 tracking-widest px-1">Global Community Feed</h3>
-        <div className="bg-white/40 border border-green-50 rounded-2xl p-4 shadow-inner flex flex-col">
-          {reports.length > 0 ? (
-            <div className="space-y-1.5 overflow-y-auto no-scrollbar">
-              {reports.slice(0, 4).map((r) => (
-                <div key={r.id} className="bg-white/80 p-4 rounded-2xl border border-green-50/50 shadow-md">
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="text-[10px] font-black text-green-900 uppercase flex items-center">
-                      <i className="fas fa-map-marker-alt mr-2 text-red-500"></i> {r.location}
-                    </span>
-                    <span className="text-[10px] text-gray-400 font-mono">{new Date(r.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                  </div>
-                  <p className="text-xs text-green-950 leading-relaxed font-medium italic">"{r.content}"</p>
-                </div>
+      {/* RADIO ONLY SECTIONS */}
+      {activeApp === 'radio' && (
+        <>
+          {/* 3. NEWS TICKER (RADIO ONLY) */}
+          <section className={`bg-green-50/30 rounded-xl border border-green-100/50 h-10 flex items-center overflow-hidden shrink-0 transition-opacity duration-500 ${isRadioPlaying ? 'opacity-100' : 'opacity-0'}`}>
+            <div className={`flex whitespace-nowrap items-center ${isRadioPlaying ? 'animate-marquee' : ''}`}>
+              <span className="text-xs font-black text-green-800 uppercase px-12 tracking-widest inline-block">{CHANNEL_INTRO}</span>
+              {adminMessages.map((msg, i) => (
+                <span key={`admin-${i}`} className="text-xs text-red-600 font-black uppercase px-12 flex items-center inline-block">
+                  <i className="fas fa-bullhorn mr-2"></i> {msg.text}
+                  <span className="ml-12 text-green-200">|</span>
+                </span>
+              ))}
+              {news.map((n, i) => (
+                <span key={`ticker-${i}`} className="text-xs text-green-700 font-bold uppercase px-12 flex items-center inline-block">
+                  <span className="w-2 h-2 bg-red-500 rounded-full mr-3 animate-pulse"></span>
+                  {n.title}
+                  <span className="ml-12 text-green-200">|</span>
+                </span>
               ))}
             </div>
-          ) : (
-            <div className="flex-1 flex flex-col items-center justify-center opacity-20">
-              <span className="text-[5px] font-black uppercase tracking-widest">Feed syncing...</span>
+          </section>
+
+          {/* 4. ADS - SPACIOUS */}
+          <section className="shrink-0 bg-gray-50 border border-gray-100 rounded-2xl p-4 flex items-center justify-between overflow-hidden shadow-sm">
+            <div className="flex flex-col">
+              <span className="text-xs font-black text-gray-800 uppercase leading-none">Global Nigeria Fashion</span>
+              <span className="text-[10px] text-gray-400 font-medium mt-1">Authentic styles from Lagos.</span>
             </div>
-          )}
-        </div>
-      </section>
+            <button className="bg-blue-600 text-white text-[10px] px-6 py-2.5 rounded-full font-black uppercase shadow-lg">Shop Now</button>
+          </section>
 
-      {/* 6. JOURNALIST HQ */}
-      <section className="space-y-3">
-        <h3 className="text-[10px] font-black uppercase text-green-700/60 tracking-widest px-1">Journalist HQ</h3>
-        <div className="bg-white/40 border border-dashed border-green-200/50 rounded-2xl p-4 shadow-sm">
-          {!isReporting ? (
-            <button
-              onClick={() => setIsReporting(true)}
-              className="w-full py-4 text-[10px] font-black text-green-800 uppercase tracking-widest flex items-center justify-center bg-white/80 rounded-2xl border border-green-50 shadow-md active:scale-95 transition-all"
-            >
-              <i className="fas fa-microphone-alt mr-3 text-red-500 text-[10px]"></i> Report City Happenings
-            </button>
-          ) : (
-            <form onSubmit={handleReport} className="flex flex-col space-y-3 animate-scale-in">
-              <textarea
-                value={reportText}
-                onChange={(e) => setReportText(e.target.value)}
-                placeholder="What's happening?..."
-                className="bg-green-50/50 border border-green-100 rounded-2xl p-4 text-xs h-32 outline-none focus:border-green-400 font-medium resize-none shadow-inner"
-              />
-              <div className="flex space-x-3">
-                <button type="submit" className="flex-1 bg-green-800 text-white py-3 rounded-xl font-black text-[10px] uppercase tracking-widest shadow-xl">
-                  Broadcast
-                </button>
-                <button type="button" onClick={() => setIsReporting(false)} className="px-6 bg-white text-green-900 py-3 rounded-xl text-[10px] font-black border border-green-100">
-                  Cancel
-                </button>
-              </div>
-            </form>
-          )}
-        </div>
-      </section>
+          {/* 5. GLOBAL FEED */}
+          <section className="flex flex-col space-y-3">
+            <h3 className="text-[10px] font-black uppercase text-green-700/60 tracking-widest px-1">Global Community Feed</h3>
+            <div className="bg-white/40 border border-green-50 rounded-2xl p-4 shadow-inner flex flex-col">
+              {reports.length > 0 ? (
+                <div className="space-y-1.5 overflow-y-auto no-scrollbar">
+                  {reports.slice(0, 4).map((r) => (
+                    <div key={r.id} className="bg-white/80 p-4 rounded-2xl border border-green-50/50 shadow-md">
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="text-[10px] font-black text-green-900 uppercase flex items-center">
+                          <i className="fas fa-map-marker-alt mr-2 text-red-500"></i> {r.location}
+                        </span>
+                        <span className="text-[10px] text-gray-400 font-mono">{new Date(r.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                      </div>
+                      <p className="text-xs text-green-950 leading-relaxed font-medium italic">"{r.content}"</p>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="flex-1 flex flex-col items-center justify-center opacity-20">
+                  <span className="text-[5px] font-black uppercase tracking-widest">Feed syncing...</span>
+                </div>
+              )}
+            </div>
+          </section>
 
-      {/* 7. MUSIC GALLERY REMOVED AS REQUESTED BY USER */}
+          {/* 6. JOURNALIST HQ */}
+          <section className="space-y-3">
+            <h3 className="text-[10px] font-black uppercase text-green-700/60 tracking-widest px-1">Journalist HQ</h3>
+            <div className="bg-white/40 border border-dashed border-green-200/50 rounded-2xl p-4 shadow-sm">
+              {!isReporting ? (
+                <button
+                  onClick={() => setIsReporting(true)}
+                  className="w-full py-4 text-[10px] font-black text-green-800 uppercase tracking-widest flex items-center justify-center bg-white/80 rounded-2xl border border-green-50 shadow-md active:scale-95 transition-all"
+                >
+                  <i className="fas fa-microphone-alt mr-3 text-red-500 text-[10px]"></i> Report City Happenings
+                </button>
+              ) : (
+                <form onSubmit={handleReport} className="flex flex-col space-y-3 animate-scale-in">
+                  <textarea
+                    value={reportText}
+                    onChange={(e) => setReportText(e.target.value)}
+                    placeholder="What's happening?..."
+                    className="bg-green-50/50 border border-green-100 rounded-2xl p-4 text-xs h-32 outline-none focus:border-green-400 font-medium resize-none shadow-inner"
+                  />
+                  <div className="flex space-x-3">
+                    <button type="submit" className="flex-1 bg-green-800 text-white py-3 rounded-xl font-black text-[10px] uppercase tracking-widest shadow-xl">
+                      Broadcast
+                    </button>
+                    <button type="button" onClick={() => setIsReporting(false)} className="px-6 bg-white text-green-900 py-3 rounded-xl text-[10px] font-black border border-green-100">
+                      Cancel
+                    </button>
+                  </div>
+                </form>
+              )}
+            </div>
+          </section>
+        </>
+      )}
 
       {/* FOOTER - Spec-aligned single line at the absolute bottom */}
-      <footer className="w-full text-center pb-4 pt-10 mt-auto">
+      <footer className="w-full text-center pb-4 pt-10 mt-auto flex flex-col items-center space-y-4">
+        {/* DOWNLOAD SECTION */}
+        <div className="flex flex-col items-center space-y-2">
+          <span className="text-[8px] font-black uppercase text-green-800/40 tracking-widest">Get the Official App</span>
+          <div className="flex items-center space-x-3">
+            <button
+              onClick={() => window.open('https://github.com/thompsonway03-netizen/diasporadio.tv/raw/main/diaspora-radio.apk', '_blank')}
+              className="bg-black text-white px-4 py-2 rounded-xl flex items-center space-x-2 shadow-lg active:scale-95 transition-all border border-white/10"
+            >
+              <i className="fab fa-android text-xl text-green-400"></i>
+              <div className="flex flex-col items-start translate-y-[-1px]">
+                <span className="text-[6px] font-black uppercase leading-none opacity-60">Download for</span>
+                <span className="text-[10px] font-black leading-none">Android APK</span>
+              </div>
+            </button>
+            <button
+              className="bg-black text-white px-4 py-2 rounded-xl flex items-center space-x-2 shadow-lg opacity-40 cursor-not-allowed border border-white/10"
+            >
+              <i className="fab fa-apple text-xl text-blue-400"></i>
+              <div className="flex flex-col items-start translate-y-[-1px]">
+                <span className="text-[6px] font-black uppercase leading-none opacity-60">Coming soon to</span>
+                <span className="text-[10px] font-black leading-none">iOS App Store</span>
+              </div>
+            </button>
+          </div>
+        </div>
+
         <div className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-black/5 backdrop-blur-md rounded-full border border-green-900/10 shadow-sm mx-auto">
           <span className="text-[7.5px] font-black uppercase text-green-950/60 tracking-tighter">{APP_NAME}</span>
           <span className="text-green-900/10 scale-y-125 px-0.5">|</span>

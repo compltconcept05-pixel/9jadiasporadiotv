@@ -752,7 +752,7 @@ const App: React.FC = () => {
           isDucking={isDucking}
           forcePlaying={role === UserRole.ADMIN ? isPlaying : (isPlayingState && listenerHasPlayed && !isTvActive)}
           isAdmin={role === UserRole.ADMIN}
-          showPlayButton={role !== UserRole.ADMIN}
+          showPlayButton={role !== UserRole.ADMIN && !isTvActive}
         />
 
         {/* Join Broadcast Overlay for Listeners */}

@@ -31,7 +31,8 @@ const TVPlayer: React.FC<TVPlayerProps> = ({
     const [isPlaying, setIsPlaying] = useState(false);
     const [currentIndex, setCurrentIndex] = useState(0);
     const [showStinger, setShowStinger] = useState(false); // Stinger overlay state
-    const [isMuted, setIsMuted] = useState(true); // Default Muted
+    const [isMuted, setIsMuted] = useState(false); // Default NOT Muted for dedicated TV app feel
+    const [volume, setVolume] = useState(1.0); // Volume state
     const [showControls, setShowControls] = useState(true); // Auto-hide controls
     const videoRef = useRef<HTMLVideoElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);
@@ -44,7 +45,7 @@ const TVPlayer: React.FC<TVPlayerProps> = ({
                 console.error(`Error attempting to enable full-screen mode: ${err.message}`);
             });
         } else {
-            document.exitFullscreen();
+            if (document.exitFullscreen) document.exitFullscreen();
         }
     };
 
@@ -52,7 +53,7 @@ const TVPlayer: React.FC<TVPlayerProps> = ({
         setShowControls(true);
         if (hideTimeoutRef.current) clearTimeout(hideTimeoutRef.current);
         if (isPlaying) {
-            hideTimeoutRef.current = setTimeout(() => setShowControls(false), 6000); // 6s instead of 3s
+            hideTimeoutRef.current = setTimeout(() => setShowControls(false), 5000); // 5s timeout
         }
     };
 
@@ -68,6 +69,13 @@ const TVPlayer: React.FC<TVPlayerProps> = ({
             if (hideTimeoutRef.current) clearTimeout(hideTimeoutRef.current);
         };
     }, [isPlaying]);
+
+    // Apply volume to video element
+    useEffect(() => {
+        if (videoRef.current) {
+            videoRef.current.volume = volume;
+        }
+    }, [volume]);
 
     const [lastAdvertTimestamp, setLastAdvertTimestamp] = useState(Date.now());
     const [lastStingerTimestamp, setLastStingerTimestamp] = useState(Date.now());
@@ -334,7 +342,7 @@ const TVPlayer: React.FC<TVPlayerProps> = ({
                 />
             )}
 
-            {/* Overlays (ON AIR MODE: No Mute Controls as requested) */}
+            {/* Overlays (ON AIR MODE: Integrated volume control) */}
             <TVOverlay
                 isPlaying={isPlaying}
                 onTogglePlay={togglePlay}
@@ -343,6 +351,8 @@ const TVPlayer: React.FC<TVPlayerProps> = ({
                 news={news}
                 adminMessages={adminMessages}
                 isVisible={showControls}
+                volume={volume}
+                onVolumeChange={setVolume}
             />
 
             {/* Tap surface to show controls */}

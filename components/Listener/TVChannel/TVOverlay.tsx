@@ -10,6 +10,8 @@ interface TVOverlayProps {
     news: NewsItem[];
     adminMessages: AdminMessage[];
     isVisible?: boolean;
+    volume?: number;
+    onVolumeChange?: (volume: number) => void;
 }
 
 const TVOverlay: React.FC<TVOverlayProps> = ({
@@ -19,7 +21,9 @@ const TVOverlay: React.FC<TVOverlayProps> = ({
     channelName,
     news,
     adminMessages,
-    isVisible = true
+    isVisible = true,
+    volume = 1,
+    onVolumeChange
 }) => {
     return (
         <div className="absolute inset-0 z-40 pointer-events-none group select-none">
@@ -84,36 +88,62 @@ const TVOverlay: React.FC<TVOverlayProps> = ({
                 </div>
             </div>
 
-            {/* 4. BOTTOM LEFT: PLAY/PAUSE (Moved to corners) */}
-            <div className={`absolute bottom-8 left-4 pointer-events-auto z-50 transition-all duration-500 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 pointer-events-none'}`}>
-                <button
-                    onClick={(e) => {
-                        e.stopPropagation();
-                        onTogglePlay();
-                    }}
-                    className="w-11 h-11 bg-white/20 hover:bg-green-600/90 backdrop-blur-2xl border-2 border-white/40 rounded-full flex items-center justify-center text-white shadow-[0_0_20px_rgba(0,0,0,0.5)] transition-all active:scale-90"
-                    title={isPlaying ? "Pause" : "Play"}
-                >
-                    {isPlaying ? (
-                        <i className="fas fa-pause text-xs"></i>
-                    ) : (
-                        <i className="fas fa-play text-xs ml-1"></i>
-                    )}
-                </button>
-            </div>
+            {/* 4. CONTROLS DECK (BOTTOM CORNERS) */}
+            <div className={`absolute bottom-8 inset-x-4 flex justify-between items-end pointer-events-none z-50 transition-all duration-500 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
 
-            {/* 5. BOTTOM RIGHT: FULLSCREEN (Moved to corners) */}
-            <div className={`absolute bottom-8 right-4 pointer-events-auto z-50 transition-all duration-500 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 pointer-events-none'}`}>
-                <button
-                    onClick={(e) => {
-                        e.stopPropagation();
-                        onToggleFullscreen?.();
-                    }}
-                    className="w-11 h-11 bg-white/20 hover:bg-white/40 backdrop-blur-2xl border-2 border-white/40 rounded-full flex items-center justify-center text-white shadow-[0_0_20px_rgba(0,0,0,0.5)] transition-all active:scale-90"
-                    title="Fullscreen"
-                >
-                    <i className="fas fa-expand text-xs"></i>
-                </button>
+                {/* LEFT: PLAY/PAUSE */}
+                <div className="pointer-events-auto">
+                    <button
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            onTogglePlay();
+                        }}
+                        className="w-11 h-11 bg-white/20 hover:bg-green-600/90 backdrop-blur-2xl border-2 border-white/40 rounded-full flex items-center justify-center text-white shadow-[0_0_20px_rgba(0,0,0,0.5)] transition-all active:scale-90"
+                        title={isPlaying ? "Pause" : "Play"}
+                    >
+                        {isPlaying ? (
+                            <i className="fas fa-pause text-xs"></i>
+                        ) : (
+                            <i className="fas fa-play text-xs ml-1"></i>
+                        )}
+                    </button>
+                </div>
+
+                {/* CENTER-ISH: VOLUME SLIDER (TV Style) */}
+                <div className="pointer-events-auto flex flex-col items-center bg-black/40 backdrop-blur-md p-2 rounded-2xl border border-white/10 shadow-2xl mb-2">
+                    <div className="h-24 w-8 flex flex-col items-center py-2 space-y-2">
+                        <i className="fas fa-volume-up text-[10px] text-white/80"></i>
+                        <input
+                            type="range"
+                            min="0"
+                            max="1"
+                            step="0.01"
+                            value={volume}
+                            onChange={(e) => onVolumeChange?.(parseFloat(e.target.value))}
+                            className="flex-1 w-1 appearance-none bg-white/20 rounded-full outline-none accent-[#008751] cursor-pointer"
+                            style={{
+                                writingMode: 'bt-lr', /* Webkit vertical support */
+                                appearance: 'slider-vertical' as any,
+                                width: '4px'
+                            }}
+                        />
+                        <i className="fas fa-volume-down text-[10px] text-white/80"></i>
+                    </div>
+                </div>
+
+                {/* RIGHT: FULLSCREEN */}
+                <div className="pointer-events-auto">
+                    <button
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            onToggleFullscreen?.();
+                        }}
+                        className="w-11 h-11 bg-white/20 hover:bg-white/40 backdrop-blur-2xl border-2 border-white/40 rounded-full flex items-center justify-center text-white shadow-[0_0_20px_rgba(0,0,0,0.5)] transition-all active:scale-90"
+                        title="Fullscreen"
+                    >
+                        <i className="fas fa-expand text-xs"></i>
+                    </button>
+                </div>
             </div>
 
             {/* Subtle Gradient Overlays */}
