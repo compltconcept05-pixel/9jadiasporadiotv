@@ -16,9 +16,9 @@ export const LEAD_ANCHOR_NAME = "Sara Obosa";
 export const NEWSCASTER_NAME = "Sara Obosa"; // Main anchor
 export const LEAD_ANCHOR_VOICE_ID = "EXAVITQu4vr4xnSDxMaL"; // Sarah (Standard Free Voice)
 
-// Legacy names (deprecated)
-export const MANUAL_NEWSCASTER_NAME = "Thompson Osas";
-export const DESIGNER_NAME = "Thompson Obosa";
+// Branding Settings
+export const DESIGNER_NAME = "PixelConcept";
+export const DESIGNER_URL = "https://pixelconcept.net";
 
 // Newsroom Scripts
 export const OPENING_SCRIPT = "Good evening. I'm Sara Obosa, and this is Nigeria Diaspora Radio Television.";
