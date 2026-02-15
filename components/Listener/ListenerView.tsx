@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import TVPlayer from './TVChannel/TVPlayer';
 import { NewsItem, MediaFile, AdminMessage, ListenerReport } from '../../types';
 import { dbService } from '../../services/dbService';
-import { CHANNEL_INTRO, DESIGNER_NAME, APP_NAME } from '../../constants';
+import { CHANNEL_INTRO, DESIGNER_NAME, APP_NAME, APK_DOWNLOAD_URL } from '../../constants';
 
 interface ListenerViewProps {
   stationState: any;
@@ -278,7 +278,16 @@ const ListenerView: React.FC<ListenerViewProps> = ({
           <span className="text-[8px] font-black uppercase text-green-800/40 tracking-widest">Get the Official App</span>
           <div className="flex items-center space-x-3">
             <button
-              onClick={() => window.open('https://github.com/thompsonway03-netizen/diasporadio.tv/raw/main/diaspora-radio.apk', '_blank')}
+              onClick={() => {
+                if (APK_DOWNLOAD_URL) {
+                  window.open(APK_DOWNLOAD_URL, '_blank');
+                  setShareFeedback('Downloading...');
+                  setTimeout(() => setShareFeedback(''), 5000);
+                } else {
+                  setShareFeedback('Link Unavailable');
+                  setTimeout(() => setShareFeedback(''), 3000);
+                }
+              }}
               className="bg-black text-white px-4 py-2 rounded-xl flex items-center space-x-2 shadow-lg active:scale-95 transition-all border border-white/10"
             >
               <i className="fab fa-android text-xl text-green-400"></i>

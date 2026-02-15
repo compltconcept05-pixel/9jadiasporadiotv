@@ -8,6 +8,7 @@ export const APP_NAME = "Nigeria Diaspora Radio TV";
 export const STATION_NAME = "Nigeria Diaspora Radio TV";
 export const STATION_ABBR = "NDRTV";
 export const STATION_TAGLINE = "Nigerians voice abroad";
+export const APK_DOWNLOAD_URL = "https://agwiepgxiyhdmsppeylx.supabase.co/storage/v1/object/public/media/android/diaspora-radio.apk";
 export const STATION_SLOGAN = "Nigerians voice abroad";
 export const TAGLINE = "Nigerians voice abroad";
 
