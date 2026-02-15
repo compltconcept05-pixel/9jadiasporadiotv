@@ -108,6 +108,8 @@ const App: React.FC = () => {
       if (prevName === name) return prevName;
       return name;
     });
+    // v2.5.0: Reset timeline to 0 for the new track
+    setRadioCurrentTime(0);
   }, []);
 
   const hasInitialSyncRef = useRef(false);
@@ -435,6 +437,9 @@ const App: React.FC = () => {
           current_offset: 0, // Reset for new track
           timestamp: Date.now()
         }).catch(err => console.error("❌ Immediate Advancement Sync Fail:", err));
+
+        // v2.5.0: Locally reset timeline for the pulse heartbeat
+        setRadioCurrentTime(0);
       }
     }
   }, [activeTrackId, isShuffle, role, supabase, isTvActive]); // activeTrackId is needed to find current index
