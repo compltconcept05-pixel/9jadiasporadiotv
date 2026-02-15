@@ -184,8 +184,22 @@ const RadioPlayer: React.FC<RadioPlayerProps> = ({
       setCurrentTime(audio.currentTime);
       onTimeUpdate?.(audio.currentTime);
     });
-    audio.addEventListener('loadedmetadata', () => setDuration(audio.duration));
-    audio.addEventListener('canplay', handleCanPlay);
+    audio.addEventListener('loadedmetadata', () => {
+      setDuration(audio.duration);
+      // Immediate sync for listeners on meta load
+      if (!isAdmin && startTime > 0) {
+        console.log(`📡 [RadioPlayer] Initial Meta Sync: Seeking to ${startTime}s`);
+        audio.currentTime = startTime;
+      }
+    });
+    audio.addEventListener('canplay', () => {
+      handleCanPlay();
+      // Second chance sync if meta was too early
+      if (!isAdmin && startTime > 0 && Math.abs(audio.currentTime - startTime) > 1.5) {
+        console.log(`📡 [RadioPlayer] CanPlay Sync: Adjusting to ${startTime}s`);
+        audio.currentTime = startTime;
+      }
+    });
     audio.addEventListener('loadstart', handleLoadStart);
 
     const setupSource = (src: string | null | undefined) => {
@@ -302,16 +316,16 @@ const RadioPlayer: React.FC<RadioPlayerProps> = ({
 
   // LIVE SYNC DRIFT CHECK
   useEffect(() => {
-    if (startTime > 0 && audioRef.current && !isAdmin && isPlaying) {
+    const isActuallyActive = isPlaying || forcePlaying;
+    if (startTime > 0 && audioRef.current && !isAdmin && isActuallyActive) {
       const diff = Math.abs(audioRef.current.currentTime - startTime);
-      // If we are more than 3 seconds out of sync, force a seek
-      // Reduced from 15s to 3s for tighter initial sync
-      if (diff > 3) {
+      // Tightened from 3s to 1.5s for a more "live" feeling
+      if (diff > 1.5) {
         console.log(`📡 [RadioPlayer] Sync Drift Detected (${diff.toFixed(1)}s). Correcting to ${startTime}s...`);
         audioRef.current.currentTime = startTime;
       }
     }
-  }, [startTime, isAdmin, isPlaying]);
+  }, [startTime, isAdmin, isPlaying, forcePlaying]);
 
   // Jingle Scheduler Refs
   const lastJingleTimeRef = useRef<number>(Date.now());

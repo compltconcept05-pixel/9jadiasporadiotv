@@ -626,6 +626,21 @@ const App: React.FC = () => {
     handleLogAdd(`TV Feed: Now Broadcasting ${video.name}`);
   }, [handleRadioToggle, handleLogAdd, handleStopNews, role]);
 
+  // --- ADMIN LOGIN LOGIC ---
+  useEffect(() => {
+    if (role === UserRole.ADMIN) {
+      console.log("👮 [App] Admin logged in. Clearing TV workspace.");
+      setIsTvActive(false);
+      // Synchronize this change to all listeners if we have supabase
+      if (supabase) {
+        dbService.updateStationState({
+          is_tv_active: false,
+          timestamp: Date.now()
+        }).catch(err => console.error("❌ Admin Login TV Sync Error:", err));
+      }
+    }
+  }, [role, supabase]);
+
   // --- AUDIO EXCLUSIVITY LOGIC GUARD ---
   useEffect(() => {
     // If TV audio is active (!isTvMuted) while TV is mounted (isTvActive),
