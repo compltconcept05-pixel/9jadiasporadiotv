@@ -625,8 +625,8 @@ const App: React.FC = () => {
   }, [handleRadioToggle, handleLogAdd, handleStopNews, role]);
 
   return (
-    <div className="min-h-screen bg-[#f0fff4] flex flex-col font-sans selection:bg-[#008751] selection:text-white">
-
+    <div className="min-h-[100dvh] bg-[#f0fff4] text-[#008751] flex flex-col max-w-md mx-auto relative shadow-2xl border-x border-green-100/30 pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]">
+      {/* NDRTV Automation Engine - Sara Obosa Lead Anchor */}
       <NDRTVEngine
         currentLocation={currentLocation}
         onStatusChange={setBroadcastStatus}
@@ -680,14 +680,12 @@ const App: React.FC = () => {
         onDuckingChange={setIsDuckingFavour}
         isAllowedToPlay={role === UserRole.ADMIN ? isPlaying : listenerHasPlayed}
         mediaFiles={allMedia}
-        isOnline={supabase}
       />
 
-
-      <header className="px-6 py-4 bg-white/80 backdrop-blur-md flex justify-between items-center border-b border-green-50">
+      <header className="p-4 sticky top-0 z-40 bg-white/90 backdrop-blur-md flex justify-between items-center border-b border-green-50 shadow-sm">
         <div className="flex flex-col">
-          <h1 className="text-[10px] font-black uppercase leading-none text-green-950 whitespace-nowrap tracking-tight">{APP_NAME}</h1>
-          <span className="text-[7px] font-bold text-green-700/40 uppercase tracking-widest mt-1">Designed by {DESIGNER_NAME}</span>
+          <h1 className="text-base font-black italic uppercase leading-none text-green-950">{APP_NAME}</h1>
+          <span className="text-[6px] font-black text-green-700/50 uppercase tracking-[0.3em] mt-0.5">V5-EXCLUSIVITY-LOCKED</span>
         </div>
         <div className="flex items-center space-x-2">
           {role === UserRole.LISTENER && (
@@ -695,7 +693,7 @@ const App: React.FC = () => {
               {cloudStatus}
             </span>
           )}
-          {/* {!supabase && <span className="text-[7px] bg-amber-500 text-white px-1.5 py-0.5 rounded font-black uppercase animate-pulse">Cloud Offline</span>} - REMOVED AS REQUESTED */}
+          {!supabase && <span className="text-[7px] bg-amber-500 text-white px-1.5 py-0.5 rounded font-black uppercase animate-pulse">Cloud Offline</span>}
           {isDucking && <span className="text-[7px] font-black uppercase text-red-500 animate-pulse bg-red-50 px-1 rounded shadow-sm border border-red-100">Live Broadcast</span>}
           <button
             onClick={role === UserRole.ADMIN ? () => { setRole(UserRole.LISTENER); setListenerHasPlayed(false); } : () => setShowAuth(true)}
@@ -703,7 +701,7 @@ const App: React.FC = () => {
           >
             {role === UserRole.ADMIN ? 'Exit Admin' : 'Admin Login'}
           </button>
-          <div className={`w-3 h-3 rounded-full ${supabase ? 'bg-green-500 shadow-[0_0_10px_#22c55e]' : 'bg-red-500 animate-pulse shadow-[0_0_10px_#ef4444]'}`} title={supabase ? "System Online" : "System Offline"}></div>
+          <div className={`w-3 h-3 rounded-full ${supabase ? 'bg-green-500' : 'bg-gray-400'}`} title={supabase ? "Cloud Connected" : "Cloud Disconnected"}></div>
           {audioStatus !== 'Ready' && <span className="text-[10px] text-green-700 font-bold ml-1">{audioStatus}</span>}
           {lastError && <span className="text-[7px] bg-red-600 text-white px-1.5 py-0.5 rounded ml-2 font-black uppercase animate-bounce">{lastError}</span>}
         </div>
@@ -749,7 +747,7 @@ const App: React.FC = () => {
           isDucking={isDucking}
           forcePlaying={role === UserRole.ADMIN ? isPlaying : (isPlayingState && listenerHasPlayed && !isTvActive)}
           isAdmin={role === UserRole.ADMIN}
-          showPlayButton={role !== UserRole.ADMIN && !isTvActive}
+          showPlayButton={role !== UserRole.ADMIN}
         />
 
         {/* Join Broadcast Overlay for Listeners */}

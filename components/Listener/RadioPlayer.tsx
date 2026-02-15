@@ -17,7 +17,6 @@ interface RadioPlayerProps {
   isAdmin?: boolean;
   isDucking?: boolean;
   showPlayButton?: boolean;
-  isOnline?: boolean;
 }
 
 const RadioPlayer: React.FC<RadioPlayerProps> = ({
@@ -31,8 +30,7 @@ const RadioPlayer: React.FC<RadioPlayerProps> = ({
   activeTrackId,
   isAdmin = false,
   isDucking = false,
-  showPlayButton = true,
-  isOnline = false // Default to false
+  showPlayButton = true
 }) => {
   const [isPlaying, setIsPlaying] = useState(forcePlaying);
   const [volume, setVolume] = useState(1.0);
@@ -293,25 +291,6 @@ const RadioPlayer: React.FC<RadioPlayerProps> = ({
     }
   }, [activeTrackUrl, activeTrackId]);
 
-  // NEWS EXCLUSIVITY: Pause music when News starts (ducking)
-  useEffect(() => {
-    if (isDucking && audioRef.current && !audioRef.current.paused) {
-      console.log("🦆 [RadioPlayer] News detected - Pausing music...");
-      audioRef.current.pause();
-    }
-  }, [isDucking]);
-
-  // RESUME ON DUCK END
-  useEffect(() => {
-    if (!isDucking && forcePlaying && audioRef.current && audioRef.current.paused) {
-      console.log("🦆 [RadioPlayer] Ducking ended - Resuming playback...");
-      // Add a slight delay to ensure the news audio has cleared the buffer/context
-      setTimeout(() => {
-        audioRef.current?.play().catch(e => console.warn("Resume failed:", e));
-      }, 500);
-    }
-  }, [isDucking, forcePlaying]);
-
   // LIVE SYNC DRIFT CHECK
   useEffect(() => {
     if (startTime > 0 && audioRef.current && !isAdmin && isPlaying) {
@@ -526,52 +505,25 @@ const RadioPlayer: React.FC<RadioPlayerProps> = ({
         status={status}
         onTogglePlayback={handlePlayPause}
         showPlayButton={true}
-        isOnline={isOnline}
       />
 
-      <div className="flex flex-col items-center space-y-4 mt-6 relative z-20 w-full px-8">
-        {/* NOW PLAYING / LIVE STREAM Pill (MATCHING SCREENSHOT) */}
-        <div className="bg-[#008751]/10 backdrop-blur-sm px-6 py-1.5 rounded-full border border-green-100 shadow-sm">
-          <span className="text-[8px] font-black uppercase text-[#008751] tracking-widest leading-none">
-            NOW PLAYING / LIVE STREAM
-          </span>
+      <div className="w-full px-8 mt-6 relative z-20">
+        <div className="h-1.5 w-full bg-green-100/50 rounded-full overflow-hidden backdrop-blur-sm border border-white/20">
+          <div className="h-full bg-[#008751] transition-all duration-300 shadow-[0_0_10px_rgba(0,135,81,0.5)]" style={{ width: `${progress}%` }}></div>
         </div>
-
-        {/* Large Red Play Button (Restored to External Position) */}
-        {showPlayButton && (
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              handlePlayPause();
-            }}
-            className="w-14 h-14 rounded-full flex items-center justify-center bg-red-600 hover:bg-red-700 shadow-[0_0_20px_rgba(220,38,38,0.4)] active:scale-90 transition-all z-30"
-          >
-            {isPlaying ? (
-              <i className="fas fa-pause text-white text-xl"></i>
-            ) : (
-              <i className="fas fa-play text-white text-xl ml-1"></i>
-            )}
-          </button>
-        )}
-
-        <div className="w-full relative px-2">
-          <div className="h-1.5 w-full bg-green-100/50 rounded-full overflow-hidden backdrop-blur-sm border border-white/20">
-            <div className="h-full bg-[#008751] transition-all duration-300 shadow-[0_0_10px_rgba(0,135,81,0.5)]" style={{ width: `${progress}%` }}></div>
+        {duration > 0 && isFinite(duration) && (
+          <div className="flex justify-between mt-0.5 px-1">
+            <span className="text-[6px] font-black uppercase text-green-800 tracking-tighter">{formatTime(currentTime)}</span>
+            <span className="text-[6px] font-black uppercase text-green-800 tracking-tighter">{formatTime(duration)}</span>
           </div>
-          {duration > 0 && isFinite(duration) && (
-            <div className="flex justify-between mt-1 px-1">
-              <span className="text-[6px] font-black uppercase text-green-800 tracking-tighter">{formatTime(currentTime)}</span>
-              <span className="text-[6px] font-black uppercase text-green-800 tracking-tighter">{formatTime(duration)}</span>
-            </div>
-          )}
-        </div>
+        )}
       </div>
 
       <div className="flex flex-col items-center space-y-4 mt-8 relative z-20 w-full px-8">
         {/* Track Info Display */}
-        <div className="bg-white/40 backdrop-blur-sm px-4 py-3 rounded-2xl border border-white/60 w-full overflow-hidden shadow-lg flex items-center justify-start text-left">
-          <span className="text-[9px] font-black uppercase text-green-900 tracking-normal line-clamp-1 w-full truncate">
-            {currentTrackName}
+        <div className="bg-white/40 backdrop-blur-sm px-6 py-3 rounded-2xl border border-white/60 w-full overflow-hidden shadow-lg flex items-center justify-center text-center">
+          <span className="text-xs font-black uppercase text-green-900 tracking-[0.2em] line-clamp-1">
+            NOW PLAYING: {currentTrackName}
           </span>
         </div>
 
