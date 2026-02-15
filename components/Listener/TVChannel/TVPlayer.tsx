@@ -14,6 +14,8 @@ interface TVPlayerProps {
     isNewsPlaying: boolean;
     isActive: boolean;
     isAdmin?: boolean;
+    isMuted?: boolean;
+    onMuteChange?: (muted: boolean) => void;
 }
 
 const TVPlayer: React.FC<TVPlayerProps> = ({
@@ -26,13 +28,22 @@ const TVPlayer: React.FC<TVPlayerProps> = ({
     onVideoAdvance,
     isNewsPlaying,
     isActive,
-    isAdmin = false
+    isAdmin = false,
+    isMuted: isMutedProp = false,
+    onMuteChange
 }) => {
     const [isPlaying, setIsPlaying] = useState(false);
     const [currentIndex, setCurrentIndex] = useState(0);
-    const [showStinger, setShowStinger] = useState(false); // Stinger overlay state
-    const [isMuted, setIsMuted] = useState(false); // Default NOT Muted for dedicated TV app feel
-    const [volume, setVolume] = useState(1.0); // Volume state
+    const [showStinger, setShowStinger] = useState(false);
+    // Use prop for muted state if provided
+    const [isMutedInternal, setIsMutedInternal] = useState(false);
+    const isMuted = onMuteChange ? isMutedProp : isMutedInternal;
+    const setIsMuted = (m: boolean) => {
+        if (onMuteChange) onMuteChange(m);
+        else setIsMutedInternal(m);
+    };
+
+    const [volume, setVolume] = useState(1.0);
     const [showControls, setShowControls] = useState(true); // Auto-hide controls
     const videoRef = useRef<HTMLVideoElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);
@@ -195,7 +206,7 @@ const TVPlayer: React.FC<TVPlayerProps> = ({
         const newIsPlaying = !isPlaying;
         setIsPlaying(newIsPlaying);
         if (newIsPlaying && isMuted) {
-            setIsMuted(false); // Force unmute on manual play interaction
+            setIsMuted(false); // Force unmute on manual play interaction -> This will trigger Radio pause via onMuteChange
         }
         // Auto-fullscreen on mobile when user taps play
         if (newIsPlaying && containerRef.current && !document.fullscreenElement) {

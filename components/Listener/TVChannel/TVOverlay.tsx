@@ -109,26 +109,19 @@ const TVOverlay: React.FC<TVOverlayProps> = ({
                     </button>
                 </div>
 
-                {/* CENTER-ISH: VOLUME SLIDER (TV Style) */}
-                <div className="pointer-events-auto flex flex-col items-center bg-black/40 backdrop-blur-md p-2 rounded-2xl border border-white/10 shadow-2xl mb-2">
-                    <div className="h-24 w-8 flex flex-col items-center py-2 space-y-2">
-                        <i className="fas fa-volume-up text-[10px] text-white/80"></i>
-                        <input
-                            type="range"
-                            min="0"
-                            max="1"
-                            step="0.01"
-                            value={volume}
-                            onChange={(e) => onVolumeChange?.(parseFloat(e.target.value))}
-                            className="flex-1 w-1 appearance-none bg-white/20 rounded-full outline-none accent-[#008751] cursor-pointer"
-                            style={{
-                                writingMode: 'bt-lr', /* Webkit vertical support */
-                                appearance: 'slider-vertical' as any,
-                                width: '4px'
-                            }}
-                        />
-                        <i className="fas fa-volume-down text-[10px] text-white/80"></i>
-                    </div>
+                {/* CENTER-ISH: VOLUME SLIDER (TV Style - Horizontal Bottom Right) */}
+                <div className="pointer-events-auto flex items-center bg-black/60 backdrop-blur-md px-3 py-2 rounded-full border border-white/20 shadow-2xl mr-12 mb-0.5">
+                    <i className="fas fa-volume-down text-[10px] text-white/80 mr-3"></i>
+                    <input
+                        type="range"
+                        min="0"
+                        max="1"
+                        step="0.01"
+                        value={volume}
+                        onChange={(e) => onVolumeChange?.(parseFloat(e.target.value))}
+                        className="w-24 h-1 appearance-none bg-white/20 rounded-full outline-none accent-[#008751] cursor-pointer"
+                    />
+                    <i className="fas fa-volume-up text-[10px] text-white/80 ml-3"></i>
                 </div>
 
                 {/* RIGHT: FULLSCREEN */}

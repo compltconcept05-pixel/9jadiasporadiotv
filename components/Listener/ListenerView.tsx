@@ -48,6 +48,31 @@ const ListenerView: React.FC<ListenerViewProps> = ({
   const [adIndex, setAdIndex] = useState(0);
   const [shareFeedback, setShareFeedback] = useState('');
   const [isTvPlaying, setIsTvPlaying] = useState(false);
+  const [isTvMuted, setIsTvMuted] = useState(false);
+
+  // COORDINATION: Radio plays -> TV mutes
+  useEffect(() => {
+    if (isRadioPlaying) {
+      setIsTvMuted(true);
+    }
+  }, [isRadioPlaying]);
+
+  // COORDINATION: TV audio starts -> Radio pauses
+  const handleTvMuteChange = (muted: boolean) => {
+    setIsTvMuted(muted);
+    // If we are unmuting TV audio AND TV is actually playing, pause radio
+    if (!muted && isTvPlaying) {
+      onRadioToggle(false);
+    }
+  };
+
+  const handleTvPlayChange = (playing: boolean) => {
+    setIsTvPlaying(playing);
+    // If TV starts playing AND it's not muted, pause radio
+    if (playing && !isTvMuted) {
+      onRadioToggle(false);
+    }
+  };
 
   const timerRef = useRef<number | null>(null);
 
@@ -128,13 +153,9 @@ const ListenerView: React.FC<ListenerViewProps> = ({
             allVideos={allVideos.filter(v => v.type === 'video')}
             news={news}
             adminMessages={adminMessages}
-            onPlayStateChange={(playing) => {
-              setIsTvPlaying(playing);
-              if (playing) {
-                onRadioToggle(false);
-                onTvToggle(true);
-              }
-            }}
+            onPlayStateChange={handleTvPlayChange}
+            isMuted={isTvMuted}
+            onMuteChange={handleTvMuteChange}
             onRadioPlay={() => {
               // Start radio audio from TV play button
               onRadioToggle(true);
