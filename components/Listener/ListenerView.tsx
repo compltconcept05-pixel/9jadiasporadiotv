@@ -60,8 +60,9 @@ const ListenerView: React.FC<ListenerViewProps> = ({
   // COORDINATION: TV audio starts -> Radio pauses
   const handleTvMuteChange = (muted: boolean) => {
     setIsTvMuted(muted);
-    // If we are unmuting TV audio AND TV is actually playing, pause radio
-    if (!muted && isTvPlaying) {
+    // If we are unmuting TV audio AND TV is actually playing OR TV is starting, pause radio
+    if (!muted) {
+      console.log("🔊 [ListenerView] TV Unmuted - Pausing Radio for exclusivity");
       onRadioToggle(false);
     }
   };
@@ -70,6 +71,7 @@ const ListenerView: React.FC<ListenerViewProps> = ({
     setIsTvPlaying(playing);
     // If TV starts playing AND it's not muted, pause radio
     if (playing && !isTvMuted) {
+      console.log("📺 [ListenerView] TV Playing & Unmuted - Pausing Radio for exclusivity");
       onRadioToggle(false);
     }
   };
