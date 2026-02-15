@@ -194,8 +194,8 @@ const RadioPlayer: React.FC<RadioPlayerProps> = ({
     });
     audio.addEventListener('canplay', () => {
       handleCanPlay();
-      // Second chance sync if meta was too early - 8s threshold for stability
-      if (!isAdmin && startTime > 0 && Math.abs(audio.currentTime - startTime) > 8.0) {
+      // Second chance sync if meta was too early - Tight 1.5s threshold for "same timing"
+      if (!isAdmin && startTime > 0 && Math.abs(audio.currentTime - startTime) > 1.5) {
         console.log(`📡 [RadioPlayer] CanPlay Sync: Adjusting to ${startTime}s`);
         audio.currentTime = startTime;
       }
@@ -319,8 +319,8 @@ const RadioPlayer: React.FC<RadioPlayerProps> = ({
     const isActuallyActive = isPlaying || forcePlaying;
     if (startTime > 0 && audioRef.current && !isAdmin && isActuallyActive) {
       const diff = Math.abs(audioRef.current.currentTime - startTime);
-      // Threshold adjusted to 8s per user request for stable catch-up
-      if (diff > 8.0) {
+      // Reverted to 1.5s for "same timing" as requested (restoring precision)
+      if (diff > 1.5) {
         console.log(`📡 [RadioPlayer] Sync Drift Detected (${diff.toFixed(1)}s). Correcting to ${startTime}s...`);
         audioRef.current.currentTime = startTime;
       }

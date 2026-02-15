@@ -348,8 +348,8 @@ const App: React.FC = () => {
       // Initial sync on change
       syncStation();
 
-      // HEARTBEAT: Pulse every 8 seconds
-      const pulseInterval = setInterval(syncStation, 8000);
+      // HEARTBEAT: Pulse every 2 seconds for high-precision live sync
+      const pulseInterval = setInterval(syncStation, 2000);
       return () => clearInterval(pulseInterval);
     }
   }, [role, supabase]); // Only depends on role/client presence
