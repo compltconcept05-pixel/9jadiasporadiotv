@@ -701,10 +701,6 @@ const App: React.FC = () => {
   (window as any).handleLogin = () => setShowAuth(true);
   (window as any).handleLogout = () => { setRole(UserRole.LISTENER); setListenerHasPlayed(false); };
 
-  // Expose for footer access
-  (window as any).handleLogin = () => setShowAuth(true);
-  (window as any).handleLogout = () => { setRole(UserRole.LISTENER); setListenerHasPlayed(false); };
-
   return (
     <div className="min-h-[100dvh] bg-[#f0fff4] text-[#008751] flex flex-col max-w-md mx-auto relative shadow-2xl border-x border-green-100/30 pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]">
       {/* NDRTV Automation Engine - Sara Obosa Lead Anchor */}
