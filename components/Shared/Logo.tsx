@@ -58,23 +58,6 @@ const Logo: React.FC<LogoProps> = ({
               </div>
             </div>
 
-            {/* Fresh Play Button - Only show in listener mode */}
-            {showPlayButton && onTogglePlayback && (
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onTogglePlayback();
-                }}
-                className="mt-4 w-14 h-14 rounded-full flex items-center justify-center transition-all duration-300 shadow-lg active:scale-90 bg-[#008751] hover:bg-green-700"
-              >
-                {isPlaying ? (
-                  <i className="fas fa-pause text-white text-2xl"></i>
-                ) : (
-                  <i className="fas fa-play text-white text-2xl ml-1"></i>
-                )}
-              </button>
-            )}
-
             {/* Gloss Overlay */}
             <div className="absolute top-0 left-0 w-full h-1/2 bg-gradient-to-b from-white/30 to-transparent rounded-t-2xl"></div>
           </div>
@@ -86,7 +69,7 @@ const Logo: React.FC<LogoProps> = ({
         </div>
 
         {/* TAGLINE - STATIC WITH OUTLINE */}
-        <div className="mt-1 text-center">
+        <div className="mt-1 text-center relative">
           <h2
             className="text-base font-black tracking-normal uppercase text-black"
             style={{
@@ -95,6 +78,26 @@ const Logo: React.FC<LogoProps> = ({
           >
             {STATION_TAGLINE}
           </h2>
+
+          {/* Fresh Play Button - Positioned Below Tagline */}
+          {showPlayButton && onTogglePlayback && (
+            <div className="mt-2 flex justify-center">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onTogglePlayback();
+                }}
+                className="w-12 h-12 rounded-full flex items-center justify-center transition-all duration-300 shadow-lg active:scale-90 bg-[#008751] hover:bg-green-700"
+              >
+                {isPlaying ? (
+                  <i className="fas fa-pause text-white text-xl"></i>
+                ) : (
+                  <i className="fas fa-play text-white text-xl ml-1"></i>
+                )}
+              </button>
+            </div>
+          )}
+
           {status === 'ERROR' && <p className="text-[8px] font-black text-red-600 mt-1 uppercase">Connection Error</p>}
         </div>
       </div>

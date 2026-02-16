@@ -657,24 +657,29 @@ const App: React.FC = () => {
   useEffect(() => {
     // 1. If TV is active and unmuted, Radio MUST be stopped
     if (isTvActive && !isTvMuted) {
-      if (listenerHasPlayed) {
+      if (listenerHasPlayed || isPlaying) {
         console.log("🛡️ [App] Exclusivity Guard: TV Audio ACTIVE. Stopping Radio.");
         setListenerHasPlayed(false);
-      }
-      if (role === UserRole.ADMIN && isPlaying) {
-        console.log("🛡️ [App] Exclusivity Guard (Admin): TV Audio ACTIVE. Stopping Radio.");
         setIsPlaying(false);
+
+        // Push stop command to cloud if admin
+        if (role === UserRole.ADMIN && supabase) {
+          dbService.updateStationState({
+            is_playing: false,
+            timestamp: Date.now()
+          }).catch(err => console.error("❌ Exclusivity Stop Sync error", err));
+        }
       }
     }
 
     // 2. If Radio is manually started, TV MUST be muted (or hidden)
-    if (listenerHasPlayed || (role === UserRole.ADMIN && isPlaying)) {
+    if (listenerHasPlayed || isPlaying) {
       if (isTvActive && !isTvMuted) {
         console.log("🛡️ [App] Exclusivity Guard: Radio ACTIVE. Muting TV.");
         setIsTvMuted(true);
       }
     }
-  }, [isTvActive, isTvMuted, listenerHasPlayed, isPlaying, role]);
+  }, [isTvActive, isTvMuted, listenerHasPlayed, isPlaying, role, supabase]);
 
   return (
     <div className="min-h-[100dvh] bg-[#f0fff4] text-[#008751] flex flex-col max-w-md mx-auto relative shadow-2xl border-x border-green-100/30 pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]">

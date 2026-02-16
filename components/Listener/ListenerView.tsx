@@ -65,11 +65,11 @@ const ListenerView: React.FC<ListenerViewProps> = ({
 
   const handleTvPlayChange = (playing: boolean) => {
     setIsTvPlaying(playing);
-    // If TV starts playing AND it's not muted, pause radio
+    // If TV starts playing AND it's not muted, pause radio FORCEFULLY
     if (playing && !isTvMuted) {
-      console.log("📺 [ListenerView] TV Playing & Unmuted - Pausing Radio for exclusivity");
+      console.log("📺 [ListenerView] TV Playing & Unmuted - Killing Radio for exclusivity");
       onRadioToggle(false);
-      onTvToggle(true); // Ensure App knows TV is active
+      onTvToggle(true);
     }
   };
 
@@ -144,9 +144,9 @@ const ListenerView: React.FC<ListenerViewProps> = ({
 
   return (
     <div className="flex-grow flex flex-col space-y-6 pt-2 pb-8 px-4 text-[#008751]">
-      {/* 1. TV SECTION (MOVED TO TOP, MOBILE-FRIENDLY) */}
-      <section className="shrink-0 w-full">
-        <div className="bg-black shadow-2xl w-full aspect-video overflow-hidden">
+      {/* 1. TV SECTION (RESIZED TO MATCH LOGO WIDTH) */}
+      <section className="shrink-0 w-full flex justify-center">
+        <div className="bg-black shadow-2xl w-[300px] h-[220px] overflow-hidden rounded-xl border border-green-900/10">
           <TVPlayer
             activeVideo={activeVideo}
             allVideos={allVideos.filter(v => v.type === 'video')}
