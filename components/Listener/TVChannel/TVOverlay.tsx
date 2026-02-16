@@ -29,7 +29,7 @@ const TVOverlay: React.FC<TVOverlayProps> = ({
         <div className="absolute inset-0 z-40 pointer-events-none group select-none">
             {/* 1. TOP LEFT: STATION BUG (Clean floating text) */}
             <div className={`absolute top-4 left-4 animate-tv-pop z-20 transition-opacity duration-500 ${isVisible ? 'opacity-100' : 'opacity-0'}`}>
-                <div className="flex items-center drop-shadow-[0_2px_4px_rgba(0,0,0,1)] scale-150 origin-left">
+                <div className="flex items-center drop-shadow-[0_2px_8px_rgba(0,0,0,1)] scale-150 origin-left">
                     <span className="text-[11px] font-black tracking-tighter flex italic uppercase">
                         <span className="text-[#008751]">ND</span>
                         <span className="text-white">R</span>

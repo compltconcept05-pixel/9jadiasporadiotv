@@ -43,7 +43,7 @@ const Logo: React.FC<LogoProps> = ({
 
         <div className="flex items-center justify-center space-x-2 w-full">
           {/* LEFT SIDE VISUALIZER WALL */}
-          <div className={`w-18 h-24 transition-opacity duration-700 ${isPlaying ? 'opacity-100' : 'opacity-20'}`}>
+          <div className={`w-18 h-24 transition-opacity duration-700 pointer-events-none ${isPlaying ? 'opacity-100' : 'opacity-20'}`}>
             <AudioVisualizer analyser={analyser || null} isActive={isPlaying} variant="sides" />
           </div>
 
@@ -63,7 +63,7 @@ const Logo: React.FC<LogoProps> = ({
           </div>
 
           {/* RIGHT SIDE VISUALIZER WALL */}
-          <div className={`w-18 h-24 transition-opacity duration-700 ${isPlaying ? 'opacity-100' : 'opacity-20'} transform scale-x-[-1]`}>
+          <div className={`w-18 h-24 transition-opacity duration-700 pointer-events-none ${isPlaying ? 'opacity-100' : 'opacity-20'} transform scale-x-[-1]`}>
             <AudioVisualizer analyser={analyser || null} isActive={isPlaying} variant="sides" />
           </div>
         </div>
@@ -81,13 +81,13 @@ const Logo: React.FC<LogoProps> = ({
 
           {/* Fresh Play Button - Positioned Below Tagline */}
           {showPlayButton && onTogglePlayback && (
-            <div className="mt-2 flex justify-center">
+            <div className="mt-2 flex justify-center relative z-[100]">
               <button
                 onClick={(e) => {
                   e.stopPropagation();
                   onTogglePlayback();
                 }}
-                className="w-12 h-12 rounded-full flex items-center justify-center transition-all duration-300 shadow-lg active:scale-90 bg-[#008751] hover:bg-green-700"
+                className="w-12 h-12 rounded-full flex items-center justify-center transition-all duration-300 shadow-lg active:scale-90 bg-[#008751] hover:bg-green-700 pointer-events-auto"
               >
                 {isPlaying ? (
                   <i className="fas fa-pause text-white text-xl"></i>

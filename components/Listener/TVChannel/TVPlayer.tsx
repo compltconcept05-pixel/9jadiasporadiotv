@@ -1,7 +1,7 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { MediaFile, NewsItem, AdminMessage } from '../../../types';
 import TVOverlay from './TVOverlay';
-import TVStinger from './TVStinger';
+// TVStinger removed
 
 interface TVPlayerProps {
     activeVideo: MediaFile | null;
@@ -34,7 +34,6 @@ const TVPlayer: React.FC<TVPlayerProps> = ({
 }) => {
     const [isPlaying, setIsPlaying] = useState(false);
     const [currentIndex, setCurrentIndex] = useState(0);
-    const [showStinger, setShowStinger] = useState(false);
     // Use prop for muted state if provided
     const [isMutedInternal, setIsMutedInternal] = useState(false);
     const isMuted = onMuteChange ? isMutedProp : isMutedInternal;
@@ -89,7 +88,7 @@ const TVPlayer: React.FC<TVPlayerProps> = ({
     }, [volume]);
 
     const [lastAdvertTimestamp, setLastAdvertTimestamp] = useState(Date.now());
-    const [lastStingerTimestamp, setLastStingerTimestamp] = useState(Date.now());
+    // lastStingerTimestamp removed
     const [isAdvertPlaying, setIsAdvertPlaying] = useState(false);
     const [originalTrackIndex, setOriginalTrackIndex] = useState(0);
 
@@ -126,23 +125,16 @@ const TVPlayer: React.FC<TVPlayerProps> = ({
                 }
             }
 
-            // 2. STINGER TIMER (15 minutes = 900,000ms)
-            // Plays stinger overlay while video continues underneath (or pauses, depending on logic)
-            if (now - lastStingerTimestamp >= 900000) {
-                console.log("🎬 [TVPlayer] Triggering Scheduled Stinger...");
-                setShowStinger(true);
-                setLastStingerTimestamp(now);
-            }
+            // 2. STINGER TIMER - REMOVED
         }, 5000); // Check every 5s
 
         return () => clearInterval(interval);
-    }, [isActive, isPlaying, isNewsPlaying, isAdmin, lastAdvertTimestamp, lastStingerTimestamp, isAdvertPlaying, allVideos, currentIndex]);
+    }, [isActive, isPlaying, isNewsPlaying, isAdmin, lastAdvertTimestamp, isAdvertPlaying, allVideos, currentIndex]);
 
     // 2. Sync with Admin Broadcast & Active State (Force Stinger on Start)
     useEffect(() => {
         if (!isActive) {
             setIsPlaying(false);
-            setShowStinger(false);
         } else if (activeVideo) {
             // Check if this is a "Fresh" start of TV execution
             // We can infer this if we weren't playing before
@@ -153,9 +145,9 @@ const TVPlayer: React.FC<TVPlayerProps> = ({
                     setCurrentIndex(idx);
                     // ONLY SHOW STINGER IF NOT ADMIN - Admins already hear it/see it on their monitor, avoids double sound
                     if (!isAdmin) {
-                        setShowStinger(true); // FORCE STINGER ON START
+                        // Stinger trigger removed
                     }
-                    setLastStingerTimestamp(Date.now()); // Reset stinger timer on start
+                    // lastStingerTimestamp reset removed
                     setIsPlaying(true);
                 }
             }
@@ -164,9 +156,8 @@ const TVPlayer: React.FC<TVPlayerProps> = ({
 
     // 3. Playback Logic
     useEffect(() => {
-        // Pauses video if Stinger is visible
         if (videoRef.current) {
-            const shouldPlayVideo = isPlaying && !isNewsPlaying && isActive && !showStinger;
+            const shouldPlayVideo = isPlaying && !isNewsPlaying && isActive;
             if (shouldPlayVideo) {
                 videoRef.current.play().catch(e => {
                     console.debug("Playback failed", e);
@@ -176,32 +167,20 @@ const TVPlayer: React.FC<TVPlayerProps> = ({
                 videoRef.current.pause();
             }
         }
-    }, [isPlaying, currentIndex, isNewsPlaying, isActive, showStinger]);
+    }, [isPlaying, currentIndex, isNewsPlaying, isActive]);
 
-    // 4. Endless Loop & Stinger Transition Logic
-    const handleStingerComplete = () => {
-        setShowStinger(false);
-        // Advance to next video
-        const nextIndex = (currentIndex + 1) % allVideos.length;
-        setCurrentIndex(nextIndex);
-        setIsPlaying(true);
-
-        // ADMIN SYNC: Signal all listeners to advance
-        if (isAdmin && onVideoAdvance) {
-            onVideoAdvance(nextIndex);
-        }
-    };
+    // 4. Endless Loop Logic (Stinger logic removed)
 
     const handleEnded = () => {
         if (isAdvertPlaying) {
             console.log("📺 [TVPlayer] Advert completed, returning to main sequence...");
             setCurrentIndex(originalTrackIndex);
             setIsAdvertPlaying(false);
-            // Show stinger when returning to main sequence for professional feel
-            setShowStinger(true);
         } else if (allVideos.length > 0) {
-            // Video ended -> Show Stinger -> (Then Stinger onComplete triggers next video)
-            setShowStinger(true);
+            // Video ended -> Advance immediately
+            const nextIndex = (currentIndex + 1) % allVideos.length;
+            setCurrentIndex(nextIndex);
+            if (isAdmin && onVideoAdvance) onVideoAdvance(nextIndex);
         }
     };
 
@@ -209,11 +188,7 @@ const TVPlayer: React.FC<TVPlayerProps> = ({
         const newIsPlaying = !isPlaying;
         setIsPlaying(newIsPlaying);
         if (newIsPlaying && isMuted) {
-            setIsMuted(false); // Force unmute on manual play interaction -> This will trigger Radio pause via onMuteChange
-        }
-        // Auto-fullscreen on mobile when user taps play
-        if (newIsPlaying && containerRef.current && !document.fullscreenElement) {
-            containerRef.current.requestFullscreen().catch(() => { });
+            setIsMuted(false);
         }
     };
 
@@ -225,110 +200,20 @@ const TVPlayer: React.FC<TVPlayerProps> = ({
 
     if (!isActive) {
         return (
-            <div ref={containerRef} className="relative bg-black overflow-hidden group select-none shadow-2xl rounded-xl w-full h-full">
-                {/* Looping Stinger instead of static "Station Live" */}
-                <TVStinger
-                    variant="loop"
-                    isMuted={true} // FORCE SILIENT IN OFFLINE LOOP
-                    isPlaying={isPlaying}
-                    onTogglePlay={togglePlay}
-                    showControls={true}
-                />
-                {/* PLAY BUTTON ON TV - NOW TV-ONLY (NO RADIO FALLBACK) */}
-                <div className="absolute inset-0 z-40 flex items-center justify-center">
-                    <button
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            togglePlay(); // Strictly play/pause local loop
-                        }}
-                        className="w-16 h-16 rounded-full flex items-center justify-center bg-[#008751]/80 hover:bg-[#008751] backdrop-blur-md shadow-2xl transition-all active:scale-90 border-2 border-white/30"
-                        style={{ boxShadow: '0 0 30px rgba(0,135,81,0.5)' }}
-                    >
-                        {/* {isPlaying ? <i className="fas fa-pause text-white text-2xl ml-1"></i> : <i className="fas fa-play text-white text-2xl ml-1"></i>} */}
-                        {/* Always show "Play" icon if loop is paused or just to invite interaction */}
-                        <i className={`fas ${isPlaying ? 'fa-pause' : 'fa-play'} text-white text-2xl ml-1`}></i>
-                    </button>
-                </div>
-                {/* PERMANENT CONTROLS - ALWAYS VISIBLE (Z-60) */}
-                <div className="absolute bottom-4 right-4 z-[60] flex items-center space-x-3 pointer-events-auto">
-                    <button
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            togglePlay();
-                        }}
-                        className="w-10 h-10 bg-black/60 hover:bg-[#008751] backdrop-blur-md rounded-full flex items-center justify-center text-white border border-white/20 shadow-xl transition-all active:scale-95"
-                    >
-                        {isPlaying ? <i className="fas fa-pause text-xs"></i> : <i className="fas fa-play text-xs ml-0.5"></i>}
-                    </button>
-                    <button
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            toggleFullscreen();
-                        }}
-                        className="w-10 h-10 bg-black/60 hover:bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center text-white border border-white/20 shadow-xl transition-all active:scale-95"
-                    >
-                        <i className="fas fa-expand text-xs"></i>
-                    </button>
-                </div>
+            <div ref={containerRef} className="relative bg-black overflow-hidden group select-none shadow-2xl rounded-xl w-full h-full flex items-center justify-center">
+                {/* STATION OFFLINE LOGO instead of Stinger */}
+                <span className="text-xl font-black italic text-white/20">NDR TV</span>
             </div>
         );
     }
 
     if (!currentTrack) {
         return (
-            <div ref={containerRef} className="relative bg-black overflow-hidden group select-none shadow-2xl w-full h-full">
-                {/* OFFLINE MODE: Loop, Controls Visible, Controlled Mute */}
-                <TVStinger
-                    variant="loop"
-                    isMuted={isMuted}
-                    onToggleMute={toggleMute}
-                    isPlaying={isPlaying}
-                    onTogglePlay={togglePlay}
-                    showControls={true}
-                />
-
-                {/* PLAY BUTTON ON TV - OFFLINE ACTIVE - NOW TV-ONLY */}
-                <div className="absolute inset-0 z-40 flex items-center justify-center">
-                    <button
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            togglePlay();
-                        }}
-                        className="w-16 h-16 rounded-full flex items-center justify-center bg-[#008751]/80 hover:bg-[#008751] backdrop-blur-md shadow-2xl transition-all active:scale-90 border-2 border-white/30"
-                        style={{ boxShadow: '0 0 30px rgba(0,135,81,0.5)' }}
-                    >
-                        <i className={`fas ${isPlaying ? 'fa-pause' : 'fa-play'} text-white text-2xl ml-1`}></i>
-                    </button>
-                </div>
-
-                {/* Optional minimal offline status overlay */}
-                <div className="absolute top-4 right-4 z-50">
-                    <div className="flex items-center space-x-2 bg-black/60 backdrop-blur-md px-3 py-1 rounded-full border border-white/10">
-                        <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
-                        <span className="text-[8px] font-bold text-white/80 uppercase tracking-widest">Signal Offline</span>
-                    </div>
-                </div>
-
-                {/* PERMANENT CONTROLS - ALWAYS VISIBLE (Z-60) */}
-                <div className="absolute bottom-4 right-4 z-[60] flex items-center space-x-3 pointer-events-auto">
-                    <button
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            togglePlay();
-                        }}
-                        className="w-16 h-16 bg-black/60 hover:bg-[#008751] backdrop-blur-md rounded-full flex items-center justify-center text-white border border-white/20 shadow-xl transition-all active:scale-95"
-                    >
-                        {!!activeVideo && isPlaying ? <i className="fas fa-pause text-xs"></i> : <i className="fas fa-play text-xs ml-0.5"></i>}
-                    </button>
-                    <button
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            toggleFullscreen();
-                        }}
-                        className="w-10 h-10 bg-black/60 hover:bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center text-white border border-white/20 shadow-xl transition-all active:scale-95"
-                    >
-                        <i className="fas fa-expand text-xs"></i>
-                    </button>
+            <div ref={containerRef} className="relative bg-black overflow-hidden group select-none shadow-2xl w-full h-full flex flex-col items-center justify-center space-y-4">
+                <span className="text-xl font-black italic text-white/20">NDR TV</span>
+                <div className="flex items-center space-x-2 bg-black/60 backdrop-blur-md px-3 py-1 rounded-full border border-white/10">
+                    <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
+                    <span className="text-[8px] font-bold text-white/80 uppercase tracking-widest">Signal Offline</span>
                 </div>
             </div>
         );
@@ -349,33 +234,18 @@ const TVPlayer: React.FC<TVPlayerProps> = ({
             />
 
 
-            {/* Stinger Overlay (ON AIR MODE: Sequence, No Controls, Controlled Mute) */}
-            {showStinger && (
-                <TVStinger
-                    onComplete={handleStingerComplete}
-                    variant="sequence"
-                    isMuted={isMuted}
-                    onToggleMute={toggleMute}
-                    isPlaying={isPlaying}
-                    onTogglePlay={togglePlay}
-                    showControls={true}
-                />
-            )}
-
-            {/* Overlays (ON AIR MODE: Integrated volume control) */}
-            {!showStinger && (
-                <TVOverlay
-                    isPlaying={isPlaying}
-                    onTogglePlay={togglePlay}
-                    onToggleFullscreen={toggleFullscreen}
-                    channelName="NDRTV"
-                    news={news}
-                    adminMessages={adminMessages}
-                    isVisible={showControls}
-                    volume={volume}
-                    onVolumeChange={setVolume}
-                />
-            )}
+            {/* Overlays (ON AIR MODE: Integrated news ticker) */}
+            <TVOverlay
+                isPlaying={isPlaying}
+                onTogglePlay={togglePlay}
+                onToggleFullscreen={toggleFullscreen}
+                channelName="NDRTV"
+                news={news}
+                adminMessages={adminMessages}
+                isVisible={showControls}
+                volume={volume}
+                onVolumeChange={setVolume}
+            />
 
             {/* Tap surface to show controls */}
             <div
@@ -383,31 +253,6 @@ const TVPlayer: React.FC<TVPlayerProps> = ({
                 onClick={resetHideTimer}
                 onMouseMove={resetHideTimer}
             />
-
-            {/* PERMANENT CONTROLS - VISIBILITY LOGIC:
-                - Offline/Standby (!isActive): ALWAYS SHOW
-                - Active (Playing/Paused): HIDE (User requested to only show when offline)
-             */}
-            <div className={`absolute bottom-4 right-4 z-[60] flex items-center space-x-3 transition-opacity duration-300 ${(!isActive || showControls) ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}>
-                <button
-                    onClick={(e) => {
-                        e.stopPropagation();
-                        togglePlay();
-                    }}
-                    className="w-10 h-10 bg-black/60 hover:bg-[#008751] backdrop-blur-md rounded-full flex items-center justify-center text-white border border-white/20 shadow-xl transition-all active:scale-95"
-                >
-                    {isPlaying ? <i className="fas fa-pause text-xs"></i> : <i className="fas fa-play text-xs ml-0.5"></i>}
-                </button>
-                <button
-                    onClick={(e) => {
-                        e.stopPropagation();
-                        toggleFullscreen();
-                    }}
-                    className="w-10 h-10 bg-black/60 hover:bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center text-white border border-white/20 shadow-xl transition-all active:scale-95"
-                >
-                    <i className="fas fa-expand text-xs"></i>
-                </button>
-            </div>
         </div>
     );
 };
