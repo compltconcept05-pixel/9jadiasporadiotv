@@ -21,7 +21,7 @@ const App: React.FC = () => {
   const [role, setRole] = useState<UserRole>(UserRole.LISTENER);
   const [showAuth, setShowAuth] = useState(false);
   const [news, setNews] = useState<NewsItem[]>([]);
-  const [logs, setLogs] = useState<AdminLog[]>([]);
+  const [isPlaying, setIsPlaying] = useState(false); // Master Radio Play State
   const [sponsoredMedia, setSponsoredMedia] = useState<MediaFile[]>([]);
   const [audioPlaylist, setAudioPlaylist] = useState<MediaFile[]>([]);
   const [adminMessages, setAdminMessages] = useState<AdminMessage[]>([]);
@@ -276,7 +276,7 @@ const App: React.FC = () => {
           } else {
             setCloudStatus('📡 Station Standby');
           }
-          setIsPlayingState(newState.is_playing);
+          setIsPlaying(newState.is_playing);
 
           // Conflict Detection: If someone else is pulsing as Admin with a different sessionId
           if (role === UserRole.ADMIN && newState.timestamp > (Date.now() - 30000)) {
@@ -818,7 +818,7 @@ const App: React.FC = () => {
           activeTrackId={activeTrackId}
           isDucking={isDucking}
           onTogglePlayback={handleRadioToggle}
-          forcePlaying={role === UserRole.ADMIN ? isPlaying : (isPlayingState && listenerHasPlayed && (!isTvActive || isTvMuted))}
+          forcePlaying={role === UserRole.ADMIN ? isPlaying : (isPlaying && listenerHasPlayed && (!isTvActive || isTvMuted))}
           isAdmin={role === UserRole.ADMIN}
           showPlayButton={role !== UserRole.ADMIN}
           isTvActive={isTvActive}
@@ -826,7 +826,7 @@ const App: React.FC = () => {
         />
 
         {/* Join Broadcast Overlay for Listeners */}
-        {role === UserRole.LISTENER && showJoinPrompt && !listenerHasPlayed && isPlayingState && (
+        {role === UserRole.LISTENER && showJoinPrompt && !listenerHasPlayed && isPlaying && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-md animate-scale-in">
             <div className="bg-white rounded-3xl p-8 max-w-[80%] text-center shadow-2xl border border-green-100">
               <div className="w-20 h-20 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-[0_0_20px_rgba(0,135,81,0.5)] animate-pulse">

@@ -205,7 +205,7 @@ const TVPlayer: React.FC<TVPlayerProps> = ({
         setIsMuted(!isMuted);
     };
 
-    const currentTrack = allVideos[currentIndex] || activeVideo;
+    const currentTrack = allVideos.find(v => v.id === activeVideo?.id) || activeVideo || allVideos.find(v => v.type === 'video');
 
     return (
         <div ref={containerRef} className="relative w-full h-full bg-black overflow-hidden group select-none shadow-2xl">
@@ -228,11 +228,16 @@ const TVPlayer: React.FC<TVPlayerProps> = ({
                         key={currentTrack.url}
                         src={currentTrack.url}
                         className="w-full h-full object-cover pointer-events-none"
-                        autoPlay={false}
+                        autoPlay={isPlaying && !isNewsPlaying}
                         muted={isMuted}
+                        loop
                         playsInline
                         onEnded={handleEnded}
                     />
+                ) : (
+                <div className="absolute inset-0 bg-black flex items-center justify-center">
+                    <div className="text-white/10 text-xl font-bold italic animate-pulse">NDR TV STANDBY</div>
+                </div>
                 )}
             </div>
 
