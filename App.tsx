@@ -31,6 +31,7 @@ const App: React.FC = () => {
   const [manualScript, setManualScript] = useState<string>('');
   const [newsHistory, setNewsHistory] = useState<NewsItem[]>([]);
 
+  const [isPlaying, setIsPlaying] = useState(false); // Master Station Play State
   const [radioCurrentTime, setRadioCurrentTime] = useState(0); // LIVE POSITION
   const [listenerHasPlayed, setListenerHasPlayed] = useState(false); // Listener play button state
   const [activeTrackId, setActiveTrackId] = useState<string | null>(null);
