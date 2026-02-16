@@ -234,10 +234,6 @@ const TVPlayer: React.FC<TVPlayerProps> = ({
                         playsInline
                         onEnded={handleEnded}
                     />
-                ) : (
-                <div className="absolute inset-0 bg-black flex items-center justify-center">
-                    <div className="text-white/10 text-xl font-bold italic animate-pulse">NDR TV STANDBY</div>
-                </div>
                 )}
             </div>
 

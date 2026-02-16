@@ -21,7 +21,7 @@ const App: React.FC = () => {
   const [role, setRole] = useState<UserRole>(UserRole.LISTENER);
   const [showAuth, setShowAuth] = useState(false);
   const [news, setNews] = useState<NewsItem[]>([]);
-  const [isPlaying, setIsPlaying] = useState(false); // Master Radio Play State
+  const [logs, setLogs] = useState<AdminLog[]>([]);
   const [sponsoredMedia, setSponsoredMedia] = useState<MediaFile[]>([]);
   const [audioPlaylist, setAudioPlaylist] = useState<MediaFile[]>([]);
   const [adminMessages, setAdminMessages] = useState<AdminMessage[]>([]);
