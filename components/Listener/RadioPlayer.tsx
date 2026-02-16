@@ -349,6 +349,23 @@ const RadioPlayer: React.FC<RadioPlayerProps> = ({
     }
   }, [startTime, isAdmin, isPlaying, forcePlaying]);
 
+  // ENSURE PLAYBACK FOLLOWS STATE CHANGES
+  useEffect(() => {
+    if (audioRef.current) {
+      const shouldBePlaying = isPlaying || forcePlaying;
+      if (shouldBePlaying && audioRef.current.paused) {
+        console.log("🔊 [RadioPlayer] Force Playback Triggered by State Change");
+        audioRef.current.play().catch(err => {
+          console.warn("Autoplay/ForcePlay blocked:", err);
+          setStatus('IDLE');
+        });
+      } else if (!shouldBePlaying && !audioRef.current.paused) {
+        console.log("🔇 [RadioPlayer] Force Pause Triggered by State Change");
+        audioRef.current.pause();
+      }
+    }
+  }, [isPlaying, forcePlaying]);
+
   // Jingle Scheduler Refs
   const lastJingleTimeRef = useRef<number>(Date.now());
   const jingleAudioRef = useRef<HTMLAudioElement | null>(null);

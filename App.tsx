@@ -95,17 +95,28 @@ const App: React.FC = () => {
 
   // Optimized Track URL Setter
   const updateTrackUrl = useCallback((id: string | null, url: string | null, name: string) => {
+    // RESOLUTION GUARD: If URL is null but ID is present, find it in library
+    let resolvedUrl = url;
+    if (!resolvedUrl && id && id !== 'jingle') {
+      const found = allMediaRef.current.find(m => m.id === id);
+      if (found) resolvedUrl = found.url;
+    }
+
     setActiveTrackId(prevId => {
       if (prevId === id) return prevId;
+      console.log(`🎵 [App] Active Track Change: ${id} (${name}) | Resolved URL: ${resolvedUrl ? 'YES' : 'NO'}`);
       return id;
     });
+
     setActiveTrackUrl(prevUrl => {
-      if (prevUrl === url) return prevUrl;
-      return url;
+      if (prevUrl === resolvedUrl) return prevUrl;
+      return resolvedUrl;
     });
+
     setCurrentTrackName(prevName => {
-      if (prevName === name) return prevName;
-      return name;
+      const clean = cleanTrackName(name);
+      if (prevName === clean) return prevName;
+      return clean;
     });
     // v2.5.0: Reset timeline to 0 for the new track
     setRadioCurrentTime(0);
@@ -253,22 +264,16 @@ const App: React.FC = () => {
             setRadioCurrentTime(compensatedOffset);
           }
 
-          if (newState.current_track_id) {
-            console.log("🎯 [App] Listener Syncing Track:", newState.current_track_name);
-            updateTrackUrl(newState.current_track_id, newState.current_track_url, newState.current_track_name);
+          setIsPlaying(newState.is_playing);
+          setIsTvActive(newState.is_tv_active);
 
-            // Re-sync URL from library if the cloud URL is missing but ID is present
-            if (!newState.current_track_url && allMediaRef.current.length > 0 && newState.current_track_id !== 'jingle') {
-              const track = allMediaRef.current.find(m => m.id === newState.current_track_id);
-              if (track && track.url) {
-                console.log("🔗 [App] Resolved URL from local library:", track.url);
-                updateTrackUrl(newState.current_track_id, track.url, newState.current_track_name);
-              }
-            }
+          if (newState.current_track_id) {
+            updateTrackUrl(newState.current_track_id, newState.current_track_url, newState.current_track_name || 'Music');
           }
 
-          // Force join prompt if not played yet and station is live
-          if (newState.is_playing && !listenerHasPlayed) {
+          setRadioCurrentTime(newState.current_offset || 0);
+
+          if (role === UserRole.LISTENER && newState.is_playing && !listenerHasPlayed) {
             setShowJoinPrompt(true);
             setCloudStatus('📡 BROADCAST LIVE - TAP TO JOIN');
           } else if (newState.is_playing) {
@@ -276,7 +281,6 @@ const App: React.FC = () => {
           } else {
             setCloudStatus('📡 Station Standby');
           }
-          setIsPlaying(newState.is_playing);
 
           // Conflict Detection: If someone else is pulsing as Admin with a different sessionId
           if (role === UserRole.ADMIN && newState.timestamp > (Date.now() - 30000)) {
