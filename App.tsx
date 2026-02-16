@@ -271,8 +271,6 @@ const App: React.FC = () => {
             updateTrackUrl(newState.current_track_id, newState.current_track_url, newState.current_track_name || 'Music');
           }
 
-          setRadioCurrentTime(newState.current_offset || 0);
-
           if (role === UserRole.LISTENER && newState.is_playing && !listenerHasPlayed) {
             setShowJoinPrompt(true);
             setCloudStatus('📡 BROADCAST LIVE - TAP TO JOIN');
@@ -766,7 +764,7 @@ const App: React.FC = () => {
       <header className="p-4 sticky top-0 z-40 bg-white/90 backdrop-blur-md flex justify-between items-center border-b border-green-50 shadow-sm">
         <div className="flex items-baseline space-x-2">
           <h1 className="text-sm font-black italic uppercase leading-none text-green-950 whitespace-nowrap">{APP_NAME}</h1>
-          <span className="text-[5px] font-black text-green-700/40 uppercase tracking-widest translate-y-[-1px]">V5.6-SYNC-SYNC</span>
+          <span className="text-[5px] font-black text-green-700/40 uppercase tracking-widest translate-y-[-1px]">V5.7-VERIFIED-PLAYBACK</span>
         </div>
         <div className="flex items-center space-x-2">
           {role === UserRole.LISTENER && (
