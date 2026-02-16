@@ -47,11 +47,11 @@ const TVOverlay: React.FC<TVOverlayProps> = ({
             </div>
 
             {/* 3. BOTTOM: INTEGRATED NEWS TICKER (Inside Screen - Red Background - Always Visible) */}
-            <div className="absolute bottom-0 inset-x-0 h-6 bg-red-600 backdrop-blur-md border-t border-white/20 flex items-center overflow-hidden z-20 transition-transform duration-500 relative">
+            <div className="absolute bottom-0 inset-x-0 h-10 bg-red-600 backdrop-blur-md border-t border-white/20 flex items-center overflow-hidden z-20 transition-transform duration-500 relative">
 
-                {/* 3.1 FLAG/MAP OVERLAY (Bold, Higher Layer, Solid Bg) */}
-                <div className="absolute left-0 inset-y-0 w-12 bg-red-600 flex items-center justify-center z-30 shadow-[4px_0_10px_rgba(0,0,0,0.3)]">
-                    <div className="flex w-8 h-5 rounded-[1px] overflow-hidden shadow-sm border border-white/20">
+                {/* 3.1 FLAG/MAP OVERLAY (Bold, Higher Layer, Solid Bg, Doubled Again) */}
+                <div className="absolute left-0 inset-y-0 w-16 bg-red-600 flex items-center justify-center z-30 shadow-[4px_0_10px_rgba(0,0,0,0.3)]">
+                    <div className="flex w-12 h-7 rounded-[1px] overflow-hidden shadow-sm border border-white/20">
                         <div className="flex-1 bg-[#008751]"></div>
                         <div className="flex-1 bg-white"></div>
                         <div className="flex-1 bg-[#008751]"></div>
@@ -60,7 +60,7 @@ const TVOverlay: React.FC<TVOverlayProps> = ({
 
                 <div className={`flex whitespace-nowrap items-center z-20 ${isPlaying ? 'animate-tv-marquee' : 'opacity-50'}`}>
                     {/* Padding for initial flag clearance */}
-                    <span className="w-12 inline-block"></span>
+                    <span className="w-16 inline-block"></span>
                     <span className="text-[7px] font-black text-white uppercase px-6 tracking-widest inline-block">{CHANNEL_INTRO}</span>
                     {adminMessages.map((msg, i) => (
                         <span key={`tv-admin-${i}`} className="text-[7px] text-red-100 font-black uppercase px-6 flex items-center inline-block">
@@ -131,7 +131,7 @@ const TVOverlay: React.FC<TVOverlayProps> = ({
 
             {/* Subtle Gradient Overlays */}
             <div className="absolute inset-x-0 top-0 h-12 bg-gradient-to-b from-black/40 to-transparent"></div>
-            <div className="absolute inset-x-0 bottom-6 h-12 bg-gradient-to-t from-black/40 to-transparent"></div>
+            {/* CLEANED UP: bottom-6 gradient removed to clear scroller space */}
 
             {/* Marquee Animation */}
             <style dangerouslySetInnerHTML={{
