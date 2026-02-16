@@ -6,6 +6,8 @@ interface TVStingerProps {
     variant?: 'sequence' | 'loop';
     isMuted?: boolean;
     onToggleMute?: () => void;
+    isPlaying?: boolean;
+    onTogglePlay?: () => void;
     showControls?: boolean;
 }
 
@@ -14,6 +16,8 @@ const TVStinger: React.FC<TVStingerProps> = ({
     variant = 'sequence',
     isMuted = false,
     onToggleMute,
+    isPlaying = true,
+    onTogglePlay,
     showControls = false
 }) => {
     const [videoError, setVideoError] = useState(false);
@@ -37,6 +41,7 @@ const TVStinger: React.FC<TVStingerProps> = ({
             {/* Background Video */}
             {!videoError ? (
                 <video
+                    key="/diaspora tv.mp4"
                     src="/diaspora tv.mp4"
                     className="absolute inset-0 w-full h-full object-cover"
                     autoPlay
@@ -45,41 +50,57 @@ const TVStinger: React.FC<TVStingerProps> = ({
                     onError={() => setVideoError(true)}
                     muted={isMuted}
                     onEnded={handleVideoEnded}
+                    ref={(el) => {
+                        if (el) {
+                            if (isPlaying) el.play().catch(() => { });
+                            else el.pause();
+                        }
+                    }}
                 />
             ) : (
                 // Fallback Gradient if video missing
                 <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_#001a00_0%,_#000000_100%)]"></div>
             )}
 
-            {/* 1. TOP LEFT: STATION BUG (Reduced Size & Tighter Position) - Copied from TVOverlay */}
-            <div className={`absolute top-2 left-2 animate-tv-pop z-50`}>
-                <div className="flex items-center bg-black/40 backdrop-blur-sm px-1.5 py-0.5 border border-white/10 shadow-lg">
-                    <span className="text-[9px] font-black tracking-tighter drop-shadow-md flex italic">
-                        <span className="text-[#008751]">ND</span>
-                        <span className="text-white">R</span>
-                        <span className="text-[#008751]">TV</span>
-                    </span>
-                </div>
-            </div>
+            {/* ... station bug ... */}
 
-            {/* Conditional Controls (For Offline Mode) */}
-            {showControls && onToggleMute && (
-                <div className="absolute bottom-4 right-4 z-50 flex items-center space-x-2">
+            {/* Conditional Controls */}
+            {showControls && (
+                <div className="absolute bottom-6 right-6 z-50 flex items-center space-x-3">
+                    {/* Play/Pause Toggle */}
+                    {onTogglePlay && (
+                        <button
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                onTogglePlay();
+                            }}
+                            className="w-10 h-10 bg-black/60 hover:bg-[#008751] backdrop-blur-xl border border-white/20 rounded-full flex items-center justify-center text-white shadow-xl transition-all active:scale-95"
+                        >
+                            {isPlaying ? (
+                                <i className="fas fa-pause text-xs"></i>
+                            ) : (
+                                <i className="fas fa-play text-xs ml-0.5"></i>
+                            )}
+                        </button>
+                    )}
+
                     {/* Mute Toggle */}
-                    <button
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            onToggleMute();
-                        }}
-                        className="w-8 h-8 bg-black/60 hover:bg-white/20 backdrop-blur-xl border border-white/10 rounded-full flex items-center justify-center text-white shadow-xl transition-all active:scale-95"
-                        title={isMuted ? "Unmute" : "Mute"}
-                    >
-                        {isMuted ? (
-                            <i className="fas fa-volume-mute text-[10px] text-red-500"></i>
-                        ) : (
-                            <i className="fas fa-volume-up text-[10px]"></i>
-                        )}
-                    </button>
+                    {onToggleMute && (
+                        <button
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                onToggleMute();
+                            }}
+                            className="w-10 h-10 bg-black/60 hover:bg-white/20 backdrop-blur-xl border border-white/10 rounded-full flex items-center justify-center text-white shadow-xl transition-all active:scale-95"
+                            title={isMuted ? "Unmute" : "Mute"}
+                        >
+                            {isMuted ? (
+                                <i className="fas fa-volume-mute text-xs text-red-500"></i>
+                            ) : (
+                                <i className="fas fa-volume-up text-xs"></i>
+                            )}
+                        </button>
+                    )}
                 </div>
             )}
 

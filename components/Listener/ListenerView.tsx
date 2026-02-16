@@ -144,9 +144,9 @@ const ListenerView: React.FC<ListenerViewProps> = ({
 
   return (
     <div className="flex-grow flex flex-col space-y-6 pt-2 pb-8 px-4 text-[#008751]">
-      {/* 1. TV SECTION (RESIZED TO MATCH LOGO WIDTH) */}
-      <section className="shrink-0 w-full flex justify-center">
-        <div className="bg-black shadow-2xl w-[300px] h-[220px] overflow-hidden rounded-xl border border-green-900/10">
+      {/* 1. TV SECTION (EDGE-TO-EDGE) */}
+      <section className="shrink-0 w-full -mx-4 px-0">
+        <div className="bg-black shadow-2xl w-full h-[240px] overflow-hidden border-y border-white/5">
           <TVPlayer
             activeVideo={activeVideo}
             allVideos={allVideos.filter(v => v.type === 'video')}

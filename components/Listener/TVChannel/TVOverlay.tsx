@@ -27,23 +27,10 @@ const TVOverlay: React.FC<TVOverlayProps> = ({
 }) => {
     return (
         <div className="absolute inset-0 z-40 pointer-events-none group select-none">
-            {/* 1. TOP LEFT: 3D EARTH LOGO (Realistic Rotating Globe) */}
-            <div className={`absolute top-2 left-2 animate-tv-pop z-20 transition-opacity duration-500 ${isVisible ? 'opacity-100' : 'opacity-0'}`}>
-                <div className="flex items-center bg-black/60 backdrop-blur-md px-2 py-1.5 border border-white/10 shadow-[0_0_15px_rgba(0,0,0,0.5)] scale-125 origin-left rounded-sm">
-                    {/* The 3D Globe Container */}
-                    <div className="relative w-7 h-7 rounded-full overflow-hidden mr-2 shadow-[0_0_8px_rgba(79,172,254,0.4)] ring-1 ring-white/10">
-                        {/* Rotating Earth Map */}
-                        <div
-                            className="absolute inset-0 bg-[url('https://upload.wikimedia.org/wikipedia/commons/thumb/c/c4/Earth_Cloud_Free.jpg/2048px-Earth_Cloud_Free.jpg')] bg-[length:auto_100%] animate-earth-spin"
-                            style={{ backgroundRepeat: 'repeat-x' }}
-                        ></div>
-                        {/* Spherical Shadow / Atmospheric Depth */}
-                        <div className="absolute inset-0 rounded-full shadow-[inset_-5px_-3px_12px_rgba(0,0,0,0.9),_inset_3px_2px_8px_rgba(255,255,255,0.2)]"></div>
-                        {/* Atmospheric Edge Glow */}
-                        <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-blue-500/10 via-transparent to-transparent opacity-40"></div>
-                    </div>
-
-                    <span className="text-[11px] font-black tracking-tighter drop-shadow-md flex italic">
+            {/* 1. TOP LEFT: STATION BUG (Clean floating text) */}
+            <div className={`absolute top-4 left-4 animate-tv-pop z-20 transition-opacity duration-500 ${isVisible ? 'opacity-100' : 'opacity-0'}`}>
+                <div className="flex items-center drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] scale-150 origin-left">
+                    <span className="text-[11px] font-black tracking-tighter flex italic uppercase">
                         <span className="text-[#008751]">ND</span>
                         <span className="text-white">R</span>
                         <span className="text-[#008751]">TV</span>
@@ -60,8 +47,8 @@ const TVOverlay: React.FC<TVOverlayProps> = ({
             </div>
 
             {/* 3. BOTTOM: INTEGRATED NEWS TICKER (Inside Screen) */}
-            <div className={`absolute bottom-0 inset-x-0 h-6 bg-[#008751] backdrop-blur-md border-t border-white/20 flex items-center overflow-hidden z-20 transition-opacity duration-500 ${isVisible ? 'opacity-100' : 'opacity-0'}`}>
-                {/* Nigeria Flag Indicator on the Left */}
+            <div className={`absolute bottom-0 inset-x-0 h-6 bg-[#008751] backdrop-blur-md border-t border-white/20 flex items-center overflow-hidden z-20 transition-opacity duration-500 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-full'}`}>
+                {/* ... flag ... */}
                 <div className="flex h-full px-2 items-center bg-black/20 border-r border-white/10 shrink-0">
                     <div className="flex w-4 h-2.5 rounded-[1px] overflow-hidden shadow-sm">
                         <div className="flex-1 bg-[#008751]"></div>
@@ -89,7 +76,7 @@ const TVOverlay: React.FC<TVOverlayProps> = ({
             </div>
 
             {/* 4. CONTROLS DECK (BOTTOM CORNERS) */}
-            <div className={`absolute bottom-8 inset-x-4 flex justify-between items-end pointer-events-none z-50 transition-all duration-500 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
+            <div className={`absolute bottom-8 inset-x-4 flex justify-between items-end pointer-events-none z-50 transition-all duration-500 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
 
                 {/* LEFT: PLAY/PAUSE */}
                 <div className="pointer-events-auto">

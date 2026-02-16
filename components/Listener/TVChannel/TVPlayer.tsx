@@ -231,7 +231,8 @@ const TVPlayer: React.FC<TVPlayerProps> = ({
                     variant="loop"
                     isMuted={true} // FORCE SILIENT IN OFFLINE LOOP
                     isPlaying={isPlaying}
-                    showControls={false}
+                    onTogglePlay={togglePlay}
+                    showControls={true}
                 />
                 {/* PLAY BUTTON ON TV - NOW TV-ONLY (NO RADIO FALLBACK) */}
                 <div className="absolute inset-0 z-40 flex items-center justify-center">
@@ -281,6 +282,8 @@ const TVPlayer: React.FC<TVPlayerProps> = ({
                     variant="loop"
                     isMuted={isMuted}
                     onToggleMute={toggleMute}
+                    isPlaying={isPlaying}
+                    onTogglePlay={togglePlay}
                     showControls={true}
                 />
 
@@ -352,7 +355,10 @@ const TVPlayer: React.FC<TVPlayerProps> = ({
                     onComplete={handleStingerComplete}
                     variant="sequence"
                     isMuted={isMuted}
-                    showControls={false}
+                    onToggleMute={toggleMute}
+                    isPlaying={isPlaying}
+                    onTogglePlay={togglePlay}
+                    showControls={true}
                 />
             )}
 
@@ -380,7 +386,7 @@ const TVPlayer: React.FC<TVPlayerProps> = ({
                 - Offline/Standby (!isActive): ALWAYS SHOW
                 - Active (Playing/Paused): HIDE (User requested to only show when offline)
              */}
-            <div className={`absolute bottom-4 right-4 z-[60] flex items-center space-x-3 transition-opacity duration-300 ${!isActive ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}>
+            <div className={`absolute bottom-4 right-4 z-[60] flex items-center space-x-3 transition-opacity duration-300 ${(!isActive || showControls) ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}>
                 <button
                     onClick={(e) => {
                         e.stopPropagation();

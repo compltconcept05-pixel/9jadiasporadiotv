@@ -800,7 +800,7 @@ const App: React.FC = () => {
           onTrackEnded={handlePlayNext}
           activeTrackId={activeTrackId}
           isDucking={isDucking}
-          forcePlaying={role === UserRole.ADMIN ? isPlaying : (isPlayingState && listenerHasPlayed && (!isTvActive || isTvMuted))}
+          forcePlaying={role === UserRole.ADMIN ? (isPlaying && (!isTvActive || isTvMuted)) : (isPlayingState && listenerHasPlayed && (!isTvActive || isTvMuted))}
           isAdmin={role === UserRole.ADMIN}
           showPlayButton={role !== UserRole.ADMIN}
         />

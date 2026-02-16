@@ -453,11 +453,13 @@ const RadioPlayer: React.FC<RadioPlayerProps> = ({
 
   useEffect(() => {
     if (audioRef.current) {
-      const shouldBePlaying = forcePlaying;
+      const shouldBePlaying = forcePlaying && !isDucking;
 
       if (!shouldBePlaying && !audioRef.current.paused) {
         console.log('📡 [RadioPlayer] EXCLUSIVITY LOCK: Pausing Radio audio (TV or Manual Pause active).');
         audioRef.current.pause();
+        setIsPlaying(false);
+        onStateChange(false);
       } else if (shouldBePlaying && audioRef.current.paused) {
         // Validate audio source before attempting to play
         if (!audioRef.current.src || audioRef.current.src === '' || audioRef.current.src === window.location.href) {
@@ -480,7 +482,7 @@ const RadioPlayer: React.FC<RadioPlayerProps> = ({
         });
       }
     }
-  }, [forcePlaying, isDucking]);
+  }, [forcePlaying, isDucking, onStateChange]);
 
   useEffect(() => {
     // Apply volume settings - FULL SILENCE during News as requested
