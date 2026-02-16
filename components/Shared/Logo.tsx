@@ -36,7 +36,7 @@ const Logo: React.FC<LogoProps> = ({
       </div>
 
       {/* Sun Flares / Ambient Light */}
-      <div className={`absolute top-0 right-0 w-48 h-48 bg-yellow-200/10 blur-[80px] rounded-full transition-opacity duration-1000 ${isJingle ? 'opacity-100 animate-pulse' : 'opacity-30'}`}></div>
+      <div className={`absolute top-0 right-0 w-48 h-48 bg-yellow-200/10 blur-[80px] rounded-full transition-opacity duration-1000 pointer-events-none ${isJingle ? 'opacity-100 animate-pulse' : 'opacity-30'}`}></div>
 
       {/* Main Content Area */}
       <div className="relative z-10 flex flex-col items-center justify-center h-full w-full px-6">

@@ -52,6 +52,8 @@ const TVStinger: React.FC<TVStingerProps> = ({
                     onEnded={handleVideoEnded}
                     ref={(el) => {
                         if (el) {
+                            // Direct attribute sync for robustness
+                            el.muted = isMuted;
                             if (isPlaying) el.play().catch(() => { });
                             else el.pause();
                         }
@@ -65,7 +67,7 @@ const TVStinger: React.FC<TVStingerProps> = ({
             {/* ... station bug ... */}
 
             {/* Conditional Controls */}
-            {showControls && (
+            {showControls && !isPlaying && (
                 <div className="absolute bottom-6 right-6 z-50 flex items-center space-x-3">
                     {/* Play/Pause Toggle */}
                     {onTogglePlay && (

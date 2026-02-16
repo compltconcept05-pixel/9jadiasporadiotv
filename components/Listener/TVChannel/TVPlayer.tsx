@@ -363,17 +363,19 @@ const TVPlayer: React.FC<TVPlayerProps> = ({
             )}
 
             {/* Overlays (ON AIR MODE: Integrated volume control) */}
-            <TVOverlay
-                isPlaying={isPlaying}
-                onTogglePlay={togglePlay}
-                onToggleFullscreen={toggleFullscreen}
-                channelName="NDRTV"
-                news={news}
-                adminMessages={adminMessages}
-                isVisible={showControls}
-                volume={volume}
-                onVolumeChange={setVolume}
-            />
+            {!showStinger && (
+                <TVOverlay
+                    isPlaying={isPlaying}
+                    onTogglePlay={togglePlay}
+                    onToggleFullscreen={toggleFullscreen}
+                    channelName="NDRTV"
+                    news={news}
+                    adminMessages={adminMessages}
+                    isVisible={showControls}
+                    volume={volume}
+                    onVolumeChange={setVolume}
+                />
+            )}
 
             {/* Tap surface to show controls */}
             <div
