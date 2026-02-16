@@ -746,17 +746,20 @@ const App: React.FC = () => {
         </div>
         <div className="flex items-center space-x-2">
           {role === UserRole.LISTENER && (
-            <span className="text-[7px] bg-green-950/80 text-white px-2 py-0.5 rounded-full font-black uppercase tracking-widest border border-green-800/30 shadow-sm whitespace-nowrap">
-              {cloudStatus}
-            </span>
+            <div
+              className={`w-2 h-2 rounded-full shadow-sm transition-colors duration-500 ${cloudStatus === 'Connected' ? 'bg-green-500' :
+                  cloudStatus === 'Initializing' || cloudStatus === 'Syncing...' ? 'bg-yellow-400' : 'bg-red-500'
+                }`}
+              title={cloudStatus || 'Connecting...'}
+            ></div>
           )}
-          {!supabase && <span className="text-[7px] bg-amber-500 text-white px-1.5 py-0.5 rounded font-black uppercase animate-pulse">Cloud Offline</span>}
-          {isDucking && <span className="text-[7px] font-black uppercase text-red-500 animate-pulse bg-red-50 px-1 rounded shadow-sm border border-red-100">Live Broadcast</span>}
+          {!supabase && <div className="w-2 h-2 bg-amber-500 rounded-full animate-pulse" title="Cloud Offline"></div>}
+          {isDucking && <span className="text-[7px] font-black uppercase text-red-500 animate-pulse bg-red-50 px-1 rounded shadow-sm border border-red-100">Live</span>}
           <button
             onClick={role === UserRole.ADMIN ? () => { setRole(UserRole.LISTENER); setListenerHasPlayed(false); } : () => setShowAuth(true)}
-            className="px-2 py-1 rounded-full border border-green-950 text-[9px] font-black uppercase text-green-950 hover:bg-green-50 transition-colors whitespace-nowrap"
+            className="px-1.5 py-1 rounded-full border border-green-950 text-[8px] font-black uppercase text-green-950 hover:bg-green-50 transition-colors whitespace-nowrap"
           >
-            {role === UserRole.ADMIN ? 'Exit Admin' : 'Admin Login'}
+            {role === UserRole.ADMIN ? 'Exit' : 'Admin'}
           </button>
           <div className={`w-3 h-3 rounded-full ${supabase ? 'bg-green-500' : 'bg-gray-400'}`} title={supabase ? "Cloud Connected" : "Cloud Disconnected"}></div>
           {audioStatus !== 'Ready' && <span className="text-[10px] text-green-700 font-bold ml-1">{audioStatus}</span>}

@@ -1,7 +1,6 @@
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect, useCallback } from 'react';
 import { MediaFile, NewsItem, AdminMessage } from '../../../types';
 import TVOverlay from './TVOverlay';
-import TVStinger from './TVStinger';
 
 interface TVPlayerProps {
     activeVideo: MediaFile | null;
@@ -34,7 +33,6 @@ const TVPlayer: React.FC<TVPlayerProps> = ({
 }) => {
     const [isPlaying, setIsPlaying] = useState(false);
     const [currentIndex, setCurrentIndex] = useState(0);
-    const [showStinger, setShowStinger] = useState(false);
     const [isMutedInternal, setIsMutedInternal] = useState(false);
     const isMuted = onMuteChange ? isMutedProp : isMutedInternal;
     const setIsMuted = (m: boolean) => {
@@ -127,10 +125,10 @@ const TVPlayer: React.FC<TVPlayerProps> = ({
                 }
             }
 
-            // 2. STINGER TIMER (7 minutes = 420,000ms)
+            // 2. STINGER TIMER -> Direct Advance (7 minutes = 420,000ms)
             if (now - lastStingerTimestamp >= 420000) {
-                console.log("🎬 [TVPlayer] Triggering Scheduled Stinger (7m interval)...");
-                setShowStinger(true);
+                console.log("🎬 [TVPlayer] Auto-Advancing (7m interval)...");
+                handleAdvance();
                 setLastStingerTimestamp(now);
             }
         }, 5000); // Check every 5s
@@ -142,7 +140,6 @@ const TVPlayer: React.FC<TVPlayerProps> = ({
     useEffect(() => {
         if (!isActive) {
             setIsPlaying(false);
-            setShowStinger(false);
         } else if (activeVideo) {
             // Check if this is a "Fresh" start of TV execution
             // We can infer this if we weren't playing before
@@ -161,10 +158,19 @@ const TVPlayer: React.FC<TVPlayerProps> = ({
         }
     }, [activeVideo?.id, allVideos, isActive]);
 
+    const handleAdvance = useCallback(() => {
+        const nextIndex = (currentIndex + 1) % allVideos.length;
+        setCurrentIndex(nextIndex);
+        setIsPlaying(true);
+        if (isAdmin && onVideoAdvance) {
+            onVideoAdvance(nextIndex);
+        }
+    }, [currentIndex, allVideos.length, isAdmin, onVideoAdvance]);
+
     // 3. Playback Logic
     useEffect(() => {
         if (videoRef.current) {
-            const shouldPlayVideo = isPlaying && !isNewsPlaying && isActive && !showStinger;
+            const shouldPlayVideo = isPlaying && !isNewsPlaying && isActive;
             if (shouldPlayVideo) {
                 videoRef.current.play().catch(e => {
                     console.debug("Playback failed", e);
@@ -174,31 +180,16 @@ const TVPlayer: React.FC<TVPlayerProps> = ({
                 videoRef.current.pause();
             }
         }
-    }, [isPlaying, currentIndex, isNewsPlaying, isActive, showStinger]);
-
-    // 4. Endless Loop & Stinger Transition Logic
-    const handleStingerComplete = () => {
-        setShowStinger(false);
-        // Advance to next video
-        const nextIndex = (currentIndex + 1) % allVideos.length;
-        setCurrentIndex(nextIndex);
-        setIsPlaying(true);
-
-        // ADMIN SYNC: Signal all listeners to advance
-        if (isAdmin && onVideoAdvance) {
-            onVideoAdvance(nextIndex);
-        }
-    };
+    }, [isPlaying, currentIndex, isNewsPlaying, isActive]);
 
     const handleEnded = () => {
         if (isAdvertPlaying) {
             console.log("📺 [TVPlayer] Advert completed, returning to main sequence...");
             setCurrentIndex(originalTrackIndex);
             setIsAdvertPlaying(false);
-            setShowStinger(true);
+            handleAdvance();
         } else if (allVideos.length > 0) {
-            // Video ended -> Show Stinger
-            setShowStinger(true);
+            handleAdvance();
         }
     };
 
@@ -245,20 +236,8 @@ const TVPlayer: React.FC<TVPlayerProps> = ({
                 )}
             </div>
 
-            {/* 2. STINGER LAYER */}
-            {showStinger && (
-                <div className="absolute inset-0 z-50">
-                    <TVStinger
-                        variant="sequence"
-                        onComplete={handleStingerComplete}
-                        isMuted={isMuted}
-                    />
-                </div>
-            )}
-
-
             {/* Overlays (ON AIR MODE: Integrated news ticker) */}
-            {isActive && !showStinger && (
+            {isActive && (
                 <TVOverlay
                     isPlaying={isPlaying}
                     onTogglePlay={togglePlay}
