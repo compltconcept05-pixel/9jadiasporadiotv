@@ -19,6 +19,7 @@ interface RadioPlayerProps {
   showPlayButton?: boolean;
   isTvActive?: boolean;
   isTvMuted?: boolean;
+  onTogglePlayback?: (play: boolean) => void;
 }
 
 const RadioPlayer: React.FC<RadioPlayerProps> = ({
@@ -34,7 +35,8 @@ const RadioPlayer: React.FC<RadioPlayerProps> = ({
   isDucking = false,
   showPlayButton = true,
   isTvActive = false,
-  isTvMuted = false
+  isTvMuted = false,
+  onTogglePlayback
 }) => {
   const [isPlaying, setIsPlaying] = useState(forcePlaying);
   const [volume, setVolume] = useState(1.0);
@@ -499,31 +501,36 @@ const RadioPlayer: React.FC<RadioPlayerProps> = ({
     if (!audioRef.current) return;
 
     if (isPlaying) {
-      audioRef.current.pause();
+      if (onTogglePlayback) {
+        onTogglePlayback(false);
+      } else {
+        audioRef.current.pause();
+      }
     } else {
-      setStatus('LOADING');
-      setErrorMessage('');
-
-      try {
-        if (isDucking) {
-          setErrorMessage("Cannot play during News Broadcast");
-          setStatus('IDLE');
-          return;
+      if (onTogglePlayback) {
+        onTogglePlayback(true);
+      } else {
+        // Fallback to internal toggle if no master prop provided
+        setStatus('LOADING');
+        setErrorMessage('');
+        try {
+          if (isDucking) {
+            setErrorMessage("Cannot play during News Broadcast");
+            setStatus('IDLE');
+            return;
+          }
+          if (audioContextRef.current) {
+            await audioContextRef.current.resume();
+          } else {
+            initAudioContext();
+            if (audioContextRef.current) await audioContextRef.current.resume();
+          }
+          await audioRef.current.play();
+        } catch (err: any) {
+          console.error("Play error:", err);
+          setStatus('ERROR');
+          setErrorMessage(err.message || 'Failed to play stream');
         }
-
-        // FORCE resume on user click to ensure visualizer starts on mobile
-        if (audioContextRef.current) {
-          await audioContextRef.current.resume();
-        } else {
-          initAudioContext();
-          if (audioContextRef.current) await audioContextRef.current.resume();
-        }
-
-        await audioRef.current.play();
-      } catch (err: any) {
-        console.error("Play error:", err);
-        setStatus('ERROR');
-        setErrorMessage(err.message || 'Failed to play stream');
       }
     }
   };
@@ -572,6 +579,14 @@ const RadioPlayer: React.FC<RadioPlayerProps> = ({
           <div className="flex items-center space-x-2 animate-bounce">
             <div className="w-3 h-3 bg-red-600 rounded-full"></div>
             <span className="text-[10px] font-black text-red-600 uppercase tracking-widest">Live Bulletin</span>
+          </div>
+        )}
+
+        {/* Status indicator */}
+        {(!isAdmin && isTvActive && !isTvMuted) && (
+          <div className="flex items-center space-x-2 animate-pulse bg-amber-50 px-4 py-1.5 rounded-full border border-amber-200 shadow-sm">
+            <div className="w-2 h-2 bg-amber-500 rounded-full"></div>
+            <span className="text-[8px] font-black text-amber-900 uppercase tracking-[0.2em]">TV ACTIVE - STANDBY MODE</span>
           </div>
         )}
 

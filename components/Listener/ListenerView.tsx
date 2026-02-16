@@ -57,8 +57,10 @@ const ListenerView: React.FC<ListenerViewProps> = ({
     onTvMuteChange(muted);
     // If we are unmuting TV audio AND TV is actually playing OR TV is starting, pause radio
     if (!muted) {
-      console.log("🔊 [ListenerView] TV Unmuted - Pausing Radio for exclusivity");
-      onRadioToggle(false);
+      console.log("🔊 [ListenerView] TV Unmuted - Exclusivity Check");
+      if (!isAdmin) {
+        onRadioToggle(false);
+      }
       onTvToggle(true); // Ensure App knows TV is active to block radio auto-advance/auto-play
     }
   };
@@ -67,8 +69,10 @@ const ListenerView: React.FC<ListenerViewProps> = ({
     setIsTvPlaying(playing);
     // If TV starts playing AND it's not muted, pause radio FORCEFULLY
     if (playing && !isTvMuted) {
-      console.log("📺 [ListenerView] TV Playing & Unmuted - Killing Radio for exclusivity");
-      onRadioToggle(false);
+      console.log("📺 [ListenerView] TV Playing & Unmuted - Exclusivity Check");
+      if (!isAdmin) {
+        onRadioToggle(false);
+      }
       onTvToggle(true);
     }
   };
@@ -310,12 +314,21 @@ const ListenerView: React.FC<ListenerViewProps> = ({
           </div>
         </div>
 
-        <div className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-black/5 backdrop-blur-md rounded-full border border-green-900/10 shadow-sm mx-auto">
-          <span className="text-[7.5px] font-black uppercase text-green-950/60 tracking-tighter">{APP_NAME}</span>
-          <span className="text-green-900/10 scale-y-125 px-0.5">|</span>
-          <span className="text-[7.5px] text-green-700/60 font-mono tracking-tighter">© 2026</span>
-          <span className="text-green-900/10 scale-y-125 px-0.5">|</span>
-          <span className="text-[7.5px] font-bold text-green-800/80 uppercase tracking-tighter">Designed by Obosa Thompson</span>
+        <div className="flex flex-col items-center space-y-4">
+          <div className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-black/5 backdrop-blur-md rounded-full border border-green-900/10 shadow-sm mx-auto">
+            <span className="text-[7.5px] font-black uppercase text-green-950/60 tracking-tighter">{APP_NAME}</span>
+            <span className="text-green-900/10 scale-y-125 px-0.5">|</span>
+            <span className="text-[7.5px] text-green-700/60 font-mono tracking-tighter">© 2026</span>
+            <span className="text-green-900/10 scale-y-125 px-0.5">|</span>
+            <span className="text-[7.5px] font-bold text-green-800/80 uppercase tracking-tighter">Designed by Obosa Thompson</span>
+          </div>
+
+          <button
+            onClick={isAdmin ? () => (window as any).handleLogout?.() : () => (window as any).handleLogin?.()}
+            className="text-[8px] font-black uppercase text-green-800/40 hover:text-green-950 transition-colors tracking-widest pb-2"
+          >
+            {isAdmin ? '[ SYSTEM ADMIN: LOGOUT ]' : '[ ACCESS: ADMIN LOGIN ]'}
+          </button>
         </div>
       </footer>
 

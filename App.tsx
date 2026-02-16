@@ -569,8 +569,10 @@ const App: React.FC = () => {
     handleStopNews(); // Stop any pending news on toggle
 
     if (play) {
-      setIsTvMuted(true); // Priority: Radio on -> TV Mutes
-      setIsTvActive(false); // ULTRA-STRICT: Radio ON = TV OFF (No background stinger)
+      if (role !== UserRole.ADMIN) {
+        setIsTvMuted(true); // Priority: Radio on -> TV Mutes
+        setIsTvActive(false); // ULTRA-STRICT: Radio ON = TV OFF (No background stinger)
+      }
       handlePlayAll(true); // Pass force=true to bypass batching block
     } else {
       setIsPlaying(false);
@@ -589,9 +591,11 @@ const App: React.FC = () => {
     setIsTvActive(active);
     if (active) {
       // If TV becomes active, stop radio IMMEDIATELY
-      console.log("📺 TV Activated - Initializing strict kill on Radio");
-      setIsPlaying(false);
-      setListenerHasPlayed(false);
+      console.log("📺 TV Activated - Initializing exclusivity check");
+      if (role !== UserRole.ADMIN) {
+        setIsPlaying(false);
+        setListenerHasPlayed(false);
+      }
       setIsTvMuted(false); // Unmute TV by default when explicitly toggled on
     }
     // Broadcaster sync
@@ -619,7 +623,9 @@ const App: React.FC = () => {
     if (!video) return;
 
     setActiveVideoId(video.id);
-    handleRadioToggle(false); // Master stop radio
+    if (role !== UserRole.ADMIN) {
+      handleRadioToggle(false); // Master stop radio for listeners
+    }
     setIsTvActive(true);
 
     // Explicitly update cloud so listeners switch
@@ -658,9 +664,12 @@ const App: React.FC = () => {
     // 1. If TV is active and unmuted, Radio MUST be stopped
     if (isTvActive && !isTvMuted) {
       if (listenerHasPlayed || isPlaying) {
-        console.log("🛡️ [App] Exclusivity Guard: TV Audio ACTIVE. Stopping Radio.");
-        setListenerHasPlayed(false);
-        setIsPlaying(false);
+        console.log("🛡️ [App] Exclusivity Guard Check");
+        if (role !== UserRole.ADMIN) {
+          console.log("🛡️ [App] Stopping Radio for non-admin exclusivity.");
+          setListenerHasPlayed(false);
+          setIsPlaying(false);
+        }
 
         // Push stop command to cloud if admin
         if (role === UserRole.ADMIN && supabase) {
@@ -675,11 +684,17 @@ const App: React.FC = () => {
     // 2. If Radio is manually started, TV MUST be muted (or hidden)
     if (listenerHasPlayed || isPlaying) {
       if (isTvActive && !isTvMuted) {
-        console.log("🛡️ [App] Exclusivity Guard: Radio ACTIVE. Muting TV.");
-        setIsTvMuted(true);
+        if (role !== UserRole.ADMIN) {
+          console.log("🛡️ [App] Exclusivity Guard: Radio ACTIVE. Muting TV.");
+          setIsTvMuted(true);
+        }
       }
     }
   }, [isTvActive, isTvMuted, listenerHasPlayed, isPlaying, role, supabase]);
+
+  // Expose for footer access
+  (window as any).handleLogin = () => setShowAuth(true);
+  (window as any).handleLogout = () => { setRole(UserRole.LISTENER); setListenerHasPlayed(false); };
 
   return (
     <div className="min-h-[100dvh] bg-[#f0fff4] text-[#008751] flex flex-col max-w-md mx-auto relative shadow-2xl border-x border-green-100/30 pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]">
@@ -748,19 +763,13 @@ const App: React.FC = () => {
           {role === UserRole.LISTENER && (
             <div
               className={`w-2 h-2 rounded-full shadow-sm transition-colors duration-500 ${cloudStatus === 'Connected' ? 'bg-green-500' :
-                  cloudStatus === 'Initializing' || cloudStatus === 'Syncing...' ? 'bg-yellow-400' : 'bg-red-500'
+                cloudStatus === 'Initializing' || cloudStatus === 'Syncing...' ? 'bg-yellow-400' : 'bg-red-500'
                 }`}
               title={cloudStatus || 'Connecting...'}
             ></div>
           )}
           {!supabase && <div className="w-2 h-2 bg-amber-500 rounded-full animate-pulse" title="Cloud Offline"></div>}
           {isDucking && <span className="text-[7px] font-black uppercase text-red-500 animate-pulse bg-red-50 px-1 rounded shadow-sm border border-red-100">Live</span>}
-          <button
-            onClick={role === UserRole.ADMIN ? () => { setRole(UserRole.LISTENER); setListenerHasPlayed(false); } : () => setShowAuth(true)}
-            className="px-1.5 py-1 rounded-full border border-green-950 text-[8px] font-black uppercase text-green-950 hover:bg-green-50 transition-colors whitespace-nowrap"
-          >
-            {role === UserRole.ADMIN ? 'Exit' : 'Admin'}
-          </button>
           <div className={`w-3 h-3 rounded-full ${supabase ? 'bg-green-500' : 'bg-gray-400'}`} title={supabase ? "Cloud Connected" : "Cloud Disconnected"}></div>
           {audioStatus !== 'Ready' && <span className="text-[10px] text-green-700 font-bold ml-1">{audioStatus}</span>}
           {lastError && <span className="text-[7px] bg-red-600 text-white px-1.5 py-0.5 rounded ml-2 font-black uppercase animate-bounce">{lastError}</span>}
@@ -803,9 +812,12 @@ const App: React.FC = () => {
           onTrackEnded={handlePlayNext}
           activeTrackId={activeTrackId}
           isDucking={isDucking}
-          forcePlaying={role === UserRole.ADMIN ? (isPlaying && (!isTvActive || isTvMuted)) : (isPlayingState && listenerHasPlayed && (!isTvActive || isTvMuted))}
+          onTogglePlayback={handleRadioToggle}
+          forcePlaying={role === UserRole.ADMIN ? isPlaying : (isPlayingState && listenerHasPlayed && (!isTvActive || isTvMuted))}
           isAdmin={role === UserRole.ADMIN}
           showPlayButton={role !== UserRole.ADMIN}
+          isTvActive={isTvActive}
+          isTvMuted={isTvMuted}
         />
 
         {/* Join Broadcast Overlay for Listeners */}
