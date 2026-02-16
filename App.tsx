@@ -570,6 +570,7 @@ const App: React.FC = () => {
 
     if (play) {
       setIsTvMuted(true); // Priority: Radio on -> TV Mutes
+      setIsTvActive(false); // ULTRA-STRICT: Radio ON = TV OFF (No background stinger)
       handlePlayAll(true); // Pass force=true to bypass batching block
     } else {
       setIsPlaying(false);
@@ -586,10 +587,12 @@ const App: React.FC = () => {
 
   const handleVideoToggle = useCallback((active: boolean) => {
     setIsTvActive(active);
-    if (active && !isTvMuted) {
-      // If TV becomes active and is unmuted, stop radio
+    if (active) {
+      // If TV becomes active, stop radio IMMEDIATELY
+      console.log("📺 TV Activated - Initializing strict kill on Radio");
       setIsPlaying(false);
       setListenerHasPlayed(false);
+      setIsTvMuted(false); // Unmute TV by default when explicitly toggled on
     }
     // Broadcaster sync
     if (role === UserRole.ADMIN && supabase) {
@@ -634,15 +637,19 @@ const App: React.FC = () => {
   // --- ADMIN LOGIN LOGIC ---
   useEffect(() => {
     if (role === UserRole.ADMIN) {
-      console.log("👮 [App] Admin logged in. Clearing TV workspace.");
+      console.log("👮 [App] Admin logged in. Clearing TV workspace and Ensuring Silence.");
       setIsTvActive(false);
+      setIsPlaying(false); // OPTIONAL: Start silent? Or maybe keep radio if it was on? Let's start silent for safety.
+
       // Synchronize this change to all listeners if we have supabase
       if (supabase) {
         dbService.updateStationState({
           is_tv_active: false,
+          is_playing: false,
           timestamp: Date.now()
         }).catch(err => console.error("❌ Admin Login TV Sync Error:", err));
       }
+      setIsTvMuted(true); // Ensure admin is muted locally
     }
   }, [role, supabase]);
 
@@ -764,6 +771,7 @@ const App: React.FC = () => {
             isNewsPlaying={false}
             isActive={isTvActive}
             isAdmin={true}
+            isMuted={true}
           />
         </div>
       )}
@@ -897,6 +905,7 @@ const App: React.FC = () => {
             isTvActive={isTvActive}
             onToggleTv={handleVideoToggle}
             onResetSync={handleResetSync}
+            onLogAdd={handleLogAdd}
             reports={reports}
           />
         )}

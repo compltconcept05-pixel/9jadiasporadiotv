@@ -402,6 +402,30 @@ class DBService {
     return urlData.publicUrl;
   }
 
+  async uploadAppToCloud(file: File): Promise<string | null> {
+    if (!supabase) return null;
+    const fileName = 'apps/app-debug.apk';
+
+    console.log(`📡 [dbService] Attempting upload of ${file.name} to bucket 'media' as ${fileName} (UPSERT)`);
+    const { data, error } = await supabase.storage
+      .from('media')
+      .upload(fileName, file, {
+        upsert: true,
+        cacheControl: '0'
+      });
+
+    if (error) {
+      console.error('❌ App Upload Error:', error.message, error);
+      throw new Error(`App Upload Error: ${error.message}`);
+    }
+
+    const { data: urlData } = supabase.storage
+      .from('media')
+      .getPublicUrl(fileName);
+
+    return urlData.publicUrl;
+  }
+
   async addMediaCloud(fileInfo: MediaFile): Promise<void> {
     if (!supabase) {
       await this.addMedia(fileInfo);

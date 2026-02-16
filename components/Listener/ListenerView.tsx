@@ -280,7 +280,8 @@ const ListenerView: React.FC<ListenerViewProps> = ({
             <button
               onClick={() => {
                 if (APK_DOWNLOAD_URL) {
-                  window.open(APK_DOWNLOAD_URL, '_blank');
+                  const urlWithCacheBuster = `${APK_DOWNLOAD_URL}?t=${Date.now()}`;
+                  window.open(urlWithCacheBuster, '_blank');
                   setShareFeedback('Downloading...');
                   setTimeout(() => setShareFeedback(''), 5000);
                 } else {

@@ -151,7 +151,10 @@ const TVPlayer: React.FC<TVPlayerProps> = ({
                 // ONLY RESET IF ID CHANGED OR WE ARE STARTING
                 if (currentIndex !== idx || !isPlaying) {
                     setCurrentIndex(idx);
-                    setShowStinger(true); // FORCE STINGER ON START
+                    // ONLY SHOW STINGER IF NOT ADMIN - Admins already hear it/see it on their monitor, avoids double sound
+                    if (!isAdmin) {
+                        setShowStinger(true); // FORCE STINGER ON START
+                    }
                     setLastStingerTimestamp(Date.now()); // Reset stinger timer on start
                     setIsPlaying(true);
                 }
@@ -226,7 +229,7 @@ const TVPlayer: React.FC<TVPlayerProps> = ({
                 {/* Looping Stinger instead of static "Station Live" */}
                 <TVStinger
                     variant="loop"
-                    isMuted={isMuted} // Updated to follow player state
+                    isMuted={true} // FORCE SILIENT IN OFFLINE LOOP
                     isPlaying={isPlaying}
                     showControls={false}
                 />

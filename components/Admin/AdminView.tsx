@@ -40,6 +40,7 @@ interface AdminViewProps {
   isTvActive?: boolean;
   onToggleTv?: (active: boolean) => void;
   onResetSync?: () => void;
+  onLogAdd?: (action: string) => void;
   reports?: ListenerReport[];
 }
 
@@ -74,7 +75,7 @@ const AdminView: React.FC<AdminViewProps> = ({
   onAddNews,
   onUpdateNews,
   onDeleteNews,
-  mediaFiles = [], status, onRefreshWire, activeVideoId, onPlayVideo, isTvActive, onToggleTv, onResetSync, onDeleteMedia, reports
+  mediaFiles = [], status, onRefreshWire, activeVideoId, onPlayVideo, isTvActive, onToggleTv, onResetSync, onDeleteMedia, onLogAdd, reports
 }) => {
   const [activeTab, setActiveTab] = useState<Tab>('command');
   const [mediaSubTab, setMediaSubTab] = useState<MediaSubTab>('audio');
@@ -87,7 +88,9 @@ const AdminView: React.FC<AdminViewProps> = ({
   const [showAddForm, setShowAddForm] = useState(false);
   const [newItem, setNewItem] = useState({ title: '', content: '', category: 'Manual' });
   const [selectedJingleUrl, setSelectedJingleUrl] = useState<string>('');
+  const [uploadedAppUrl, setUploadedAppUrl] = useState<string>('');
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const appFileInputRef = useRef<HTMLInputElement>(null);
   const folderInputRef = useRef<HTMLSelectElement>(null);
 
   // Auto-sync manualText when prop changes
@@ -150,6 +153,41 @@ const AdminView: React.FC<AdminViewProps> = ({
       const isErr = internalStatus && internalStatus.includes('❌');
       setTimeout(() => setInternalStatus(''), isErr ? 15000 : 3000);
       if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
+
+  const handleAppUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (!file.name.toLowerCase().endsWith('.apk')) {
+      alert('❌ Error: Only .apk files are allowed for app updates.');
+      if (appFileInputRef.current) appFileInputRef.current.value = '';
+      return;
+    }
+
+    setIsProcessing(true);
+    setInternalStatus(`Uploading Android App (${file.name})...`);
+
+    try {
+      console.log('🚀 Starting App Update upload:', file.name);
+      const publicUrl = await dbService.uploadAppToCloud(file);
+
+      if (!publicUrl) {
+        throw new Error('Upload failed: Storage returned no URL');
+      }
+
+      console.log(`✅ App updated in Storage. URL: ${publicUrl}`);
+      setUploadedAppUrl(publicUrl);
+      setInternalStatus('✅ App Upload complete!');
+      onLogAdd?.(`System: Android App updated to version ${file.name}`);
+    } catch (error: any) {
+      console.error('❌ App Update failed:', error);
+      setInternalStatus(`❌ App Update Error: ${error.message}`);
+    } finally {
+      setIsProcessing(false);
+      setTimeout(() => setInternalStatus(''), 8000);
+      if (appFileInputRef.current) appFileInputRef.current.value = '';
     }
   };
 
@@ -724,6 +762,60 @@ const AdminView: React.FC<AdminViewProps> = ({
               >
                 <i className="fas fa-plug text-gray-400"></i>
               </button>
+            </div>
+
+            {/* APP UPDATE SECTION */}
+            <div className="mt-3 p-3 bg-red-50 rounded-xl border border-red-100 flex flex-col items-center justify-center space-y-2">
+              <h4 className="text-[8px] font-black uppercase text-red-800 tracking-widest">Android App Management</h4>
+              <p className="text-[7px] text-red-600 font-bold text-center leading-tight">Updating the APK here will instantly update the download link for all listeners.</p>
+
+              <input
+                type="file"
+                id="app-upload"
+                accept=".apk"
+                onChange={handleAppUpload}
+                className="hidden"
+                ref={appFileInputRef}
+              />
+              <button
+                onClick={() => appFileInputRef.current?.click()}
+                disabled={isProcessing}
+                className={`w-full py-2.5 rounded-lg text-[9px] font-black uppercase shadow-md transition-all active:scale-95 flex items-center justify-center space-x-2 ${isProcessing ? 'bg-gray-300 cursor-wait' : 'bg-red-600 hover:bg-red-700 text-white border-b-2 border-red-800'}`}
+              >
+                <i className="fab fa-android mr-1 text-lg"></i>
+                <span>{isProcessing ? 'Uploading App...' : 'Upload New Android App (.apk)'}</span>
+              </button>
+
+              {uploadedAppUrl && (
+                <div className="w-full mt-2 p-2 bg-white rounded border border-red-200 animate-fadeIn">
+                  <p className="text-[6px] font-black uppercase text-gray-400 mb-1">Diagnostic URL (Supabase):</p>
+                  <div className="flex items-center space-x-2">
+                    <input
+                      readOnly
+                      value={uploadedAppUrl}
+                      className="flex-1 text-[7px] bg-red-50 p-1 border border-red-100 rounded truncate"
+                    />
+                    <button
+                      onClick={() => {
+                        navigator.clipboard.writeText(uploadedAppUrl);
+                        setInternalStatus('URL COPIED! 📋');
+                        setTimeout(() => setInternalStatus(''), 2000);
+                      }}
+                      className="px-2 py-1 bg-red-100 text-red-700 text-[7px] font-black uppercase rounded hover:bg-red-200 transition-colors"
+                    >
+                      Copy
+                    </button>
+                    <a
+                      href={uploadedAppUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="px-2 py-1 bg-green-100 text-green-700 text-[7px] font-black uppercase rounded hover:bg-green-200 transition-colors"
+                    >
+                      Test
+                    </a>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Master Play All Button */}
