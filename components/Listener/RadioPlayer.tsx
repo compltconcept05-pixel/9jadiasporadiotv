@@ -503,33 +503,44 @@ const RadioPlayer: React.FC<RadioPlayerProps> = ({
     if (isPlaying) {
       if (onTogglePlayback) {
         onTogglePlayback(false);
-      } else {
-        audioRef.current.pause();
       }
+      audioRef.current.pause();
     } else {
-      if (onTogglePlayback) {
-        onTogglePlayback(true);
-      } else {
-        // Fallback to internal toggle if no master prop provided
-        setStatus('LOADING');
-        setErrorMessage('');
-        try {
-          if (isDucking) {
-            setErrorMessage("Cannot play during News Broadcast");
-            setStatus('IDLE');
-            return;
-          }
-          if (audioContextRef.current) {
-            await audioContextRef.current.resume();
-          } else {
-            initAudioContext();
-            if (audioContextRef.current) await audioContextRef.current.resume();
-          }
-          await audioRef.current.play();
-        } catch (err: any) {
-          console.error("Play error:", err);
+      // PRIMING: Directly interact with audio element to unlock it
+      setStatus('LOADING');
+      setErrorMessage('');
+
+      try {
+        if (isDucking) {
+          setErrorMessage("Cannot play during News Broadcast");
+          setStatus('IDLE');
+          return;
+        }
+
+        // FORCE resume on user click
+        if (audioContextRef.current) {
+          await audioContextRef.current.resume();
+        } else if (!isStreamRef.current) {
+          initAudioContext();
+          if (audioContextRef.current) await audioContextRef.current.resume();
+        }
+
+        // Parent Toggle SECOND to update station state if needed
+        if (onTogglePlayback) {
+          onTogglePlayback(true);
+        } else {
+          setIsPlaying(true);
+          onStateChange(true);
+        }
+
+        // Actual Play THIRD
+        await audioRef.current.play();
+      } catch (err: any) {
+        console.error("Play error:", err);
+        if (err.name !== 'AbortError') {
           setStatus('ERROR');
           setErrorMessage(err.message || 'Failed to play stream');
+          if (onTogglePlayback) onTogglePlayback(false);
         }
       }
     }

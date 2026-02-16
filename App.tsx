@@ -570,10 +570,12 @@ const App: React.FC = () => {
 
     if (play) {
       if (role !== UserRole.ADMIN) {
-        setIsTvMuted(true); // Priority: Radio on -> TV Mutes
-        setIsTvActive(false); // ULTRA-STRICT: Radio ON = TV OFF (No background stinger)
+        setIsTvMuted(true);
+        setIsTvActive(false);
+        setListenerHasPlayed(true); // Listeners just "join" the current broadcast
+      } else {
+        handlePlayAll(true); // Admins start/reset the broadcast
       }
-      handlePlayAll(true); // Pass force=true to bypass batching block
     } else {
       setIsPlaying(false);
       setListenerHasPlayed(false);
@@ -624,9 +626,12 @@ const App: React.FC = () => {
 
     setActiveVideoId(video.id);
     if (role !== UserRole.ADMIN) {
-      handleRadioToggle(false); // Master stop radio for listeners
+      setIsTvActive(true);
+      setIsTvMuted(false);
+      setListenerHasPlayed(false); // Switch to TV mode locally
+    } else {
+      setIsTvActive(true);
     }
-    setIsTvActive(true);
 
     // Explicitly update cloud so listeners switch
     if (role === UserRole.ADMIN && supabase) {
@@ -691,6 +696,10 @@ const App: React.FC = () => {
       }
     }
   }, [isTvActive, isTvMuted, listenerHasPlayed, isPlaying, role, supabase]);
+
+  // Expose for footer access
+  (window as any).handleLogin = () => setShowAuth(true);
+  (window as any).handleLogout = () => { setRole(UserRole.LISTENER); setListenerHasPlayed(false); };
 
   // Expose for footer access
   (window as any).handleLogin = () => setShowAuth(true);

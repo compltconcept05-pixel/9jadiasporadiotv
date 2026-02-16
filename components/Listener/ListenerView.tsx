@@ -325,9 +325,10 @@ const ListenerView: React.FC<ListenerViewProps> = ({
 
           <button
             onClick={isAdmin ? () => (window as any).handleLogout?.() : () => (window as any).handleLogin?.()}
-            className="text-[8px] font-black uppercase text-green-800/40 hover:text-green-950 transition-colors tracking-widest pb-2"
+            className="flex items-center space-x-2 px-6 py-2.5 bg-black text-white rounded-full text-[9px] font-black uppercase tracking-widest shadow-xl active:scale-95 transition-all border border-white/10"
           >
-            {isAdmin ? '[ SYSTEM ADMIN: LOGOUT ]' : '[ ACCESS: ADMIN LOGIN ]'}
+            <i className={`fas ${isAdmin ? 'fa-sign-out-alt' : 'fa-lock'} text-[10px]`}></i>
+            <span>{isAdmin ? 'System Administrator: Logout' : 'Admin Login Access'}</span>
           </button>
         </div>
       </footer>
