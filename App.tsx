@@ -604,23 +604,6 @@ const App: React.FC = () => {
     }
   }, [role, isPlaying, supabase, isTvMuted]);
 
-  // --- LOGOUT CLEANUP: Force Silence on Admin Exit ---
-  const prevRoleRef = useRef<UserRole>(role);
-  useEffect(() => {
-    if (prevRoleRef.current === UserRole.ADMIN && role === UserRole.LISTENER) {
-      console.log("🚪 [App] Admin logged out. Forcing station silence...");
-      setIsPlaying(false);
-      setListenerHasPlayed(false);
-      if (supabase) {
-        dbService.updateStationState({
-          is_playing: false,
-          timestamp: Date.now()
-        }).catch(err => console.error("❌ Logout Sync Error", err));
-      }
-    }
-    prevRoleRef.current = role;
-  }, [role, supabase]);
-
   const handlePlayVideo = useCallback((track: MediaFile | number) => {
     handleStopNews(); // Ensure news stops
 
@@ -817,9 +800,9 @@ const App: React.FC = () => {
           onTrackEnded={handlePlayNext}
           activeTrackId={activeTrackId}
           isDucking={isDucking}
-          forcePlaying={role === UserRole.ADMIN ? isPlaying : (isPlayingState && listenerHasPlayed && (!isTvActive || isTvMuted))}
+          forcePlaying={role === UserRole.ADMIN ? (isPlaying && (!isTvActive || isTvMuted)) : (isPlayingState && listenerHasPlayed && (!isTvActive || isTvMuted))}
           isAdmin={role === UserRole.ADMIN}
-          showPlayButton={true} // Repaired: Allow Admin to see/use button if they want, but listener logic stays separate
+          showPlayButton={role !== UserRole.ADMIN}
         />
 
         {/* Join Broadcast Overlay for Listeners */}

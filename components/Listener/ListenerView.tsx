@@ -182,25 +182,6 @@ const ListenerView: React.FC<ListenerViewProps> = ({
         </button>
       </div>
 
-      {/* 3. NEWS TICKER (RADIO ONLY) */}
-      <section className={`bg-green-50/30 rounded-xl border border-green-100/50 h-10 flex items-center overflow-hidden shrink-0 transition-opacity duration-500 ${isRadioPlaying ? 'opacity-100' : 'opacity-0'}`}>
-        <div className={`flex whitespace-nowrap items-center ${isRadioPlaying ? 'animate-marquee' : ''}`}>
-          <span className="text-xs font-black text-green-800 uppercase px-12 tracking-widest inline-block">{CHANNEL_INTRO}</span>
-          {adminMessages.map((msg, i) => (
-            <span key={`admin-${i}`} className="text-xs text-red-600 font-black uppercase px-12 flex items-center inline-block">
-              <i className="fas fa-bullhorn mr-2"></i> {msg.text}
-              <span className="ml-12 text-green-200">|</span>
-            </span>
-          ))}
-          {news.map((n, i) => (
-            <span key={`ticker-${i}`} className="text-xs text-green-700 font-bold uppercase px-12 flex items-center inline-block">
-              <span className="w-2 h-2 bg-red-500 rounded-full mr-3 animate-pulse"></span>
-              {n.title}
-              <span className="ml-12 text-green-200">|</span>
-            </span>
-          ))}
-        </div>
-      </section>
 
       {/* 4. ADS - SPACIOUS */}
       <section className="shrink-0 bg-gray-50 border border-gray-100 rounded-2xl p-4 flex items-center justify-between overflow-hidden shadow-sm">
@@ -270,6 +251,26 @@ const ListenerView: React.FC<ListenerViewProps> = ({
       </section>
 
       {/* 7. MUSIC GALLERY REMOVED AS REQUESTED BY USER */}
+
+      {/* NEWS TICKER (RADIO ONLY) - MOVED TO BOTTOM */}
+      <section className={`bg-green-50/30 rounded-xl border border-green-100/50 h-10 flex items-center overflow-hidden shrink-0 transition-opacity duration-500 ${isRadioPlaying ? 'opacity-100' : 'opacity-0'}`}>
+        <div className={`flex whitespace-nowrap items-center ${isRadioPlaying ? 'animate-marquee' : ''}`}>
+          <span className="text-xs font-black text-green-800 uppercase px-12 tracking-widest inline-block">{CHANNEL_INTRO}</span>
+          {adminMessages.map((msg, i) => (
+            <span key={`admin-${i}`} className="text-xs text-red-600 font-black uppercase px-12 flex items-center inline-block">
+              <i className="fas fa-bullhorn mr-2"></i> {msg.text}
+              <span className="ml-12 text-green-200">|</span>
+            </span>
+          ))}
+          {news.map((n, i) => (
+            <span key={`ticker-${i}`} className="text-xs text-green-700 font-bold uppercase px-12 flex items-center inline-block">
+              <span className="w-2 h-2 bg-red-500 rounded-full mr-3 animate-pulse"></span>
+              {n.title}
+              <span className="ml-12 text-green-200">|</span>
+            </span>
+          ))}
+        </div>
+      </section>
 
       {/* FOOTER - Spec-aligned single line at the absolute bottom */}
       <footer className="w-full text-center pb-4 pt-10 mt-auto flex flex-col items-center space-y-4">

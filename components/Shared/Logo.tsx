@@ -10,6 +10,7 @@ interface LogoProps {
   status?: 'IDLE' | 'LOADING' | 'PLAYING' | 'ERROR';
   onTogglePlayback?: () => void;
   showPlayButton?: boolean;
+  isAdmin?: boolean;
 }
 
 const Logo: React.FC<LogoProps> = ({
@@ -19,7 +20,8 @@ const Logo: React.FC<LogoProps> = ({
   isJingle = false,
   status = 'IDLE',
   onTogglePlayback,
-  showPlayButton = true
+  showPlayButton = true,
+  isAdmin = false
 }) => {
   const scale = size === 'sm' ? 0.8 : size === 'lg' ? 1.0 : 0.88;
 
@@ -79,8 +81,8 @@ const Logo: React.FC<LogoProps> = ({
             {STATION_TAGLINE}
           </h2>
 
-          {/* Fresh Play Button - Positioned Below Tagline */}
-          {showPlayButton && onTogglePlayback && (
+          {/* Fresh Play Button - Positioned Below Tagline (HIDE FOR ADMINS) */}
+          {showPlayButton && onTogglePlayback && !isAdmin && (
             <div className="mt-2 flex justify-center relative z-[100]">
               <button
                 onClick={(e) => {
