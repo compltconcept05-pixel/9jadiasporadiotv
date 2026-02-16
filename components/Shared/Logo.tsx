@@ -25,7 +25,7 @@ const Logo: React.FC<LogoProps> = ({
 
   return (
     <div
-      className={`flex flex-col items-center w-[300px] h-64 mx-auto overflow-hidden rounded-[40px] shadow-2xl bg-white relative transition-all duration-500 ${isJingle ? 'ring-2 ring-amber-400 shadow-[0_0_15px_rgba(251,191,36,0.3)] scale-105' : ''} ${status === 'ERROR' ? 'ring-2 ring-red-500' : ''}`}
+      className={`flex flex-col items-center w-[300px] h-64 mx-auto overflow-hidden rounded-none shadow-2xl bg-white relative transition-all duration-500 ${isJingle ? 'ring-2 ring-amber-400 shadow-[0_0_15px_rgba(251,191,36,0.3)] scale-105' : ''} ${status === 'ERROR' ? 'ring-2 ring-red-500' : ''}`}
       style={{ transform: `scale(${scale})` }}
     >
       {/* Background: Nigerian Flag Stripes */}

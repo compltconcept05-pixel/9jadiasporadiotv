@@ -458,8 +458,8 @@ const RadioPlayer: React.FC<RadioPlayerProps> = ({
       if (!shouldBePlaying && !audioRef.current.paused) {
         console.log('📡 [RadioPlayer] EXCLUSIVITY LOCK: Pausing Radio audio (TV or Manual Pause active).');
         audioRef.current.pause();
-        setIsPlaying(false);
-        onStateChange(false);
+        // REMOVED: setIsPlaying(false) and onStateChange(false) 
+        // Preserving local state allows auto-play to resume when forcePlaying becomes true again.
       } else if (shouldBePlaying && audioRef.current.paused) {
         // Validate audio source before attempting to play
         if (!audioRef.current.src || audioRef.current.src === '' || audioRef.current.src === window.location.href) {
