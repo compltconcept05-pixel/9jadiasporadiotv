@@ -476,14 +476,16 @@ class DBService {
         .remove([fileName]);
       if (storageError) console.warn('⚠️ Storage deletion failed:', storageError.message);
     }
-  async getAppDownloadUrl(): Promise < string | null > {
-      if(!supabase) return null;
-      const { data } = supabase.storage
-        .from('media')
-        .getPublicUrl('apps/app-debug.apk');
-
-      return data?.publicUrl || null;
-    }
   }
 
-  export const dbService = new DBService();
+  async getAppDownloadUrl(): Promise<string | null> {
+    if (!supabase) return null;
+    const { data } = supabase.storage
+      .from('media')
+      .getPublicUrl('apps/app-debug.apk');
+
+    return data?.publicUrl || null;
+  }
+}
+
+export const dbService = new DBService();
