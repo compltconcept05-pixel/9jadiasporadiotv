@@ -943,11 +943,21 @@ const App: React.FC = () => {
         <div className="flex flex-col items-center space-y-2">
           <span className="text-[7px] font-black uppercase text-green-800/30 tracking-widest">Official Android App</span>
           <button
-            onClick={() => {
-              const urlWithCacheBuster = `${APK_DOWNLOAD_URL}?t=${Date.now()}`;
-              window.open(urlWithCacheBuster, '_blank');
+            onClick={async () => {
+              try {
+                const url = await dbService.getAppDownloadUrl();
+                if (url) {
+                  const urlWithCacheBuster = `${url}?t=${Date.now()}`;
+                  window.open(urlWithCacheBuster, '_blank');
+                } else {
+                  alert("Download link is currently being updated. Please try again in a few minutes.");
+                }
+              } catch (err) {
+                console.error("Download failed", err);
+                alert("Download failed. Please contact support.");
+              }
             }}
-            className="group flex items-center space-x-2 px-4 py-1.5 bg-green-900/5 hover:bg-green-900/10 text-green-900/50 rounded-lg transition-all border border-green-900/10 active:scale-95"
+            className="group flex items-center space-x-2 px-4 py-1.5 bg-green-900/5 hover:bg-green-100 text-green-900/50 hover:text-green-900 rounded-lg transition-all border border-green-900/10 active:scale-95"
           >
             <i className="fab fa-android text-sm"></i>
             <span className="text-[9px] font-black uppercase">Download APK</span>
