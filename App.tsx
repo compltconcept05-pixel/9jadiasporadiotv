@@ -8,7 +8,7 @@ import { dbService } from './services/dbService';
 import { scanNigerianNewspapers } from './services/newsAIService';
 import { getDetailedBulletinAudio, getNewsAudio, getJingleAudio } from './services/aiDjService';
 import { UserRole, MediaFile, AdminMessage, AdminLog, NewsItem, ListenerReport } from './types';
-import { DESIGNER_NAME, APP_NAME, JINGLE_1, JINGLE_2, NEWS_BGM_VOLUME, NEWSCASTER_NAME } from './constants';
+import { DESIGNER_NAME, APP_NAME, JINGLE_1, JINGLE_2, NEWS_BGM_VOLUME, NEWSCASTER_NAME, APK_DOWNLOAD_URL } from './constants';
 import { generateNewsBackgroundMusicAsync } from './services/backgroundMusicService';
 import { generatePodcastScript, generatePodcastAudio } from './services/podcastService';
 import NDRTVEngine from './components/Admin/NewsRoom/NDRTVEngine';
@@ -937,6 +937,39 @@ const App: React.FC = () => {
       </main>
 
       {showAuth && <PasswordModal onClose={() => setShowAuth(false)} onSuccess={() => { setRole(UserRole.ADMIN); setShowAuth(false); }} />}
+
+      {/* GLOBAL FOOTER - PERSISTENT */}
+      <footer className="w-full text-center pb-8 pt-6 mt-auto flex flex-col items-center space-y-5 bg-transparent relative z-[50]">
+        <div className="flex flex-col items-center space-y-2">
+          <span className="text-[7px] font-black uppercase text-green-800/30 tracking-widest">Official Android App</span>
+          <button
+            onClick={() => {
+              const urlWithCacheBuster = `${APK_DOWNLOAD_URL}?t=${Date.now()}`;
+              window.open(urlWithCacheBuster, '_blank');
+            }}
+            className="group flex items-center space-x-2 px-4 py-1.5 bg-green-900/5 hover:bg-green-900/10 text-green-900/50 rounded-lg transition-all border border-green-900/10 active:scale-95"
+          >
+            <i className="fab fa-android text-sm"></i>
+            <span className="text-[9px] font-black uppercase">Download APK</span>
+          </button>
+        </div>
+
+        <div className="flex flex-col items-center space-y-3">
+          <div className="inline-flex items-center justify-center gap-1.5 px-3 py-1 bg-green-900/5 rounded-full border border-green-900/10 opacity-60">
+            <span className="text-[7px] font-black uppercase text-green-950 tracking-tighter">{APP_NAME}</span>
+            <span className="text-green-900/20 px-0.5">|</span>
+            <span className="text-[7px] text-green-800 font-mono tracking-tighter">© 2026</span>
+          </div>
+
+          <button
+            onClick={role === UserRole.ADMIN ? () => { setRole(UserRole.LISTENER); setListenerHasPlayed(false); } : () => setShowAuth(true)}
+            className="flex items-center space-x-1.5 px-4 py-1.5 rounded-full text-[7px] font-black uppercase tracking-[0.2em] transition-all border border-green-800/10 text-green-800/30 hover:text-green-800/60 hover:bg-green-800/5 active:scale-95"
+          >
+            <i className={`fas ${role === UserRole.ADMIN ? 'fa-sign-out-alt' : 'fa-lock'}`}></i>
+            <span>{role === UserRole.ADMIN ? 'System Administrator: Logout' : 'Admin Login'}</span>
+          </button>
+        </div>
+      </footer>
     </div>
   );
 };

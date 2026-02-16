@@ -83,7 +83,7 @@ const Logo: React.FC<LogoProps> = ({
 
           {/* Fresh Play Button - Positioned Below Tagline (HIDE FOR ADMINS) */}
           {showPlayButton && onTogglePlayback && !isAdmin && (
-            <div className="mt-2 flex justify-center relative z-[100] pointer-events-auto cursor-pointer">
+            <div className="mt-2 flex justify-center relative z-[200] pointer-events-auto cursor-pointer">
               <button
                 onClick={(e) => {
                   e.stopPropagation();
