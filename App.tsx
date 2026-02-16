@@ -31,7 +31,6 @@ const App: React.FC = () => {
   const [manualScript, setManualScript] = useState<string>('');
   const [newsHistory, setNewsHistory] = useState<NewsItem[]>([]);
 
-  const [isPlaying, setIsPlaying] = useState(false); // Radio Play State (Admin broadcast)
   const [radioCurrentTime, setRadioCurrentTime] = useState(0); // LIVE POSITION
   const [listenerHasPlayed, setListenerHasPlayed] = useState(false); // Listener play button state
   const [activeTrackId, setActiveTrackId] = useState<string | null>(null);
@@ -53,7 +52,6 @@ const App: React.FC = () => {
   const [stopTriggerCount, setStopTriggerCount] = useState(0);
   const [activeVideoId, setActiveVideoId] = useState<string | null>(null);
   const [showJoinPrompt, setShowJoinPrompt] = useState(false);
-  const [isPlayingState, setIsPlayingState] = useState(false); // Global station play state
   const [cloudStatus, setCloudStatus] = useState<string>('Initializing Satellite...');
   const [sessionId] = useState(() => Math.random().toString(36).substring(7));
   const [adminConflict, setAdminConflict] = useState(false);

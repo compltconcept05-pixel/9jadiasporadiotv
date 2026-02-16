@@ -212,7 +212,15 @@ const TVPlayer: React.FC<TVPlayerProps> = ({
             {/* STRICT OVERFLOW CONTROL */}
             {/* 1. TV SECTION */}
             <div className="absolute inset-0 z-0 flex flex-col items-center justify-center space-y-4">
-                {(!isActive || !currentTrack) ? (
+                {(isActive && !currentTrack) ? (
+                    <div className="flex flex-col items-center space-y-4">
+                        <span className="text-xl font-black italic text-white/40 animate-pulse tracking-widest">NDR TV STANDBY</span>
+                        <div className="flex items-center space-x-2 bg-black/60 backdrop-blur-md px-3 py-1 rounded-full border border-white/10">
+                            <div className="w-2 h-2 bg-yellow-500 rounded-full animate-pulse"></div>
+                            <span className="text-[8px] font-bold text-white/80 uppercase tracking-widest">Connecting to Satellite...</span>
+                        </div>
+                    </div>
+                ) : !isActive ? (
                     <>
                         <span className="text-xl font-black italic text-white/20">NDR TV</span>
                         {isActive && !currentTrack && (
