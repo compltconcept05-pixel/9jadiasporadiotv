@@ -27,24 +27,14 @@ const TVOverlay: React.FC<TVOverlayProps> = ({
 }) => {
     return (
         <div className="absolute inset-0 z-40 pointer-events-none group select-none">
-            {/* 1. TOP LEFT: STATION BUG (Eternally Looping Text) */}
-            <div className={`absolute top-4 left-0 w-full overflow-hidden z-20 transition-opacity duration-500`}>
-                <div className="flex whitespace-nowrap animate-tv-logo-loop items-center">
-                    <div className="flex items-center scale-150 origin-left px-8">
-                        <span className="text-[11px] font-black tracking-tighter flex italic uppercase text-white">
-                            <span className="text-[#008751]">ND</span>
-                            <span>R</span>
-                            <span className="text-[#008751]">TV</span>
-                        </span>
-                    </div>
-                    {/* Repeated for seamless loop */}
-                    <div className="flex items-center scale-150 origin-left px-8">
-                        <span className="text-[11px] font-black tracking-tighter flex italic uppercase text-white">
-                            <span className="text-[#008751]">ND</span>
-                            <span>R</span>
-                            <span className="text-[#008751]">TV</span>
-                        </span>
-                    </div>
+            {/* 1. TOP LEFT: STATION BUG (Popping Text every 4s) */}
+            <div className={`absolute top-4 left-4 z-20 transition-opacity duration-500 ${isVisible ? 'opacity-100' : 'opacity-0'}`}>
+                <div className="flex items-center scale-150 origin-left animate-tv-logo-pop">
+                    <span className="text-[11px] font-black tracking-tighter flex italic uppercase text-white">
+                        <span className="text-[#008751]">ND</span>
+                        <span>R</span>
+                        <span className="text-[#008751]">TV</span>
+                    </span>
                 </div>
             </div>
 
@@ -56,8 +46,8 @@ const TVOverlay: React.FC<TVOverlayProps> = ({
                 </div>
             </div>
 
-            {/* 3. BOTTOM: INTEGRATED NEWS TICKER (Inside Screen - Always Visible) */}
-            <div className={`absolute bottom-0 inset-x-0 h-6 bg-[#008751] backdrop-blur-md border-t border-white/20 flex items-center overflow-hidden z-20 transition-transform duration-500`}>
+            {/* 3. BOTTOM: INTEGRATED NEWS TICKER (Inside Screen - Red Background - Always Visible) */}
+            <div className={`absolute bottom-0 inset-x-0 h-6 bg-red-600 backdrop-blur-md border-t border-white/20 flex items-center overflow-hidden z-20 transition-transform duration-500`}>
                 {/* ... flag ... */}
                 <div className="flex h-full px-2 items-center bg-black/20 border-r border-white/10 shrink-0">
                     <div className="flex w-4 h-2.5 rounded-[1px] overflow-hidden shadow-sm">
@@ -143,13 +133,13 @@ const TVOverlay: React.FC<TVOverlayProps> = ({
             {/* Marquee Animation */}
             <style dangerouslySetInnerHTML={{
                 __html: `
-                 @keyframes tv-logo-loop { 
-                    0% { transform: translateX(0); } 
-                    100% { transform: translateX(-50%); } 
+                 @keyframes tv-logo-pop { 
+                    0%, 100% { transform: scale(1.5); } 
+                    5% { transform: scale(1.7); } 
+                    10% { transform: scale(1.5); }
                 }
-                .animate-tv-logo-loop { 
-                    display: inline-flex; 
-                    animation: tv-logo-loop 12s linear infinite; 
+                .animate-tv-logo-pop { 
+                    animation: tv-logo-pop 4s ease-in-out infinite; 
                 }
                  @keyframes tv-marquee { 
                     0% { transform: translateX(0); } 

@@ -50,7 +50,6 @@ const RadioPlayer: React.FC<RadioPlayerProps> = ({
   const isStreamRef = useRef<boolean>(false);
   const wakeLockRef = useRef<any>(null);
   const lastActivityRef = useRef<number>(Date.now());
-  const isInternalPauseRef = useRef<boolean>(false);
 
   const onTrackEndedRef = useRef(onTrackEnded);
   useEffect(() => {
@@ -117,13 +116,6 @@ const RadioPlayer: React.FC<RadioPlayerProps> = ({
     };
 
     const handlePause = () => {
-      if (isInternalPauseRef.current) {
-        console.log("📡 [RadioPlayer] handlePause: Internal pause detected, skipping state reset.");
-        isInternalPauseRef.current = false;
-        setStatus('IDLE');
-        setIsPlaying(true); // Keep local intent as true
-        return;
-      }
       setStatus('IDLE');
       setIsPlaying(false);
       onStateChange(false);
@@ -465,9 +457,9 @@ const RadioPlayer: React.FC<RadioPlayerProps> = ({
 
       if (!shouldBePlaying && !audioRef.current.paused) {
         console.log('📡 [RadioPlayer] EXCLUSIVITY LOCK: Pausing Radio audio (TV or Manual Pause active).');
-        isInternalPauseRef.current = true;
         audioRef.current.pause();
-        // Preserving local state allows auto-play to resume when forcePlaying becomes true again.
+        setIsPlaying(false);
+        onStateChange(false);
       } else if (shouldBePlaying && audioRef.current.paused) {
         // Validate audio source before attempting to play
         if (!audioRef.current.src || audioRef.current.src === '' || audioRef.current.src === window.location.href) {

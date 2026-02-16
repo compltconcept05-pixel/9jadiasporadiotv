@@ -88,7 +88,7 @@ const TVPlayer: React.FC<TVPlayerProps> = ({
     }, [volume]);
 
     const [lastAdvertTimestamp, setLastAdvertTimestamp] = useState(Date.now());
-    // lastStingerTimestamp removed
+    const [lastStingerTimestamp, setLastStingerTimestamp] = useState(Date.now());
     const [isAdvertPlaying, setIsAdvertPlaying] = useState(false);
     const [originalTrackIndex, setOriginalTrackIndex] = useState(0);
 
@@ -125,16 +125,22 @@ const TVPlayer: React.FC<TVPlayerProps> = ({
                 }
             }
 
-            // 2. STINGER TIMER - REMOVED
+            // 2. STINGER TIMER (7 minutes = 420,000ms)
+            if (now - lastStingerTimestamp >= 420000) {
+                console.log("🎬 [TVPlayer] Triggering Scheduled Stinger (7m interval)...");
+                setShowStinger(true);
+                setLastStingerTimestamp(now);
+            }
         }, 5000); // Check every 5s
 
         return () => clearInterval(interval);
-    }, [isActive, isPlaying, isNewsPlaying, isAdmin, lastAdvertTimestamp, isAdvertPlaying, allVideos, currentIndex]);
+    }, [isActive, isPlaying, isNewsPlaying, isAdmin, lastAdvertTimestamp, lastStingerTimestamp, isAdvertPlaying, allVideos, currentIndex]);
 
     // 2. Sync with Admin Broadcast & Active State (Force Stinger on Start)
     useEffect(() => {
         if (!isActive) {
             setIsPlaying(false);
+            setShowStinger(false);
         } else if (activeVideo) {
             // Check if this is a "Fresh" start of TV execution
             // We can infer this if we weren't playing before
@@ -145,9 +151,9 @@ const TVPlayer: React.FC<TVPlayerProps> = ({
                     setCurrentIndex(idx);
                     // ONLY SHOW STINGER IF NOT ADMIN - Admins already hear it/see it on their monitor, avoids double sound
                     if (!isAdmin) {
-                        // Stinger trigger removed
+                        setShowStinger(true); // FORCE STINGER ON START
                     }
-                    // lastStingerTimestamp reset removed
+                    setLastStingerTimestamp(Date.now());
                     setIsPlaying(true);
                 }
             }
@@ -157,7 +163,7 @@ const TVPlayer: React.FC<TVPlayerProps> = ({
     // 3. Playback Logic
     useEffect(() => {
         if (videoRef.current) {
-            const shouldPlayVideo = isPlaying && !isNewsPlaying && isActive;
+            const shouldPlayVideo = isPlaying && !isNewsPlaying && isActive && !showStinger;
             if (shouldPlayVideo) {
                 videoRef.current.play().catch(e => {
                     console.debug("Playback failed", e);
@@ -167,20 +173,31 @@ const TVPlayer: React.FC<TVPlayerProps> = ({
                 videoRef.current.pause();
             }
         }
-    }, [isPlaying, currentIndex, isNewsPlaying, isActive]);
+    }, [isPlaying, currentIndex, isNewsPlaying, isActive, showStinger]);
 
-    // 4. Endless Loop Logic (Stinger logic removed)
+    // 4. Endless Loop & Stinger Transition Logic
+    const handleStingerComplete = () => {
+        setShowStinger(false);
+        // Advance to next video
+        const nextIndex = (currentIndex + 1) % allVideos.length;
+        setCurrentIndex(nextIndex);
+        setIsPlaying(true);
+
+        // ADMIN SYNC: Signal all listeners to advance
+        if (isAdmin && onVideoAdvance) {
+            onVideoAdvance(nextIndex);
+        }
+    };
 
     const handleEnded = () => {
         if (isAdvertPlaying) {
             console.log("📺 [TVPlayer] Advert completed, returning to main sequence...");
             setCurrentIndex(originalTrackIndex);
             setIsAdvertPlaying(false);
+            setShowStinger(true);
         } else if (allVideos.length > 0) {
-            // Video ended -> Advance immediately
-            const nextIndex = (currentIndex + 1) % allVideos.length;
-            setCurrentIndex(nextIndex);
-            if (isAdmin && onVideoAdvance) onVideoAdvance(nextIndex);
+            // Video ended -> Show Stinger
+            setShowStinger(true);
         }
     };
 
@@ -222,30 +239,46 @@ const TVPlayer: React.FC<TVPlayerProps> = ({
     return (
         <div ref={containerRef} className="relative w-full h-full bg-black overflow-hidden group select-none shadow-2xl">
             {/* STRICT OVERFLOW CONTROL */}
-            <video
-                ref={videoRef}
-                key={currentTrack.url}
-                src={currentTrack.url}
-                className="w-full h-full object-cover pointer-events-none"
-                autoPlay={false}
-                muted={isMuted}
-                playsInline
-                onEnded={handleEnded}
-            />
+            {/* 1. TV SECTION */}
+            <div className="absolute inset-0 z-0">
+                <video
+                    ref={videoRef}
+                    key={currentTrack.url}
+                    src={currentTrack.url}
+                    className="w-full h-full object-cover pointer-events-none"
+                    autoPlay={false}
+                    muted={isMuted}
+                    playsInline
+                    onEnded={handleEnded}
+                />
+            </div>
+
+            {/* 2. STINGER LAYER */}
+            {showStinger && (
+                <div className="absolute inset-0 z-50">
+                    <TVStinger
+                        variant="sequence"
+                        onComplete={handleStingerComplete}
+                        isMuted={isMuted}
+                    />
+                </div>
+            )}
 
 
             {/* Overlays (ON AIR MODE: Integrated news ticker) */}
-            <TVOverlay
-                isPlaying={isPlaying}
-                onTogglePlay={togglePlay}
-                onToggleFullscreen={toggleFullscreen}
-                channelName="NDRTV"
-                news={news}
-                adminMessages={adminMessages}
-                isVisible={showControls}
-                volume={volume}
-                onVolumeChange={setVolume}
-            />
+            {!showStinger && (
+                <TVOverlay
+                    isPlaying={isPlaying}
+                    onTogglePlay={togglePlay}
+                    onToggleFullscreen={toggleFullscreen}
+                    channelName="NDRTV"
+                    news={news}
+                    adminMessages={adminMessages}
+                    isVisible={showControls}
+                    volume={volume}
+                    onVolumeChange={setVolume}
+                />
+            )}
 
             {/* Tap surface to show controls */}
             <div
