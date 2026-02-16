@@ -58,7 +58,7 @@ const TVOverlay: React.FC<TVOverlayProps> = ({
                     </div>
                 </div>
 
-                <div className={`flex whitespace-nowrap items-center z-20 ${isPlaying ? 'animate-tv-marquee' : 'opacity-50'}`}>
+                <div className="flex whitespace-nowrap items-center z-20 animate-tv-marquee">
                     {/* Padding for initial flag clearance */}
                     <span className="w-16 inline-block"></span>
                     <span className="text-[7px] font-black text-white uppercase px-6 tracking-widest inline-block">{CHANNEL_INTRO}</span>

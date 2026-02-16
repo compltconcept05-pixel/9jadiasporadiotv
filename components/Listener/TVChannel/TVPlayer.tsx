@@ -64,6 +64,8 @@ const TVPlayer: React.FC<TVPlayerProps> = ({
         if (hideTimeoutRef.current) clearTimeout(hideTimeoutRef.current);
         if (isPlaying) {
             hideTimeoutRef.current = setTimeout(() => setShowControls(false), 5000); // 5s timeout
+        } else {
+            setShowControls(true); // Persist controls when "black" or paused
         }
     };
 
