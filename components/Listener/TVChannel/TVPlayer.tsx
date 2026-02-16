@@ -1,7 +1,7 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { MediaFile, NewsItem, AdminMessage } from '../../../types';
 import TVOverlay from './TVOverlay';
-// TVStinger removed
+import TVStinger from './TVStinger';
 
 interface TVPlayerProps {
     activeVideo: MediaFile | null;
@@ -34,7 +34,7 @@ const TVPlayer: React.FC<TVPlayerProps> = ({
 }) => {
     const [isPlaying, setIsPlaying] = useState(false);
     const [currentIndex, setCurrentIndex] = useState(0);
-    // Use prop for muted state if provided
+    const [showStinger, setShowStinger] = useState(false);
     const [isMutedInternal, setIsMutedInternal] = useState(false);
     const isMuted = onMuteChange ? isMutedProp : isMutedInternal;
     const setIsMuted = (m: boolean) => {
