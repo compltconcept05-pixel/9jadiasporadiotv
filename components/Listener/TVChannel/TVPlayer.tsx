@@ -150,9 +150,8 @@ const TVPlayer: React.FC<TVPlayerProps> = ({
                 if (currentIndex !== idx || !isPlaying) {
                     setCurrentIndex(idx);
                     // ONLY SHOW STINGER IF NOT ADMIN - Admins already hear it/see it on their monitor, avoids double sound
-                    if (!isAdmin) {
-                        setShowStinger(true); // FORCE STINGER ON START
-                    }
+                    // ONLY SHOW STINGER IF NOT ADMIN AND 7 MINUTES ELAPSED
+                    // Removed initial trigger
                     setLastStingerTimestamp(Date.now());
                     setIsPlaying(true);
                 }
