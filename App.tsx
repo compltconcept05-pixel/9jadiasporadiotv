@@ -754,7 +754,7 @@ const App: React.FC = () => {
           {isDucking && <span className="text-[7px] font-black uppercase text-red-500 animate-pulse bg-red-50 px-1 rounded shadow-sm border border-red-100">Live Broadcast</span>}
           <button
             onClick={role === UserRole.ADMIN ? () => { setRole(UserRole.LISTENER); setListenerHasPlayed(false); } : () => setShowAuth(true)}
-            className="px-4 py-1.5 rounded-full border border-green-950 text-[10px] font-black uppercase text-green-950 hover:bg-green-50 transition-colors"
+            className="px-2 py-1 rounded-full border border-green-950 text-[9px] font-black uppercase text-green-950 hover:bg-green-50 transition-colors whitespace-nowrap"
           >
             {role === UserRole.ADMIN ? 'Exit Admin' : 'Admin Login'}
           </button>

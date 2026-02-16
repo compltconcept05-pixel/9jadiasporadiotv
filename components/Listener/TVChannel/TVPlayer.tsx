@@ -216,42 +216,33 @@ const TVPlayer: React.FC<TVPlayerProps> = ({
 
     const currentTrack = allVideos[currentIndex] || activeVideo;
 
-    if (!isActive) {
-        return (
-            <div ref={containerRef} className="relative bg-black overflow-hidden group select-none shadow-2xl rounded-xl w-full h-full flex items-center justify-center">
-                {/* STATION OFFLINE LOGO instead of Stinger */}
-                <span className="text-xl font-black italic text-white/20">NDR TV</span>
-            </div>
-        );
-    }
-
-    if (!currentTrack) {
-        return (
-            <div ref={containerRef} className="relative bg-black overflow-hidden group select-none shadow-2xl w-full h-full flex flex-col items-center justify-center space-y-4">
-                <span className="text-xl font-black italic text-white/20">NDR TV</span>
-                <div className="flex items-center space-x-2 bg-black/60 backdrop-blur-md px-3 py-1 rounded-full border border-white/10">
-                    <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
-                    <span className="text-[8px] font-bold text-white/80 uppercase tracking-widest">Signal Offline</span>
-                </div>
-            </div>
-        );
-    }
-
     return (
         <div ref={containerRef} className="relative w-full h-full bg-black overflow-hidden group select-none shadow-2xl">
             {/* STRICT OVERFLOW CONTROL */}
             {/* 1. TV SECTION */}
-            <div className="absolute inset-0 z-0">
-                <video
-                    ref={videoRef}
-                    key={currentTrack.url}
-                    src={currentTrack.url}
-                    className="w-full h-full object-cover pointer-events-none"
-                    autoPlay={false}
-                    muted={isMuted}
-                    playsInline
-                    onEnded={handleEnded}
-                />
+            <div className="absolute inset-0 z-0 flex flex-col items-center justify-center space-y-4">
+                {(!isActive || !currentTrack) ? (
+                    <>
+                        <span className="text-xl font-black italic text-white/20">NDR TV</span>
+                        {isActive && !currentTrack && (
+                            <div className="flex items-center space-x-2 bg-black/60 backdrop-blur-md px-3 py-1 rounded-full border border-white/10">
+                                <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
+                                <span className="text-[8px] font-bold text-white/80 uppercase tracking-widest">Signal Offline</span>
+                            </div>
+                        )}
+                    </>
+                ) : (
+                    <video
+                        ref={videoRef}
+                        key={currentTrack.url}
+                        src={currentTrack.url}
+                        className="w-full h-full object-cover pointer-events-none"
+                        autoPlay={false}
+                        muted={isMuted}
+                        playsInline
+                        onEnded={handleEnded}
+                    />
+                )}
             </div>
 
             {/* 2. STINGER LAYER */}
@@ -267,7 +258,7 @@ const TVPlayer: React.FC<TVPlayerProps> = ({
 
 
             {/* Overlays (ON AIR MODE: Integrated news ticker) */}
-            {!showStinger && (
+            {isActive && !showStinger && (
                 <TVOverlay
                     isPlaying={isPlaying}
                     onTogglePlay={togglePlay}

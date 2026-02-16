@@ -537,14 +537,16 @@ const RadioPlayer: React.FC<RadioPlayerProps> = ({
 
   return (
     <div className="flex flex-col items-center justify-center space-y-0 w-full">
-      <Logo
-        size="lg"
-        analyser={analyser}
-        isPlaying={isPlaying}
-        status={status}
-        onTogglePlayback={handlePlayPause}
-        showPlayButton={true}
-      />
+      <div className="relative z-50 pointer-events-auto">
+        <Logo
+          size="lg"
+          analyser={analyser}
+          isPlaying={isPlaying}
+          status={status}
+          onTogglePlayback={handlePlayPause}
+          showPlayButton={true}
+        />
+      </div>
 
       <div className="w-full px-8 mt-6 relative z-20">
         <div className="h-1.5 w-full bg-green-100/50 rounded-full overflow-hidden backdrop-blur-sm border border-white/20">

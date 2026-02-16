@@ -47,7 +47,7 @@ const TVOverlay: React.FC<TVOverlayProps> = ({
             </div>
 
             {/* 3. BOTTOM: INTEGRATED NEWS TICKER (Inside Screen - Red Background - Always Visible) */}
-            <div className="absolute bottom-0 inset-x-0 h-10 bg-red-600 backdrop-blur-md border-t border-white/20 flex items-center overflow-hidden z-20 transition-transform duration-500 relative">
+            <div className="absolute bottom-0 inset-x-0 h-10 bg-red-600 backdrop-blur-md border-t border-white/20 flex items-center overflow-hidden z-20 transition-transform duration-500">
 
                 {/* 3.1 FLAG/MAP OVERLAY (Bold, Higher Layer, Solid Bg, Doubled Again) */}
                 <div className="absolute left-0 inset-y-0 w-16 bg-red-600 flex items-center justify-center z-30 shadow-[4px_0_10px_rgba(0,0,0,0.3)]">
