@@ -138,6 +138,7 @@ const App: React.FC = () => {
         dbService.getStationState()
       ]);
 
+      console.log("📦 [App] Cloud Data Fetched:", { media: m?.length, logs: l?.length, state: sState });
       setNews(cloudNews || []);
 
       const mediaItems = m || [];

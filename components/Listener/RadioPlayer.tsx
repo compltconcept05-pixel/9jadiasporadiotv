@@ -109,6 +109,7 @@ const RadioPlayer: React.FC<RadioPlayerProps> = ({
       setStatus('PLAYING');
       setIsPlaying(true);
       onStateChange(true);
+      console.log("🔊 [RadioPlayer] Playback Started:", currentTrackName);
       setErrorMessage('');
 
       // Auto-resume AudioContext on play
