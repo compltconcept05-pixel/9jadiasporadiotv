@@ -896,16 +896,7 @@ const App: React.FC = () => {
       {/* GLOBAL FOOTER - PERSISTENT */}
       <footer className="w-full text-center pb-8 pt-4 mt-auto flex flex-col items-center space-y-4 bg-transparent relative z-[50]">
 
-        {/* 1. ADMIN LOGIN - MOVED TO TOP OF FOOTER FOR ACCESSIBILITY */}
-        <div className="w-full px-8 max-w-md">
-          <button
-            onClick={role === UserRole.ADMIN ? () => { setRole(UserRole.LISTENER); setListenerHasPlayed(false); } : () => setShowAuth(true)}
-            className="w-full flex items-center justify-center space-x-1.5 px-4 py-2.5 rounded-full text-[8px] font-black uppercase tracking-[0.2em] transition-all border border-green-800/20 text-green-800/40 hover:text-green-800 hover:bg-green-800/5 active:scale-95 bg-white/50 backdrop-blur-sm shadow-sm"
-          >
-            <i className={`fas ${role === UserRole.ADMIN ? 'fa-sign-out-alt' : 'fa-lock'}`}></i>
-            <span>{role === UserRole.ADMIN ? 'System Administrator: Logout' : 'Administrator Control Panel'}</span>
-          </button>
-        </div>
+        {/* 1. ADMIN LOGIN REMOVED FROM FOOTER -> NOW FLOATING */}
 
         {/* 2. APP DOWNLOAD SECTION - COMPACTED */}
         <div className="flex flex-col items-center space-y-2 opacity-60 hover:opacity-100 transition-opacity">
@@ -940,6 +931,15 @@ const App: React.FC = () => {
           </div>
         </div>
       </footer>
+
+      {/* 4. FLOATING ADMIN BUTTON */}
+      <button
+        onClick={role === UserRole.ADMIN ? () => { setRole(UserRole.LISTENER); setListenerHasPlayed(false); } : () => setShowAuth(true)}
+        className="fixed bottom-6 right-6 z-[200] w-12 h-12 bg-white/80 backdrop-blur-md rounded-full border border-green-800/20 shadow-xl flex items-center justify-center text-green-800/40 hover:text-green-800 hover:bg-green-800/5 hover:scale-110 active:scale-90 transition-all"
+        title={role === UserRole.ADMIN ? 'Logout' : 'Admin Login'}
+      >
+        <i className={`fas ${role === UserRole.ADMIN ? 'fa-sign-out-alt' : 'fa-lock'} text-sm`}></i>
+      </button>
     </div>
   );
 };
