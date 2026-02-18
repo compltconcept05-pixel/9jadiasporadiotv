@@ -17,7 +17,8 @@
     "@supabase/supabase-js": "^2.95.3",
     "node-localstorage": "^3.0.5",
     "react": "^19.2.3",
-    "react-dom": "^19.2.3"
+    "react-dom": "^19.2.3",
+    "react-player": "^3.4.0"
   },
   "devDependencies": {
     "@types/node": "^22.14.0",

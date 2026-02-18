@@ -341,8 +341,8 @@ const RadioPlayer: React.FC<RadioPlayerProps> = ({
     const isActuallyActive = isPlaying || forcePlaying;
     if (startTime > 0 && audioRef.current && !isAdmin && isActuallyActive) {
       const diff = Math.abs(audioRef.current.currentTime - startTime);
-      // Reverted to 1.5s for "same timing" as requested (restoring precision)
-      if (diff > 1.5) {
+      // Increased threshold to 4s for stability to prevent skipping/jitter
+      if (diff > 4.0) {
         console.log(`📡 [RadioPlayer] Sync Drift Detected (${diff.toFixed(1)}s). Correcting to ${startTime}s...`);
         audioRef.current.currentTime = startTime;
       }

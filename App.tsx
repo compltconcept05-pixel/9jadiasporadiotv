@@ -31,16 +31,16 @@ const App: React.FC = () => {
   const [manualScript, setManualScript] = useState<string>('');
   const [newsHistory, setNewsHistory] = useState<NewsItem[]>([]);
 
-  const [isPlaying, setIsPlaying] = useState(false); // Master Station Play State
+  const [isPlaying, setIsPlaying] = useState(false); // Master Station Play State (Disabled for TV Only)
   const [radioCurrentTime, setRadioCurrentTime] = useState(0); // LIVE POSITION
-  const [listenerHasPlayed, setListenerHasPlayed] = useState(false); // Listener play button state
+  const [listenerHasPlayed, setListenerHasPlayed] = useState(true); // TV Auto-plays for listeners
   const [activeTrackId, setActiveTrackId] = useState<string | null>(null);
   const [activeTrackUrl, setActiveTrackUrl] = useState<string | null>(null);
   const [currentTrackName, setCurrentTrackName] = useState<string>('Station Standby');
   const [isShuffle, setIsShuffle] = useState(true);
   const [hasInteracted, setHasInteracted] = useState(false);
   const [audioStatus, setAudioStatus] = useState<string>('Ready');
-  const [isTvActive, setIsTvActive] = useState(false); // TV Active State
+  const [isTvActive, setIsTvActive] = useState(true); // TV Active State (Default: TRUE)
   const [isTvMuted, setIsTvMuted] = useState(false); // TV Audio Exclusivity State
   const [lastError, setLastError] = useState<string>('');
   const [isDuckingNDR, setIsDuckingNDR] = useState(false);
@@ -260,8 +260,11 @@ const App: React.FC = () => {
             const compensatedOffset = newState.current_offset + latencyInSeconds;
 
             // Only update if it's statistically significant to avoid micro-jitters
-            console.log(`⏱️ [Sync] Base: ${newState.current_offset}s | Latency: ${latencyInSeconds.toFixed(2)}s | Target: ${compensatedOffset.toFixed(2)}s`);
-            setRadioCurrentTime(compensatedOffset);
+            // Increased threshold to 4s to prevent skipping
+            if (Math.abs(radioCurrentTimeRef.current - compensatedOffset) > 4.0) {
+              console.log(`⏱️ [Sync] Significant Drift: Base: ${newState.current_offset}s | Latency: ${latencyInSeconds.toFixed(2)}s | Target: ${compensatedOffset.toFixed(2)}s`);
+              setRadioCurrentTime(compensatedOffset);
+            }
           }
 
           setIsPlaying(newState.is_playing);
@@ -764,7 +767,7 @@ const App: React.FC = () => {
       <header className="p-4 sticky top-0 z-40 bg-white/90 backdrop-blur-md flex justify-between items-center border-b border-green-50 shadow-sm">
         <div className="flex items-baseline space-x-2">
           <h1 className="text-sm font-black italic uppercase leading-none text-green-950 whitespace-nowrap">{APP_NAME}</h1>
-          <span className="text-[5px] font-black text-green-700/40 uppercase tracking-widest translate-y-[-1px]">V5.7-VERIFIED-PLAYBACK</span>
+          <span className="text-[5px] font-black text-green-700/40 uppercase tracking-widest translate-y-[-1px]">V5.8-STABILITY-FIX</span>
         </div>
         <div className="flex items-center space-x-2">
           {role === UserRole.LISTENER && (
@@ -801,57 +804,7 @@ const App: React.FC = () => {
       )}
 
       <main className="flex-grow pt-1 px-1.5">
-        <RadioPlayer
-          onStateChange={(playing) => {
-            if (role === UserRole.ADMIN) {
-              setIsPlaying(playing);
-            } else {
-              setListenerHasPlayed(playing);
-              if (playing) setShowJoinPrompt(false);
-            }
-          }}
-          onTimeUpdate={(time) => {
-            if (role === UserRole.ADMIN) setRadioCurrentTime(time);
-          }}
-          startTime={role === UserRole.LISTENER ? radioCurrentTime : 0}
-          activeTrackUrl={activeTrackUrl}
-          currentTrackName={currentTrackName}
-          onTrackEnded={handlePlayNext}
-          activeTrackId={activeTrackId}
-          isDucking={isDucking}
-          onTogglePlayback={handleRadioToggle}
-          forcePlaying={role === UserRole.ADMIN ? isPlaying : (isPlaying && listenerHasPlayed && (!isTvActive || isTvMuted))}
-          isAdmin={role === UserRole.ADMIN}
-          showPlayButton={role !== UserRole.ADMIN}
-          isTvActive={isTvActive}
-          isTvMuted={isTvMuted}
-        />
-
-        {/* Join Broadcast Overlay for Listeners */}
-        {role === UserRole.LISTENER && showJoinPrompt && !listenerHasPlayed && isPlaying && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-md animate-scale-in">
-            <div className="bg-white rounded-3xl p-8 max-w-[80%] text-center shadow-2xl border border-green-100">
-              <div className="w-20 h-20 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-[0_0_20px_rgba(0,135,81,0.5)] animate-pulse">
-                <i className="fas fa-play text-white text-3xl ml-1"></i>
-              </div>
-              <h2 className="text-xl font-black text-green-900 mb-2 uppercase tracking-tight">Station is LIVE</h2>
-              <p className="text-xs text-green-700/70 mb-8 font-medium">The broadcast is currently active. Tap below to join now.</p>
-              <button
-                onClick={() => {
-                  setListenerHasPlayed(true);
-                  setShowJoinPrompt(false);
-                  setHasInteracted(true);
-                  if ((window as any).resumeRadioAudioContext) {
-                    (window as any).resumeRadioAudioContext();
-                  }
-                }}
-                className="w-full bg-[#008751] text-white py-4 rounded-2xl font-black uppercase tracking-widest hover:scale-105 active:scale-95 transition-all shadow-lg"
-              >
-                Join Broadcast
-              </button>
-            </div>
-          </div>
-        )}
+        {/* JOIN BROADCAST PROMPT REMOVED FOR TV ONLY */}
 
         {/* LISTENER VIEW (Always mounted to keep TV/Audio alive) */}
         <div className={role === UserRole.LISTENER ? 'block' : 'hidden'}>
@@ -941,8 +894,8 @@ const App: React.FC = () => {
       {showAuth && <PasswordModal onClose={() => setShowAuth(false)} onSuccess={() => { setRole(UserRole.ADMIN); setShowAuth(false); }} />}
 
       {/* GLOBAL FOOTER - PERSISTENT */}
-      <footer className="w-full text-center pb-8 pt-6 mt-auto flex flex-col items-center space-y-5 bg-transparent relative z-[50]">
-        <div className="flex flex-col items-center space-y-2">
+      <footer className="w-full text-center pb-12 pt-8 mt-auto flex flex-col items-center space-y-8 bg-transparent relative z-[50]">
+        <div className="flex flex-col items-center space-y-4">
           <span className="text-[7px] font-black uppercase text-green-800/30 tracking-widest">Official Android App</span>
           <button
             onClick={async () => {
@@ -959,14 +912,14 @@ const App: React.FC = () => {
                 alert("Download failed. Please contact support.");
               }
             }}
-            className="group flex items-center space-x-2 px-4 py-1.5 bg-green-900/5 hover:bg-green-100 text-green-900/50 hover:text-green-900 rounded-lg transition-all border border-green-900/10 active:scale-95"
+            className="group flex items-center space-x-2 px-6 py-2.5 bg-green-900/5 hover:bg-green-100 text-green-900/50 hover:text-green-900 rounded-xl transition-all border border-green-900/10 active:scale-95 shadow-sm"
           >
             <i className="fab fa-android text-sm"></i>
-            <span className="text-[9px] font-black uppercase">Download APK</span>
+            <span className="text-[9px] font-black uppercase tracking-widest">Get App (APK)</span>
           </button>
         </div>
 
-        <div className="flex flex-col items-center space-y-3">
+        <div className="flex flex-col items-center space-y-4 w-full px-8">
           <div className="inline-flex items-center justify-center gap-1.5 px-3 py-1 bg-green-900/5 rounded-full border border-green-900/10 opacity-60">
             <span className="text-[7px] font-black uppercase text-green-950 tracking-tighter">{APP_NAME}</span>
             <span className="text-green-900/20 px-0.5">|</span>
@@ -975,10 +928,10 @@ const App: React.FC = () => {
 
           <button
             onClick={role === UserRole.ADMIN ? () => { setRole(UserRole.LISTENER); setListenerHasPlayed(false); } : () => setShowAuth(true)}
-            className="flex items-center space-x-1.5 px-4 py-1.5 rounded-full text-[7px] font-black uppercase tracking-[0.2em] transition-all border border-green-800/10 text-green-800/30 hover:text-green-800/60 hover:bg-green-800/5 active:scale-95"
+            className="w-full flex items-center justify-center space-x-1.5 px-4 py-3 rounded-full text-[8px] font-black uppercase tracking-[0.2em] transition-all border border-green-800/20 text-green-800/40 hover:text-green-800 hover:bg-green-800/5 active:scale-95 bg-white/50 backdrop-blur-sm"
           >
             <i className={`fas ${role === UserRole.ADMIN ? 'fa-sign-out-alt' : 'fa-lock'}`}></i>
-            <span>{role === UserRole.ADMIN ? 'System Administrator: Logout' : 'Admin Login'}</span>
+            <span>{role === UserRole.ADMIN ? 'System Administrator: Logout' : 'Administrator Control Panel'}</span>
           </button>
         </div>
       </footer>

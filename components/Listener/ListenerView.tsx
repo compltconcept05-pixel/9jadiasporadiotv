@@ -15,8 +15,6 @@ interface ListenerViewProps {
   isNewsPlaying: boolean;
   isTvActive: boolean;
   allVideos: MediaFile[];
-  isRadioPlaying: boolean;
-  onRadioToggle: (play: boolean) => void;
   onTvToggle: (active: boolean) => void;
   isTvMuted: boolean;
   onTvMuteChange: (muted: boolean) => void;
@@ -36,8 +34,6 @@ const ListenerView: React.FC<ListenerViewProps> = ({
   isNewsPlaying,
   isTvActive,
   allVideos,
-  isRadioPlaying,
-  onRadioToggle,
   onTvToggle,
   isTvMuted,
   onTvMuteChange,
@@ -55,24 +51,16 @@ const ListenerView: React.FC<ListenerViewProps> = ({
   // COORDINATION: TV audio starts -> Radio pauses
   const handleTvMuteChange = (muted: boolean) => {
     onTvMuteChange(muted);
-    // If we are unmuting TV audio AND TV is actually playing OR TV is starting, pause radio
     if (!muted) {
-      console.log("🔊 [ListenerView] TV Unmuted - Exclusivity Check");
-      if (!isAdmin) {
-        onRadioToggle(false);
-      }
-      onTvToggle(true); // Ensure App knows TV is active to block radio auto-advance/auto-play
+      console.log("🔊 [ListenerView] TV Unmuted");
+      onTvToggle(true);
     }
   };
 
   const handleTvPlayChange = (playing: boolean) => {
     setIsTvPlaying(playing);
-    // If TV starts playing AND it's not muted, pause radio FORCEFULLY
-    if (playing && !isTvMuted) {
-      console.log("📺 [ListenerView] TV Playing & Unmuted - Exclusivity Check");
-      if (!isAdmin) {
-        onRadioToggle(false);
-      }
+    if (playing) {
+      console.log("📺 [ListenerView] TV Playing");
       onTvToggle(true);
     }
   };
@@ -159,10 +147,6 @@ const ListenerView: React.FC<ListenerViewProps> = ({
             onPlayStateChange={handleTvPlayChange}
             isMuted={isTvMuted}
             onMuteChange={handleTvMuteChange}
-            onRadioPlay={() => {
-              // Start radio audio from TV play button
-              onRadioToggle(true);
-            }}
             onVideoAdvance={onVideoAdvance}
             isNewsPlaying={isNewsPlaying}
             isActive={isTvActive}
@@ -256,25 +240,7 @@ const ListenerView: React.FC<ListenerViewProps> = ({
 
       {/* 7. MUSIC GALLERY REMOVED AS REQUESTED BY USER */}
 
-      {/* NEWS TICKER (RADIO ONLY) - MOVED TO BOTTOM */}
-      <section className={`bg-green-50/30 rounded-xl border border-green-100/50 h-10 flex items-center overflow-hidden shrink-0 transition-opacity duration-500 ${isRadioPlaying ? 'opacity-100' : 'opacity-0'}`}>
-        <div className={`flex whitespace-nowrap items-center ${isRadioPlaying ? 'animate-marquee' : ''}`}>
-          <span className="text-xs font-black text-green-800 uppercase px-12 tracking-widest inline-block">{CHANNEL_INTRO}</span>
-          {adminMessages.map((msg, i) => (
-            <span key={`admin-${i}`} className="text-xs text-red-600 font-black uppercase px-12 flex items-center inline-block">
-              <i className="fas fa-bullhorn mr-2"></i> {msg.text}
-              <span className="ml-12 text-green-200">|</span>
-            </span>
-          ))}
-          {news.map((n, i) => (
-            <span key={`ticker-${i}`} className="text-xs text-green-700 font-bold uppercase px-12 flex items-center inline-block">
-              <span className="w-2 h-2 bg-red-500 rounded-full mr-3 animate-pulse"></span>
-              {n.title}
-              <span className="ml-12 text-green-200">|</span>
-            </span>
-          ))}
-        </div>
-      </section>
+      <div className="h-10"></div>
 
       <div className="h-10"></div>
 

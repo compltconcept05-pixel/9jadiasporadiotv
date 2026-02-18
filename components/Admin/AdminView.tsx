@@ -86,7 +86,7 @@ const AdminView: React.FC<AdminViewProps> = ({
   const [manualText, setManualText] = useState(manualScript);
   const [editingItem, setEditingItem] = useState<NewsItem | null>(null);
   const [showAddForm, setShowAddForm] = useState(false);
-  const [newItem, setNewItem] = useState({ title: '', content: '', category: 'Manual' });
+  const [newItem, setNewItem] = useState({ title: '', content: '', category: 'Manual' as const });
   const [selectedJingleUrl, setSelectedJingleUrl] = useState<string>('');
   const [uploadedAppUrl, setUploadedAppUrl] = useState<string>('');
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -291,13 +291,6 @@ const AdminView: React.FC<AdminViewProps> = ({
               </div>
 
               <div className="flex items-center justify-between space-x-2">
-                <button
-                  onClick={onToggleRadio}
-                  className={`flex-1 py-3 rounded-lg text-white font-black text-[10px] uppercase shadow-md transition-transform active:scale-95 ${isRadioPlaying ? 'bg-red-500 hover:bg-red-600 border-red-400' : 'bg-green-500 hover:bg-green-600 border-green-400'} border-b-2`}
-                >
-                  {isRadioPlaying ? 'Stop Radio' : 'Start Radio'}
-                </button>
-
                 <button
                   onClick={() => onToggleTv?.(!isTvActive)}
                   className={`flex-1 py-3 rounded-lg text-white font-black text-[10px] uppercase shadow-md transition-transform active:scale-95 ${isTvActive ? 'bg-indigo-600 hover:bg-indigo-700 border-indigo-500' : 'bg-gray-500 hover:bg-gray-600 border-gray-400'} border-b-2`}
@@ -668,6 +661,50 @@ const AdminView: React.FC<AdminViewProps> = ({
               >
                 Videos
               </button>
+            </div>
+
+            {/* Social Media Link Integration */}
+            <div className="mb-4 p-3 bg-indigo-50 rounded-xl border border-indigo-100">
+              <h4 className="text-[8px] font-black uppercase text-indigo-800 mb-2">Post Social Media Link (FB, IG, YT)</h4>
+              <div className="flex space-x-2">
+                <input
+                  type="text"
+                  id="social-link-input"
+                  placeholder="Paste social media video link here..."
+                  className="flex-1 text-[9px] p-2 border border-indigo-200 rounded outline-none focus:ring-1 focus:ring-indigo-500 bg-white"
+                />
+                <button
+                  onClick={async () => {
+                    const input = document.getElementById('social-link-input') as HTMLInputElement;
+                    const url = input?.value;
+                    if (!url) return;
+                    setIsProcessing(true);
+                    setInternalStatus('Processing link...');
+                    try {
+                      const newMedia: MediaFile = {
+                        id: 'social-' + Date.now(),
+                        name: 'Social Media Video',
+                        url: url,
+                        type: 'video',
+                        timestamp: Date.now(),
+                        likes: 0
+                      };
+                      await dbService.addMediaCloud(newMedia);
+                      setInternalStatus('✅ Link saved to TV Library!');
+                      input.value = '';
+                      onRefreshData();
+                    } catch (e: any) {
+                      setInternalStatus('❌ Error: ' + e.message);
+                    } finally {
+                      setIsProcessing(false);
+                      setTimeout(() => setInternalStatus(''), 3000);
+                    }
+                  }}
+                  className="px-4 py-2 bg-indigo-600 text-white text-[8px] font-black uppercase rounded shadow hover:bg-indigo-700 transition-all"
+                >
+                  Post Link
+                </button>
+              </div>
             </div>
 
             {/* Folder Selection for Upload */}

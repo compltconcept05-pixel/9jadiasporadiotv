@@ -4,7 +4,7 @@ export interface NewsItem {
   id: string;
   title: string;
   content: string;
-  category: 'Nigeria' | 'Diaspora' | 'Culture' | 'Economy' | 'Listener Report' | 'Sports' | 'Global' | 'Politics' | 'Business' | 'Security' | 'Technology' | 'Breaking';
+  category: 'Nigeria' | 'Diaspora' | 'Culture' | 'Economy' | 'Listener Report' | 'Sports' | 'Global' | 'Politics' | 'Business' | 'Security' | 'Technology' | 'Breaking' | 'TV' | 'Social' | 'Manual';
   timestamp: number;
   location?: string;
   sources?: string[];

@@ -1,4 +1,6 @@
 import React, { useRef, useState, useEffect, useCallback } from 'react';
+import ReactPlayer from 'react-player';
+const Player = ReactPlayer as any;
 import { MediaFile, NewsItem, AdminMessage } from '../../../types';
 import TVOverlay from './TVOverlay';
 
@@ -42,7 +44,6 @@ const TVPlayer: React.FC<TVPlayerProps> = ({
 
     const [volume, setVolume] = useState(1.0);
     const [showControls, setShowControls] = useState(true); // Auto-hide controls
-    const videoRef = useRef<HTMLVideoElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);
     const hideTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -80,12 +81,7 @@ const TVPlayer: React.FC<TVPlayerProps> = ({
         };
     }, [isPlaying]);
 
-    // Apply volume to video element
-    useEffect(() => {
-        if (videoRef.current) {
-            videoRef.current.volume = volume;
-        }
-    }, [volume]);
+    // Volume effect removed - volume prop handles this
 
     const [lastAdvertTimestamp, setLastAdvertTimestamp] = useState(Date.now());
     const [lastStingerTimestamp, setLastStingerTimestamp] = useState(Date.now());
@@ -118,7 +114,6 @@ const TVPlayer: React.FC<TVPlayerProps> = ({
                         setIsAdvertPlaying(true);
                         setLastAdvertTimestamp(now);
                         // No stinger for ads, just cut to them for seamless feel
-                        if (videoRef.current) videoRef.current.currentTime = 0;
                     }
                 } else {
                     setLastAdvertTimestamp(now); // Reset if no ads found to prevent loop
@@ -167,20 +162,7 @@ const TVPlayer: React.FC<TVPlayerProps> = ({
         }
     }, [currentIndex, allVideos.length, isAdmin, onVideoAdvance]);
 
-    // 3. Playback Logic
-    useEffect(() => {
-        if (videoRef.current) {
-            const shouldPlayVideo = isPlaying && !isNewsPlaying && isActive;
-            if (shouldPlayVideo) {
-                videoRef.current.play().catch(e => {
-                    console.debug("Playback failed", e);
-                    setIsPlaying(false);
-                });
-            } else {
-                videoRef.current.pause();
-            }
-        }
-    }, [isPlaying, currentIndex, isNewsPlaying, isActive]);
+    // Playback and pause are handled directly by the playing prop in ReactPlayer
 
     const handleEnded = () => {
         if (isAdvertPlaying) {
@@ -231,17 +213,19 @@ const TVPlayer: React.FC<TVPlayerProps> = ({
                         )}
                     </>
                 ) : (
-                    <video
-                        ref={videoRef}
-                        key={currentTrack.url}
-                        src={currentTrack.url}
-                        className="w-full h-full object-cover pointer-events-none"
-                        autoPlay={isPlaying && !isNewsPlaying}
-                        muted={isMuted}
-                        loop
-                        playsInline
-                        onEnded={handleEnded}
-                    />
+                    <div className="w-full h-full">
+                        <Player
+                            url={currentTrack.url}
+                            className="react-player"
+                            width="100%"
+                            height="100%"
+                            playing={isPlaying && !isNewsPlaying && isActive}
+                            muted={isMuted}
+                            volume={volume}
+                            onEnded={handleEnded}
+                            playsinline
+                        />
+                    </div>
                 )}
             </div>
 
