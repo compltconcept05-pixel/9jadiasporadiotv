@@ -35,13 +35,17 @@ interface AdminViewProps {
   onDeleteNews?: (id: string) => void; // New
   mediaFiles: MediaFile[];
   status?: string;
+  onRefreshWire?: () => void;
   activeVideoId?: string | null;
   onPlayVideo?: (track: MediaFile) => void;
+  tvPlaylist?: string[];
+  onUpdatePlaylist?: (playlist: string[]) => void;
   isTvActive?: boolean;
   onToggleTv?: (active: boolean) => void;
   onResetSync?: () => void;
   onLogAdd?: (action: string) => void;
   reports?: ListenerReport[];
+  onDeleteMedia?: (id: string, fileName?: string) => Promise<void>;
 }
 
 type Tab = 'command' | 'bulletin' | 'manual' | 'media' | 'inbox' | 'logs' | 'podcast';
@@ -75,7 +79,7 @@ const AdminView: React.FC<AdminViewProps> = ({
   onAddNews,
   onUpdateNews,
   onDeleteNews,
-  mediaFiles = [], status, onRefreshWire, activeVideoId, onPlayVideo, isTvActive, onToggleTv, onResetSync, onDeleteMedia, onLogAdd, reports
+  mediaFiles = [], status, onRefreshWire, activeVideoId, onPlayVideo, tvPlaylist = [], onUpdatePlaylist, isTvActive, onToggleTv, onResetSync, onDeleteMedia, onLogAdd, reports
 }) => {
   const [activeTab, setActiveTab] = useState<Tab>('command');
   const [mediaSubTab, setMediaSubTab] = useState<MediaSubTab>('audio');
@@ -665,33 +669,39 @@ const AdminView: React.FC<AdminViewProps> = ({
 
             {/* Social Media Link Integration */}
             <div className="mb-4 p-3 bg-indigo-50 rounded-xl border border-indigo-100">
-              <h4 className="text-[8px] font-black uppercase text-indigo-800 mb-2">Post Social Media Link (FB, IG, YT)</h4>
-              <div className="flex space-x-2">
-                <input
-                  type="text"
-                  id="social-link-input"
-                  placeholder="Paste social media video link here..."
-                  className="flex-1 text-[9px] p-2 border border-indigo-200 rounded outline-none focus:ring-1 focus:ring-indigo-500 bg-white"
-                />
+              <h4 className="text-[8px] font-black uppercase text-indigo-800 mb-2">Post Social Media Links (FB, IG, YT) - Up to 3</h4>
+              <div className="space-y-2">
+                {[0, 1, 2].map((i) => (
+                  <input
+                    key={i}
+                    type="text"
+                    id={`social-link-input-${i}`}
+                    defaultValue={tvPlaylist[i] || ''}
+                    placeholder={`Paste video link ${i + 1} here...`}
+                    className="w-full text-[9px] p-2 border border-indigo-200 rounded outline-none focus:ring-1 focus:ring-indigo-500 bg-white"
+                  />
+                ))}
                 <button
                   onClick={async () => {
-                    const input = document.getElementById('social-link-input') as HTMLInputElement;
-                    const url = input?.value;
-                    if (!url) return;
+                    const links: string[] = [];
+                    for (let i = 0; i < 3; i++) {
+                      const input = document.getElementById(`social-link-input-${i}`) as HTMLInputElement;
+                      if (input?.value.trim()) {
+                        links.push(input.value.trim());
+                      }
+                    }
+
+                    if (links.length === 0) return;
+
                     setIsProcessing(true);
-                    setInternalStatus('Processing link...');
+                    setInternalStatus('Broadcasting Playlist...');
                     try {
-                      const newMedia: MediaFile = {
-                        id: 'social-' + Date.now(),
-                        name: 'Social Media Video',
-                        url: url,
-                        type: 'video',
-                        timestamp: Date.now(),
-                        likes: 0
-                      };
-                      await dbService.addMediaCloud(newMedia);
-                      setInternalStatus('✅ Link saved to TV Library!');
-                      input.value = '';
+                      // Update playlist state in App.tsx
+                      onUpdatePlaylist?.(links);
+
+                      // Also add to media library if it's new (optional, but requested to play content)
+                      // For now, we trust the playlist state will reach TVPlayer
+                      setInternalStatus('✅ Playlist Live on TV!');
                       onRefreshData();
                     } catch (e: any) {
                       setInternalStatus('❌ Error: ' + e.message);
@@ -700,9 +710,9 @@ const AdminView: React.FC<AdminViewProps> = ({
                       setTimeout(() => setInternalStatus(''), 3000);
                     }
                   }}
-                  className="px-4 py-2 bg-indigo-600 text-white text-[8px] font-black uppercase rounded shadow hover:bg-indigo-700 transition-all"
+                  className="w-full py-2.5 bg-indigo-600 text-white text-[8px] font-black uppercase rounded shadow-lg hover:bg-indigo-700 transition-all border-b-2 border-indigo-800"
                 >
-                  Post Link
+                  Broadcast Playlist
                 </button>
               </div>
             </div>

@@ -18,7 +18,10 @@ interface ListenerViewProps {
   onTvToggle: (active: boolean) => void;
   isTvMuted: boolean;
   onTvMuteChange: (muted: boolean) => void;
+  tvPlaylist: string[];
   onVideoAdvance?: (index: number) => void;
+  isRadioPlaying: boolean;
+  onRadioToggle: (play: boolean) => void;
   isAdmin?: boolean;
   onReport?: (report: ListenerReport) => Promise<void>;
 }
@@ -37,7 +40,10 @@ const ListenerView: React.FC<ListenerViewProps> = ({
   onTvToggle,
   isTvMuted,
   onTvMuteChange,
+  tvPlaylist,
   onVideoAdvance,
+  isRadioPlaying,
+  onRadioToggle,
   isAdmin = false,
   onReport
 }) => {
@@ -151,6 +157,7 @@ const ListenerView: React.FC<ListenerViewProps> = ({
             isNewsPlaying={isNewsPlaying}
             isActive={isTvActive}
             isAdmin={isAdmin}
+            tvPlaylist={tvPlaylist}
           />
         </div>
       </section>
@@ -238,7 +245,43 @@ const ListenerView: React.FC<ListenerViewProps> = ({
         </div>
       </section>
 
-      {/* 7. MUSIC GALLERY REMOVED AS REQUESTED BY USER */}
+      {/* 7. MUSIC GALLERY - RESTORED */}
+      <section className="space-y-4">
+        <div className="flex justify-between items-baseline px-1">
+          <h3 className="text-[10px] font-black uppercase text-green-700/60 tracking-widest">Naija Top Hits</h3>
+          <button
+            onClick={() => onRadioToggle(!isRadioPlaying)}
+            className={`text-[8px] font-black uppercase px-3 py-1 rounded-full transition-all ${isRadioPlaying ? 'bg-red-50 text-red-600 animate-pulse' : 'bg-green-50 text-green-700'}`}
+          >
+            {isRadioPlaying ? 'Stop Radio' : 'Live Radio'}
+          </button>
+        </div>
+
+        <div className="grid grid-cols-2 gap-3 pb-8">
+          {allVideos.filter(m => m.type === 'audio').slice(0, 10).map((track) => (
+            <button
+              key={track.id}
+              onClick={() => onPlayTrack(track)}
+              className="group relative bg-white p-3 rounded-2xl border border-green-50 shadow-sm hover:shadow-md hover:border-green-200 transition-all text-left active:scale-95"
+            >
+              <div className="flex items-center space-x-3">
+                <div className="w-8 h-8 bg-green-900/5 rounded-xl flex items-center justify-center group-hover:bg-green-600 group-hover:text-white transition-colors">
+                  <i className="fas fa-play text-[10px]"></i>
+                </div>
+                <div className="flex flex-col min-w-0">
+                  <span className="text-[9px] font-black text-green-950 truncate uppercase tracking-tight">{track.name.replace(/\.[^/.]+$/, "")}</span>
+                  <span className="text-[7px] text-green-600/60 font-bold uppercase">NDR Exclusive</span>
+                </div>
+              </div>
+            </button>
+          ))}
+          {allVideos.filter(m => m.type === 'audio').length === 0 && (
+            <div className="col-span-2 text-center py-8 opacity-20">
+              <span className="text-[8px] font-black uppercase tracking-widest">Library Syncing...</span>
+            </div>
+          )}
+        </div>
+      </section>
 
       <div className="h-10"></div>
 

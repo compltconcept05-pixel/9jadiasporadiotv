@@ -17,6 +17,7 @@ interface TVPlayerProps {
     isAdmin?: boolean;
     isMuted?: boolean;
     onMuteChange?: (muted: boolean) => void;
+    tvPlaylist?: string[];
 }
 
 const TVPlayer: React.FC<TVPlayerProps> = ({
@@ -31,9 +32,11 @@ const TVPlayer: React.FC<TVPlayerProps> = ({
     isActive,
     isAdmin = false,
     isMuted: isMutedProp = false,
-    onMuteChange
+    onMuteChange,
+    tvPlaylist = []
 }) => {
     const [isPlaying, setIsPlaying] = useState(false);
+    const [playlistIndex, setPlaylistIndex] = useState(0);
     const [currentIndex, setCurrentIndex] = useState(0);
     const [isMutedInternal, setIsMutedInternal] = useState(false);
     const isMuted = onMuteChange ? isMutedProp : isMutedInternal;
@@ -164,12 +167,34 @@ const TVPlayer: React.FC<TVPlayerProps> = ({
 
     // Playback and pause are handled directly by the playing prop in ReactPlayer
 
+    const filterSocialUrl = (url: string) => {
+        if (!url) return '';
+        const lowercase = url.toLowerCase();
+        // Skip Shorts or Stories
+        if (lowercase.includes('/shorts/') || lowercase.includes('/stories/')) {
+            console.warn("🚫 [TVPlayer] Filtering out Short/Story:", url);
+            return '';
+        }
+        return url;
+    };
+
     const handleEnded = () => {
         if (isAdvertPlaying) {
             console.log("📺 [TVPlayer] Advert completed, returning to main sequence...");
             setCurrentIndex(originalTrackIndex);
             setIsAdvertPlaying(false);
             handleAdvance();
+        } else if (tvPlaylist.length > 0) {
+            const nextIdx = playlistIndex + 1;
+            if (nextIdx < tvPlaylist.length) {
+                console.log("⏭️ [TVPlayer] Advancing Playlist:", nextIdx);
+                setPlaylistIndex(nextIdx);
+                setIsPlaying(true);
+            } else {
+                console.log("⏹️ [TVPlayer] Playlist completed.");
+                setPlaylistIndex(0); // Loop or Stop? Let's loop for now unless user said otherwise
+                setIsPlaying(true);
+            }
         } else if (allVideos.length > 0) {
             handleAdvance();
         }
@@ -187,14 +212,25 @@ const TVPlayer: React.FC<TVPlayerProps> = ({
         setIsMuted(!isMuted);
     };
 
-    const currentTrack = allVideos.find(v => v.id === activeVideo?.id) || activeVideo || allVideos.find(v => v.type === 'video');
+    let currentVideoUrl = '';
+    if (tvPlaylist.length > 0) {
+        currentVideoUrl = filterSocialUrl(tvPlaylist[playlistIndex]);
+        // If current is filtered, try next
+        if (!currentVideoUrl && tvPlaylist.length > 1) {
+            const nextIdx = (playlistIndex + 1) % tvPlaylist.length;
+            currentVideoUrl = filterSocialUrl(tvPlaylist[nextIdx]);
+        }
+    } else {
+        const track = allVideos.find(v => v.id === activeVideo?.id) || activeVideo || allVideos.find(v => v.type === 'video');
+        currentVideoUrl = track?.url || '';
+    }
 
     return (
         <div ref={containerRef} className="relative w-full h-full bg-black overflow-hidden group select-none shadow-2xl">
             {/* STRICT OVERFLOW CONTROL */}
             {/* 1. TV SECTION */}
             <div className="absolute inset-0 z-0 flex flex-col items-center justify-center space-y-4">
-                {(isActive && !currentTrack) ? (
+                {(isActive && !currentVideoUrl) ? (
                     <div className="flex flex-col items-center space-y-4">
                         <span className="text-xl font-black italic text-white/40 animate-pulse tracking-widest">NDR TV STANDBY</span>
                         <div className="flex items-center space-x-2 bg-black/60 backdrop-blur-md px-3 py-1 rounded-full border border-white/10">
@@ -205,7 +241,7 @@ const TVPlayer: React.FC<TVPlayerProps> = ({
                 ) : !isActive ? (
                     <>
                         <span className="text-xl font-black italic text-white/20">NDR TV</span>
-                        {isActive && !currentTrack && (
+                        {isActive && !currentVideoUrl && (
                             <div className="flex items-center space-x-2 bg-black/60 backdrop-blur-md px-3 py-1 rounded-full border border-white/10">
                                 <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
                                 <span className="text-[8px] font-bold text-white/80 uppercase tracking-widest">Signal Offline</span>
@@ -215,7 +251,7 @@ const TVPlayer: React.FC<TVPlayerProps> = ({
                 ) : (
                     <div className="w-full h-full">
                         <Player
-                            url={currentTrack.url}
+                            url={currentVideoUrl}
                             className="react-player"
                             width="100%"
                             height="100%"

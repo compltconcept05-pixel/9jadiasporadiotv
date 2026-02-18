@@ -52,6 +52,7 @@ const App: React.FC = () => {
   const [manualNewsTriggerCount, setManualNewsTriggerCount] = useState(0);
   const [stopTriggerCount, setStopTriggerCount] = useState(0);
   const [activeVideoId, setActiveVideoId] = useState<string | null>(null);
+  const [tvPlaylist, setTvPlaylist] = useState<string[]>([]);
   const [showJoinPrompt, setShowJoinPrompt] = useState(false);
   const [cloudStatus, setCloudStatus] = useState<string>('Initializing Satellite...');
   const [sessionId] = useState(() => Math.random().toString(36).substring(7));
@@ -252,6 +253,10 @@ const App: React.FC = () => {
             setActiveVideoId(newState.current_video_id);
           }
 
+          if (newState.tv_playlist) {
+            setTvPlaylist(newState.tv_playlist);
+          }
+
           if (newState.current_offset !== undefined) {
             // COMPENSATED SYNC: Add lag compensation (Now - LastUpdated)
             // timestamp is in ms, offset is in seconds
@@ -347,6 +352,7 @@ const App: React.FC = () => {
           current_track_name: currentTrackNameRef.current,
           current_track_url: isCloudUrl ? urlToSync : (isJingle ? urlToSync : null),
           current_video_id: activeVideoIdRef.current,
+          tv_playlist: tvPlaylist,
           current_offset: radioCurrentTimeRef.current,
           timestamp: Date.now()
         }).catch(err => console.error("❌ Station Sync error", err));
@@ -830,6 +836,7 @@ const App: React.FC = () => {
             activeVideo={allMediaRef.current.find(m => m.id === activeVideoId) || null}
             isNewsPlaying={isDucking}
             isTvActive={isTvActive}
+            tvPlaylist={tvPlaylist}
             allVideos={allMedia}
             isRadioPlaying={listenerHasPlayed}
             onRadioToggle={handleRadioToggle}
@@ -857,10 +864,10 @@ const App: React.FC = () => {
             onPlayAll={handlePlayAll} onSkipNext={handlePlayNext}
             onPushBroadcast={handlePushBroadcast} onPlayJingle={handlePlayJingle}
             news={news}
-            onTriggerFullBulletin={() => setNewsTriggerCount(prev => prev + 1)}
-            onTriggerManualBroadcast={() => setManualNewsTriggerCount(prev => prev + 1)}
-            onPlayPodcastFile={() => { }}
-            onPlayDirectTTS={() => { }}
+            onTriggerFullBulletin={async () => { setNewsTriggerCount(prev => prev + 1); }}
+            onTriggerManualBroadcast={async () => { setManualNewsTriggerCount(prev => prev + 1); }}
+            onPlayPodcastFile={async () => { }}
+            onPlayDirectTTS={async () => { }}
             onSaveManualScript={async (s) => {
               await dbService.saveManualScript(s);
               setManualScript(s);
@@ -882,6 +889,8 @@ const App: React.FC = () => {
             }}
             activeVideoId={activeVideoId}
             onPlayVideo={handlePlayVideo}
+            tvPlaylist={tvPlaylist}
+            onUpdatePlaylist={setTvPlaylist}
             isTvActive={isTvActive}
             onToggleTv={handleVideoToggle}
             onResetSync={handleResetSync}
