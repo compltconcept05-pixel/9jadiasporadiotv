@@ -894,9 +894,21 @@ const App: React.FC = () => {
       {showAuth && <PasswordModal onClose={() => setShowAuth(false)} onSuccess={() => { setRole(UserRole.ADMIN); setShowAuth(false); }} />}
 
       {/* GLOBAL FOOTER - PERSISTENT */}
-      <footer className="w-full text-center pb-12 pt-8 mt-auto flex flex-col items-center space-y-8 bg-transparent relative z-[50]">
-        <div className="flex flex-col items-center space-y-4">
-          <span className="text-[7px] font-black uppercase text-green-800/30 tracking-widest">Official Android App</span>
+      <footer className="w-full text-center pb-8 pt-4 mt-auto flex flex-col items-center space-y-4 bg-transparent relative z-[50]">
+
+        {/* 1. ADMIN LOGIN - MOVED TO TOP OF FOOTER FOR ACCESSIBILITY */}
+        <div className="w-full px-8 max-w-md">
+          <button
+            onClick={role === UserRole.ADMIN ? () => { setRole(UserRole.LISTENER); setListenerHasPlayed(false); } : () => setShowAuth(true)}
+            className="w-full flex items-center justify-center space-x-1.5 px-4 py-2.5 rounded-full text-[8px] font-black uppercase tracking-[0.2em] transition-all border border-green-800/20 text-green-800/40 hover:text-green-800 hover:bg-green-800/5 active:scale-95 bg-white/50 backdrop-blur-sm shadow-sm"
+          >
+            <i className={`fas ${role === UserRole.ADMIN ? 'fa-sign-out-alt' : 'fa-lock'}`}></i>
+            <span>{role === UserRole.ADMIN ? 'System Administrator: Logout' : 'Administrator Control Panel'}</span>
+          </button>
+        </div>
+
+        {/* 2. APP DOWNLOAD SECTION - COMPACTED */}
+        <div className="flex flex-col items-center space-y-2 opacity-60 hover:opacity-100 transition-opacity">
           <button
             onClick={async () => {
               try {
@@ -912,27 +924,20 @@ const App: React.FC = () => {
                 alert("Download failed. Please contact support.");
               }
             }}
-            className="group flex items-center space-x-2 px-6 py-2.5 bg-green-900/5 hover:bg-green-100 text-green-900/50 hover:text-green-900 rounded-xl transition-all border border-green-900/10 active:scale-95 shadow-sm"
+            className="group flex items-center space-x-2 px-4 py-1.5 bg-green-900/5 hover:bg-green-100 text-green-900/40 hover:text-green-900 rounded-lg transition-all border border-green-900/10 active:scale-95"
           >
-            <i className="fab fa-android text-sm"></i>
-            <span className="text-[9px] font-black uppercase tracking-widest">Get App (APK)</span>
+            <i className="fab fa-android text-[10px]"></i>
+            <span className="text-[7px] font-black uppercase tracking-widest">Get App (APK)</span>
           </button>
         </div>
 
-        <div className="flex flex-col items-center space-y-4 w-full px-8">
+        {/* 3. BRANDING */}
+        <div className="flex flex-col items-center space-y-2 w-full px-8 pb-4">
           <div className="inline-flex items-center justify-center gap-1.5 px-3 py-1 bg-green-900/5 rounded-full border border-green-900/10 opacity-60">
             <span className="text-[7px] font-black uppercase text-green-950 tracking-tighter">{APP_NAME}</span>
             <span className="text-green-900/20 px-0.5">|</span>
             <span className="text-[7px] text-green-800 font-mono tracking-tighter">© 2026</span>
           </div>
-
-          <button
-            onClick={role === UserRole.ADMIN ? () => { setRole(UserRole.LISTENER); setListenerHasPlayed(false); } : () => setShowAuth(true)}
-            className="w-full flex items-center justify-center space-x-1.5 px-4 py-3 rounded-full text-[8px] font-black uppercase tracking-[0.2em] transition-all border border-green-800/20 text-green-800/40 hover:text-green-800 hover:bg-green-800/5 active:scale-95 bg-white/50 backdrop-blur-sm"
-          >
-            <i className={`fas ${role === UserRole.ADMIN ? 'fa-sign-out-alt' : 'fa-lock'}`}></i>
-            <span>{role === UserRole.ADMIN ? 'System Administrator: Logout' : 'Administrator Control Panel'}</span>
-          </button>
         </div>
       </footer>
     </div>
