@@ -238,53 +238,36 @@ const TVPlayer: React.FC<TVPlayerProps> = ({
 
     return (
         <div ref={containerRef} className="relative w-full h-full bg-black overflow-hidden group select-none shadow-2xl">
-            {/* STRICT OVERFLOW CONTROL */}
             {/* 1. TV SECTION */}
             <div className="absolute inset-0 z-0 flex flex-col items-center justify-center space-y-4">
-                {(isActive && !currentVideoUrl) ? (
-                    <div className="flex flex-col items-center space-y-4">
-                        <span className="text-xl font-black italic text-white/40 animate-pulse tracking-widest">NDR TV STANDBY</span>
-                        <div className="flex items-center space-x-2 bg-black/60 backdrop-blur-md px-3 py-1 rounded-full border border-white/10">
-                            <div className="w-2 h-2 bg-yellow-500 rounded-full animate-pulse"></div>
-                            <span className="text-[8px] font-bold text-white/80 uppercase tracking-widest">Connecting to Satellite...</span>
-                        </div>
-                    </div>
-                ) : !isActive ? (
-                    <>
-                        <span className="text-xl font-black italic text-white/20">NDR TV</span>
-                        {isActive && !currentVideoUrl && (
-                            <div className="flex items-center space-x-2 bg-black/60 backdrop-blur-md px-3 py-1 rounded-full border border-white/10">
-                                <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
-                                <span className="text-[8px] font-bold text-white/80 uppercase tracking-widest">Signal Offline</span>
-                            </div>
-                        )}
-                    </>
-                ) : (
+                {currentVideoUrl ? (
+                    /* ── HAS A URL: show the embedded player ── */
                     <div className="w-full h-full relative group">
                         <Player
                             url={currentVideoUrl}
                             className="react-player"
                             width="100%"
                             height="100%"
-                            playing={isPlaying && !isNewsPlaying && isActive}
+                            playing={isPlaying && !isNewsPlaying}
                             muted={isMuted}
                             volume={volume}
                             onEnded={handleEnded}
                             onPlay={() => setIsPlaying(true)}
                             onPause={() => setIsPlaying(false)}
                             playsinline
+                            config={{
+                                youtube: { playerVars: { autoplay: 1, rel: 0 } },
+                                facebook: { appId: '966242223397117' }
+                            }}
                         />
 
-                        {/* PLAY BUTTON OVERLAY (Visible when not playing or on standby) */}
-                        {(!isPlaying || !isActive) && (
+                        {/* PLAY BUTTON OVERLAY */}
+                        {!isPlaying && (
                             <div
-                                onClick={() => {
-                                    setIsPlaying(true);
-                                    if (!isActive && isAdmin) setIsPlaying(true);
-                                }}
-                                className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-[2px] cursor-pointer group-hover:bg-black/20 transition-all z-20"
+                                onClick={() => setIsPlaying(true)}
+                                className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-[2px] cursor-pointer hover:bg-black/20 transition-all z-20"
                             >
-                                <div className="w-20 h-20 bg-[#008751] rounded-full flex items-center justify-center shadow-2xl border-4 border-white/20 transform group-hover:scale-110 transition-transform">
+                                <div className="w-20 h-20 bg-[#008751] rounded-full flex items-center justify-center shadow-2xl border-4 border-white/20 transform hover:scale-110 transition-transform">
                                     <i className="fas fa-play text-white text-3xl ml-1"></i>
                                 </div>
                                 <div className="absolute bottom-10 text-white font-black uppercase tracking-[0.2em] text-[10px] animate-pulse">
@@ -293,6 +276,18 @@ const TVPlayer: React.FC<TVPlayerProps> = ({
                             </div>
                         )}
                     </div>
+                ) : isActive ? (
+                    /* ── ACTIVE but no URL yet: standby ── */
+                    <div className="flex flex-col items-center space-y-4">
+                        <span className="text-xl font-black italic text-white/40 animate-pulse tracking-widest">NDR TV STANDBY</span>
+                        <div className="flex items-center space-x-2 bg-black/60 backdrop-blur-md px-3 py-1 rounded-full border border-white/10">
+                            <div className="w-2 h-2 bg-yellow-500 rounded-full animate-pulse"></div>
+                            <span className="text-[8px] font-bold text-white/80 uppercase tracking-widest">Connecting to Satellite...</span>
+                        </div>
+                    </div>
+                ) : (
+                    /* ── IDLE: not active, no URL ── */
+                    <span className="text-xl font-black italic text-white/20">NDR TV</span>
                 )}
             </div>
 
