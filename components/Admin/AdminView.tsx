@@ -672,14 +672,28 @@ const AdminView: React.FC<AdminViewProps> = ({
               <h4 className="text-[8px] font-black uppercase text-indigo-800 mb-2">Post Social Media Links (FB, IG, YT) - Up to 3</h4>
               <div className="space-y-2">
                 {[0, 1, 2].map((i) => (
-                  <input
-                    key={i}
-                    type="text"
-                    id={`social-link-input-${i}`}
-                    defaultValue={tvPlaylist[i] || ''}
-                    placeholder={`Paste video link ${i + 1} here...`}
-                    className="w-full text-[9px] p-2 border border-indigo-200 rounded outline-none focus:ring-1 focus:ring-indigo-500 bg-white"
-                  />
+                  <div key={i} className="flex items-center gap-2">
+                    <input
+                      type="text"
+                      id={`social-link-input-${i}`}
+                      defaultValue={tvPlaylist[i] || ''}
+                      placeholder={`Paste video link ${i + 1} here...`}
+                      className="flex-1 text-[9px] p-2 border border-indigo-200 rounded outline-none focus:ring-1 focus:ring-indigo-500 bg-white"
+                    />
+                    <button
+                      title="Play this link"
+                      onClick={() => {
+                        const input = document.getElementById(`social-link-input-${i}`) as HTMLInputElement;
+                        const url = input?.value.trim();
+                        if (url) {
+                          window.open(url, '_blank', 'noopener,noreferrer');
+                        }
+                      }}
+                      className="shrink-0 w-8 h-8 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg flex items-center justify-center shadow transition-all active:scale-90"
+                    >
+                      <i className="fas fa-play text-[9px] ml-0.5"></i>
+                    </button>
+                  </div>
                 ))}
                 <button
                   onClick={async () => {
