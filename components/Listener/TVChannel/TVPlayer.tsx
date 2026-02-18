@@ -38,6 +38,7 @@ const TVPlayer: React.FC<TVPlayerProps> = ({
     const [isPlaying, setIsPlaying] = useState(false);
     const [playlistIndex, setPlaylistIndex] = useState(0);
     const [currentIndex, setCurrentIndex] = useState(0);
+    const prevPlaylistRef = useRef<string[]>([]);
     const [isMutedInternal, setIsMutedInternal] = useState(false);
     const isMuted = onMuteChange ? isMutedProp : isMutedInternal;
     const setIsMuted = (m: boolean) => {
@@ -96,6 +97,21 @@ const TVPlayer: React.FC<TVPlayerProps> = ({
         onPlayStateChange?.(isPlaying);
     }, [isPlaying, onPlayStateChange]);
 
+    // AUTO-START: When a new social media playlist arrives, reset index and start playing
+    useEffect(() => {
+        const prev = prevPlaylistRef.current;
+        const isNewPlaylist = tvPlaylist.length > 0 && (
+            prev.length !== tvPlaylist.length ||
+            tvPlaylist.some((url, i) => url !== prev[i])
+        );
+        if (isNewPlaylist) {
+            console.log('📺 [TVPlayer] New playlist received, auto-starting:', tvPlaylist);
+            prevPlaylistRef.current = tvPlaylist;
+            setPlaylistIndex(0);
+            setIsPlaying(true);
+        }
+    }, [tvPlaylist]);
+
     // TIMER LOGIC: Adverts (10m) and Stingers (15m)
     useEffect(() => {
         if (!isActive || !isPlaying || isNewsPlaying || !isAdmin) return;
@@ -134,27 +150,22 @@ const TVPlayer: React.FC<TVPlayerProps> = ({
         return () => clearInterval(interval);
     }, [isActive, isPlaying, isNewsPlaying, isAdmin, lastAdvertTimestamp, lastStingerTimestamp, isAdvertPlaying, allVideos, currentIndex]);
 
-    // 2. Sync with Admin Broadcast & Active State (Force Stinger on Start)
+    // 2. Sync with Admin Broadcast & Active State
     useEffect(() => {
-        if (!isActive) {
+        // Only stop if inactive AND no social playlist is running
+        if (!isActive && tvPlaylist.length === 0) {
             setIsPlaying(false);
-        } else if (activeVideo) {
-            // Check if this is a "Fresh" start of TV execution
-            // We can infer this if we weren't playing before
+        } else if (isActive && activeVideo) {
             const idx = allVideos.findIndex(v => v.id === activeVideo.id);
             if (idx !== -1) {
-                // ONLY RESET IF ID CHANGED OR WE ARE STARTING
                 if (currentIndex !== idx || !isPlaying) {
                     setCurrentIndex(idx);
-                    // ONLY SHOW STINGER IF NOT ADMIN - Admins already hear it/see it on their monitor, avoids double sound
-                    // ONLY SHOW STINGER IF NOT ADMIN AND 7 MINUTES ELAPSED
-                    // Removed initial trigger
                     setLastStingerTimestamp(Date.now());
                     setIsPlaying(true);
                 }
             }
         }
-    }, [activeVideo?.id, allVideos, isActive]);
+    }, [activeVideo?.id, allVideos, isActive, tvPlaylist.length]);
 
     const handleAdvance = useCallback(() => {
         const nextIndex = (currentIndex + 1) % allVideos.length;

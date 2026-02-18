@@ -55,6 +55,16 @@ const ListenerView: React.FC<ListenerViewProps> = ({
   const [shareFeedback, setShareFeedback] = useState('');
   const [isTvPlaying, setIsTvPlaying] = useState(false);
   const [channelMode, setChannelMode] = useState<'broadcast' | 'social'>('broadcast');
+
+  // AUTO-SWITCH: When admin broadcasts a social playlist, switch to social mode automatically
+  useEffect(() => {
+    if (tvPlaylist.length > 0) {
+      setChannelMode('social');
+      onTvToggle(true);
+      console.log('📺 [ListenerView] Auto-switching to Social Stream mode');
+    }
+  }, [tvPlaylist]);
+
   // COORDINATION: TV audio starts -> Radio pauses
   const handleTvMuteChange = (muted: boolean) => {
     onTvMuteChange(muted);
