@@ -54,6 +54,7 @@ const ListenerView: React.FC<ListenerViewProps> = ({
   const [adIndex, setAdIndex] = useState(0);
   const [shareFeedback, setShareFeedback] = useState('');
   const [isTvPlaying, setIsTvPlaying] = useState(false);
+  const [channelMode, setChannelMode] = useState<'broadcast' | 'social'>('broadcast');
   // COORDINATION: TV audio starts -> Radio pauses
   const handleTvMuteChange = (muted: boolean) => {
     onTvMuteChange(muted);
@@ -143,23 +144,21 @@ const ListenerView: React.FC<ListenerViewProps> = ({
   return (
     <div className="flex-grow flex flex-col space-y-6 pt-2 pb-8 px-4 text-[#008751]">
       {/* 1. TV SECTION (CENTERED WITH SIDE MARGINS) */}
-      <section className="shrink-0 w-full">
-        <div className="bg-black shadow-2xl w-full h-[240px] overflow-hidden rounded-none border border-white/5">
-          <TVPlayer
-            activeVideo={activeVideo}
-            allVideos={allVideos.filter(v => v.type === 'video')}
-            news={news}
-            adminMessages={adminMessages}
-            onPlayStateChange={handleTvPlayChange}
-            isMuted={isTvMuted}
-            onMuteChange={handleTvMuteChange}
-            onVideoAdvance={onVideoAdvance}
-            isNewsPlaying={isNewsPlaying}
-            isActive={isTvActive}
-            isAdmin={isAdmin}
-            tvPlaylist={tvPlaylist}
-          />
-        </div>
+      <section className="relative w-full max-w-md mx-auto aspect-video bg-black shadow-2xl z-30">
+        <TVPlayer
+          activeVideo={activeVideo}
+          allVideos={allVideos.filter(v => v.type === 'video')}
+          news={news}
+          adminMessages={adminMessages}
+          onPlayStateChange={handleTvPlayChange}
+          isMuted={isTvMuted}
+          onMuteChange={handleTvMuteChange}
+          onVideoAdvance={onVideoAdvance}
+          isNewsPlaying={isNewsPlaying}
+          isActive={isTvActive}
+          isAdmin={isAdmin}
+          tvPlaylist={channelMode === 'social' ? tvPlaylist : []}
+        />
       </section>
 
       {/* 2. INVITE FRIENDS / LOCATION INFO */}
@@ -177,42 +176,30 @@ const ListenerView: React.FC<ListenerViewProps> = ({
         </button>
       </div>
 
-      {/* 3. MUSIC GALLERY - MOVED UP FOR PROMINENCE */}
-      <section className="space-y-4">
-        <div className="flex justify-between items-baseline px-1">
-          <h3 className="text-[10px] font-black uppercase text-green-700/60 tracking-widest">Naija Top Hits</h3>
-          <button
-            onClick={() => onRadioToggle(!isRadioPlaying)}
-            className={`text-[8px] font-black uppercase px-3 py-1 rounded-full transition-all ${isRadioPlaying ? 'bg-red-50 text-red-600 animate-pulse' : 'bg-green-50 text-green-700'}`}
-          >
-            {isRadioPlaying ? 'Stop Radio' : 'Live Radio'}
-          </button>
-        </div>
+      {/* 3. CHANNEL SWITCHER (SOCIAL VS BROADCAST) */}
+      <section className="shrink-0 grid grid-cols-2 gap-3 px-1">
+        <button
+          onClick={() => {
+            setChannelMode('broadcast');
+            if (onTvToggle) onTvToggle(true);
+          }}
+          className={`flex flex-col items-center justify-center p-3 rounded-2xl border transition-all active:scale-95 ${channelMode === 'broadcast' ? 'bg-[#008751] border-green-600 shadow-lg' : 'bg-white border-green-100 shadow-sm hover:bg-green-50'}`}
+        >
+          <i className={`fas fa-broadcast-tower mb-1 text-sm ${channelMode === 'broadcast' ? 'text-white' : 'text-green-800'}`}></i>
+          <span className={`text-[8px] font-black uppercase tracking-widest ${channelMode === 'broadcast' ? 'text-white' : 'text-green-900'}`}>Live Broadcast</span>
+        </button>
 
-        <div className="grid grid-cols-2 gap-3 pb-2">
-          {allVideos.filter(m => m.type === 'audio').slice(0, 10).map((track) => (
-            <button
-              key={track.id}
-              onClick={() => onPlayTrack(track)}
-              className="group relative bg-white p-3 rounded-2xl border border-green-50 shadow-sm hover:shadow-md hover:border-green-200 transition-all text-left active:scale-95"
-            >
-              <div className="flex items-center space-x-3">
-                <div className="w-8 h-8 bg-green-900/5 rounded-xl flex items-center justify-center group-hover:bg-green-600 group-hover:text-white transition-colors">
-                  <i className="fas fa-play text-[10px]"></i>
-                </div>
-                <div className="flex flex-col min-w-0">
-                  <span className="text-[9px] font-black text-green-950 truncate uppercase tracking-tight">{track.name.replace(/\.[^/.]+$/, "")}</span>
-                  <span className="text-[7px] text-green-600/60 font-bold uppercase">NDR Exclusive</span>
-                </div>
-              </div>
-            </button>
-          ))}
-          {allVideos.filter(m => m.type === 'audio').length === 0 && (
-            <div className="col-span-2 text-center py-8 opacity-20">
-              <span className="text-[8px] font-black uppercase tracking-widest">Library Syncing...</span>
-            </div>
-          )}
-        </div>
+        <button
+          onClick={() => {
+            setChannelMode('social');
+            if (onTvToggle) onTvToggle(true);
+            console.log("📺 [ListenerView] Switching to Social Stream...");
+          }}
+          className={`flex flex-col items-center justify-center p-3 rounded-2xl border transition-all active:scale-95 ${channelMode === 'social' ? 'bg-indigo-600 border-indigo-700 shadow-lg' : 'bg-white border-indigo-100 shadow-sm hover:bg-indigo-50'}`}
+        >
+          <i className={`fas fa-play-circle mb-1 text-sm ${channelMode === 'social' ? 'text-white' : 'text-indigo-800'}`}></i>
+          <span className={`text-[8px] font-black uppercase tracking-widest ${channelMode === 'social' ? 'text-white' : 'text-indigo-900'}`}>Social Stream</span>
+        </button>
       </section>
 
       {/* 4. ADS - SPACIOUS */}

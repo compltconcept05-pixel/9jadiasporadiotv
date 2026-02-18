@@ -945,10 +945,10 @@ const App: React.FC = () => {
                 alert("Download failed. Please contact support.");
               }
             }}
-            className="group flex items-center space-x-2 px-4 py-1.5 bg-green-900/5 hover:bg-green-100 text-green-900/40 hover:text-green-900 rounded-lg transition-all border border-green-900/10 active:scale-95"
+            className="group flex items-center space-x-2 px-6 py-2 bg-[#3DDC84] hover:bg-[#35c476] text-white rounded-lg transition-all shadow-md active:scale-95"
           >
-            <i className="fab fa-android text-[10px]"></i>
-            <span className="text-[7px] font-black uppercase tracking-widest">Get App (APK)</span>
+            <i className="fab fa-android text-lg"></i>
+            <span className="text-[10px] font-black uppercase tracking-widest">Download for Android</span>
           </button>
         </div>
 
