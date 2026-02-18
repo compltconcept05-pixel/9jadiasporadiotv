@@ -90,7 +90,7 @@ const AdminView: React.FC<AdminViewProps> = ({
   const [manualText, setManualText] = useState(manualScript);
   const [editingItem, setEditingItem] = useState<NewsItem | null>(null);
   const [showAddForm, setShowAddForm] = useState(false);
-  const [newItem, setNewItem] = useState({ title: '', content: '', category: 'Manual' as const });
+  const [newItem, setNewItem] = useState<{ title: string; content: string; category: NewsItem['category'] }>({ title: '', content: '', category: 'Manual' });
   const [selectedJingleUrl, setSelectedJingleUrl] = useState<string>('');
   const [uploadedAppUrl, setUploadedAppUrl] = useState<string>('');
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -482,7 +482,7 @@ const AdminView: React.FC<AdminViewProps> = ({
                       <input
                         type="text"
                         value={editingItem ? editingItem.category : newItem.category}
-                        onChange={(e) => editingItem ? setEditingItem({ ...editingItem, category: e.target.value }) : setNewItem({ ...newItem, category: e.target.value })}
+                        onChange={(e) => editingItem ? setEditingItem({ ...editingItem, category: e.target.value as NewsItem['category'] }) : setNewItem({ ...newItem, category: e.target.value as NewsItem['category'] })}
                         className="w-full text-[9px] p-2 bg-gray-50 border border-gray-100 rounded focus:ring-1 focus:ring-orange-500 outline-none transition-all"
                       />
                     </div>
@@ -681,13 +681,19 @@ const AdminView: React.FC<AdminViewProps> = ({
                       className="flex-1 text-[9px] p-2 border border-indigo-200 rounded outline-none focus:ring-1 focus:ring-indigo-500 bg-white"
                     />
                     <button
-                      title="Play this link"
+                      title="Play all links on TV"
                       onClick={() => {
-                        const input = document.getElementById(`social-link-input-${i}`) as HTMLInputElement;
-                        const url = input?.value.trim();
-                        if (url) {
-                          window.open(url, '_blank', 'noopener,noreferrer');
+                        // Collect ALL filled inputs and broadcast to TV
+                        const links: string[] = [];
+                        for (let j = 0; j < 3; j++) {
+                          const inp = document.getElementById(`social-link-input-${j}`) as HTMLInputElement;
+                          if (inp?.value.trim()) links.push(inp.value.trim());
                         }
+                        if (links.length === 0) return;
+                        onUpdatePlaylist?.(links);
+                        onToggleTv?.(true);
+                        setInternalStatus('✅ Playing on TV!');
+                        setTimeout(() => setInternalStatus(''), 3000);
                       }}
                       className="shrink-0 w-8 h-8 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg flex items-center justify-center shadow transition-all active:scale-90"
                     >
