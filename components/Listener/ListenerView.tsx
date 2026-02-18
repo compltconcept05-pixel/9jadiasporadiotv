@@ -162,7 +162,7 @@ const ListenerView: React.FC<ListenerViewProps> = ({
         </div>
       </section>
 
-      {/* 2. INVITE FRIENDS (MOVED BELOW TV) */}
+      {/* 2. INVITE FRIENDS / LOCATION INFO */}
       <div className="flex justify-between items-center bg-white p-3 rounded-2xl border border-green-100 shadow-sm relative overflow-hidden shrink-0">
         <div className="flex flex-col z-10">
           <span className="text-[9px] font-black uppercase tracking-widest text-green-600">{location}</span>
@@ -177,6 +177,43 @@ const ListenerView: React.FC<ListenerViewProps> = ({
         </button>
       </div>
 
+      {/* 3. MUSIC GALLERY - MOVED UP FOR PROMINENCE */}
+      <section className="space-y-4">
+        <div className="flex justify-between items-baseline px-1">
+          <h3 className="text-[10px] font-black uppercase text-green-700/60 tracking-widest">Naija Top Hits</h3>
+          <button
+            onClick={() => onRadioToggle(!isRadioPlaying)}
+            className={`text-[8px] font-black uppercase px-3 py-1 rounded-full transition-all ${isRadioPlaying ? 'bg-red-50 text-red-600 animate-pulse' : 'bg-green-50 text-green-700'}`}
+          >
+            {isRadioPlaying ? 'Stop Radio' : 'Live Radio'}
+          </button>
+        </div>
+
+        <div className="grid grid-cols-2 gap-3 pb-2">
+          {allVideos.filter(m => m.type === 'audio').slice(0, 10).map((track) => (
+            <button
+              key={track.id}
+              onClick={() => onPlayTrack(track)}
+              className="group relative bg-white p-3 rounded-2xl border border-green-50 shadow-sm hover:shadow-md hover:border-green-200 transition-all text-left active:scale-95"
+            >
+              <div className="flex items-center space-x-3">
+                <div className="w-8 h-8 bg-green-900/5 rounded-xl flex items-center justify-center group-hover:bg-green-600 group-hover:text-white transition-colors">
+                  <i className="fas fa-play text-[10px]"></i>
+                </div>
+                <div className="flex flex-col min-w-0">
+                  <span className="text-[9px] font-black text-green-950 truncate uppercase tracking-tight">{track.name.replace(/\.[^/.]+$/, "")}</span>
+                  <span className="text-[7px] text-green-600/60 font-bold uppercase">NDR Exclusive</span>
+                </div>
+              </div>
+            </button>
+          ))}
+          {allVideos.filter(m => m.type === 'audio').length === 0 && (
+            <div className="col-span-2 text-center py-8 opacity-20">
+              <span className="text-[8px] font-black uppercase tracking-widest">Library Syncing...</span>
+            </div>
+          )}
+        </div>
+      </section>
 
       {/* 4. ADS - SPACIOUS */}
       <section className="shrink-0 bg-gray-50 border border-gray-100 rounded-2xl p-4 flex items-center justify-between overflow-hidden shadow-sm">
@@ -214,7 +251,7 @@ const ListenerView: React.FC<ListenerViewProps> = ({
       </section>
 
       {/* 6. JOURNALIST HQ */}
-      <section className="space-y-3">
+      <section className="space-y-3 pb-8">
         <h3 className="text-[10px] font-black uppercase text-green-700/60 tracking-widest px-1">Journalist HQ</h3>
         <div className="bg-white/40 border border-dashed border-green-200/50 rounded-2xl p-4 shadow-sm">
           {!isReporting ? (
@@ -241,44 +278,6 @@ const ListenerView: React.FC<ListenerViewProps> = ({
                 </button>
               </div>
             </form>
-          )}
-        </div>
-      </section>
-
-      {/* 7. MUSIC GALLERY - RESTORED */}
-      <section className="space-y-4">
-        <div className="flex justify-between items-baseline px-1">
-          <h3 className="text-[10px] font-black uppercase text-green-700/60 tracking-widest">Naija Top Hits</h3>
-          <button
-            onClick={() => onRadioToggle(!isRadioPlaying)}
-            className={`text-[8px] font-black uppercase px-3 py-1 rounded-full transition-all ${isRadioPlaying ? 'bg-red-50 text-red-600 animate-pulse' : 'bg-green-50 text-green-700'}`}
-          >
-            {isRadioPlaying ? 'Stop Radio' : 'Live Radio'}
-          </button>
-        </div>
-
-        <div className="grid grid-cols-2 gap-3 pb-8">
-          {allVideos.filter(m => m.type === 'audio').slice(0, 10).map((track) => (
-            <button
-              key={track.id}
-              onClick={() => onPlayTrack(track)}
-              className="group relative bg-white p-3 rounded-2xl border border-green-50 shadow-sm hover:shadow-md hover:border-green-200 transition-all text-left active:scale-95"
-            >
-              <div className="flex items-center space-x-3">
-                <div className="w-8 h-8 bg-green-900/5 rounded-xl flex items-center justify-center group-hover:bg-green-600 group-hover:text-white transition-colors">
-                  <i className="fas fa-play text-[10px]"></i>
-                </div>
-                <div className="flex flex-col min-w-0">
-                  <span className="text-[9px] font-black text-green-950 truncate uppercase tracking-tight">{track.name.replace(/\.[^/.]+$/, "")}</span>
-                  <span className="text-[7px] text-green-600/60 font-bold uppercase">NDR Exclusive</span>
-                </div>
-              </div>
-            </button>
-          ))}
-          {allVideos.filter(m => m.type === 'audio').length === 0 && (
-            <div className="col-span-2 text-center py-8 opacity-20">
-              <span className="text-[8px] font-black uppercase tracking-widest">Library Syncing...</span>
-            </div>
           )}
         </div>
       </section>

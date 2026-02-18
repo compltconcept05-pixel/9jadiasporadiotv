@@ -287,12 +287,12 @@ const App: React.FC = () => {
           } else {
             setCloudStatus('📡 Station Standby');
           }
+        }
 
-          // Conflict Detection: If someone else is pulsing as Admin with a different sessionId
-          if (role === UserRole.ADMIN && newState.timestamp > (Date.now() - 30000)) {
-            // If the state was updated recently by someone else (id logic needs schema update, for now we use name or just warn)
-            // Ideally we'd have broad_caster_id in schema
-          }
+        // Conflict Detection: If someone else is pulsing as Admin with a different sessionId
+        if (role === UserRole.ADMIN && newState.timestamp > (Date.now() - 30000)) {
+          // If the state was updated recently by someone else (id logic needs schema update, for now we use name or just warn)
+          // Ideally we'd have broad_caster_id in schema
         }
       })
       .subscribe((status) => {
@@ -791,6 +791,27 @@ const App: React.FC = () => {
           {lastError && <span className="text-[7px] bg-red-600 text-white px-1.5 py-0.5 rounded ml-2 font-black uppercase animate-bounce">{lastError}</span>}
         </div>
       </header>
+
+      {/* --- MASTER RADIO PLAYER (AUDIO ENGINE) --- */}
+      <div className={`transition-all duration-700 ${(!isTvActive || (role === UserRole.LISTENER && !isPlaying)) ? 'opacity-100 max-h-[400px] visible py-4' : 'opacity-0 max-h-0 invisible overflow-hidden'}`}>
+        <RadioPlayer
+          onStateChange={(playing) => {
+            if (role === UserRole.ADMIN) setIsPlaying(playing);
+          }}
+          onTimeUpdate={setRadioCurrentTime}
+          startTime={role === UserRole.ADMIN ? 0 : radioCurrentTime}
+          activeTrackUrl={activeTrackUrl}
+          currentTrackName={currentTrackName}
+          forcePlaying={role === UserRole.ADMIN ? isPlaying : listenerHasPlayed}
+          onTrackEnded={handlePlayNext}
+          activeTrackId={activeTrackId}
+          isAdmin={role === UserRole.ADMIN}
+          isDucking={isDucking}
+          isTvActive={isTvActive}
+          isTvMuted={isTvMuted}
+          onTogglePlayback={handleRadioToggle}
+        />
+      </div>
 
       {/* ADMIN TV SYNC ENGINE (Invisible) */}
       {role === UserRole.ADMIN && (

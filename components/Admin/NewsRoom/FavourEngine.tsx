@@ -16,6 +16,7 @@ interface FavourEngineProps {
     onStatusChange: (status: string) => void;
     onNewsUpdate: React.Dispatch<React.SetStateAction<NewsItem[]>>;
     onLogAdd: (action: string) => void;
+    currentNewsFeed: NewsItem[];
     onDuckingChange?: (isDucking: boolean) => void;
     isAllowedToPlay?: boolean;
     mediaFiles?: MediaFile[];
@@ -107,7 +108,7 @@ const FavourEngine: React.FC<FavourEngineProps> = ({
         let buffer: AudioBuffer;
         try {
             console.log(`🔊 [Audio] Decoding ${data.byteLength} bytes...`);
-            buffer = await ctx.decodeAudioData(data.buffer.slice(data.byteOffset, data.byteOffset + data.byteLength));
+            buffer = await ctx.decodeAudioData(data.buffer.slice(data.byteOffset, data.byteOffset + data.byteLength) as ArrayBuffer);
             console.log(`🔊 [Audio] Successfully decoded. Duration: ${buffer.duration.toFixed(2)}s`);
         } catch (e) {
             console.error("❌ Audio Decode Error:", e);

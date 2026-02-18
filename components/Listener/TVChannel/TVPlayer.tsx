@@ -249,7 +249,7 @@ const TVPlayer: React.FC<TVPlayerProps> = ({
                         )}
                     </>
                 ) : (
-                    <div className="w-full h-full">
+                    <div className="w-full h-full relative group">
                         <Player
                             url={currentVideoUrl}
                             className="react-player"
@@ -259,8 +259,28 @@ const TVPlayer: React.FC<TVPlayerProps> = ({
                             muted={isMuted}
                             volume={volume}
                             onEnded={handleEnded}
+                            onPlay={() => setIsPlaying(true)}
+                            onPause={() => setIsPlaying(false)}
                             playsinline
                         />
+
+                        {/* PLAY BUTTON OVERLAY (Visible when not playing or on standby) */}
+                        {(!isPlaying || !isActive) && (
+                            <div
+                                onClick={() => {
+                                    setIsPlaying(true);
+                                    if (!isActive && isAdmin) setIsPlaying(true);
+                                }}
+                                className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-[2px] cursor-pointer group-hover:bg-black/20 transition-all z-20"
+                            >
+                                <div className="w-20 h-20 bg-[#008751] rounded-full flex items-center justify-center shadow-2xl border-4 border-white/20 transform group-hover:scale-110 transition-transform">
+                                    <i className="fas fa-play text-white text-3xl ml-1"></i>
+                                </div>
+                                <div className="absolute bottom-10 text-white font-black uppercase tracking-[0.2em] text-[10px] animate-pulse">
+                                    Click to Play NDR TV
+                                </div>
+                            </div>
+                        )}
                     </div>
                 )}
             </div>
