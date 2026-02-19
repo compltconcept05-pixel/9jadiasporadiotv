@@ -897,7 +897,7 @@ const App: React.FC = () => {
               setHasInteracted(true); updateTrackUrl(t.id, t.url, cleanTrackName(t.name)); setIsPlaying(true);
               setIsTvActive(false);
             }}
-            isRadioPlaying={isPlaying} onToggleRadio={() => setIsPlaying(!isPlaying)}
+            isRadioPlaying={isPlaying} onToggleRadio={(play) => handleRadioToggle(play)}
             currentTrackName={currentTrackName} isShuffle={isShuffle} onToggleShuffle={() => setIsShuffle(!isShuffle)}
             onPlayAll={handlePlayAll} onSkipNext={handlePlayNext}
             onPushBroadcast={handlePushBroadcast} onPlayJingle={handlePlayJingle}

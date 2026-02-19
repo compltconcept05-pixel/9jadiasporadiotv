@@ -11,7 +11,7 @@ interface AdminViewProps {
   logs: AdminLog[];
   onPlayTrack: (track: MediaFile) => void;
   isRadioPlaying: boolean;
-  onToggleRadio: () => void;
+  onToggleRadio: (play: boolean) => void;
   currentTrackName: string;
   isShuffle: boolean;
   onToggleShuffle: () => void;
@@ -215,57 +215,141 @@ const AdminView: React.FC<AdminViewProps> = ({
   };
 
   return (
-    <div className="flex flex-col h-full bg-green-50/50">
-      {/* Navigation */}
-      <nav className="flex flex-wrap items-center justify-between bg-white/80 backdrop-blur-sm p-1.5 rounded-lg border border-green-100 shadow-sm mb-3 mt-1 gap-1">
+    <div className="flex flex-col h-full bg-green-50/50 p-2 space-y-3 overflow-y-auto custom-scrollbar">
+      {/* --- THEATER MODE: DUAL MONITOR SYSTEM --- */}
+      <div className="grid grid-cols-2 gap-3 w-full shrink-0">
+        {/* 1. PREVIEW MONITOR */}
+        <div className="flex flex-col space-y-2">
+          <div className="aspect-video bg-black rounded-xl border-2 border-blue-400 shadow-2xl relative overflow-hidden group">
+            <TVPlayer
+              activeVideo={mediaFiles.find(m => m.id === previewVideoId) || null}
+              allVideos={mediaFiles.filter(v => v.type === 'video')}
+              news={[]}
+              adminMessages={[]}
+              isNewsPlaying={false}
+              isActive={true}
+              isAdmin={true}
+              isMuted={false}
+              tvPlaylist={previewPlaylist}
+              isPreview={true}
+            />
+            <div className="absolute top-2 left-2 px-2 py-0.5 bg-blue-600 text-white text-[7px] font-black rounded uppercase tracking-widest z-40 opacity-90 shadow-sm">Preview Monitor</div>
+            <div className="absolute bottom-2 right-2 flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity z-40">
+              <span className="bg-black/60 text-white p-1 rounded text-[6px] font-bold">Local Only</span>
+            </div>
+          </div>
+        </div>
+
+        {/* 2. LIVE MONITOR */}
+        <div className="flex flex-col space-y-2">
+          <div className="aspect-video bg-black rounded-xl border-2 border-red-500 shadow-2xl relative overflow-hidden group">
+            <TVPlayer
+              activeVideo={mediaFiles.find(m => m.id === activeVideoId) || null}
+              allVideos={mediaFiles.filter(v => v.type === 'video')}
+              news={[]}
+              adminMessages={[]}
+              isNewsPlaying={false}
+              isActive={!!isTvActive}
+              isAdmin={true}
+              isMuted={true}
+              tvPlaylist={tvPlaylist}
+            />
+            <div className="absolute top-2 left-2 px-2 py-0.5 bg-red-600 text-white text-[7px] font-black rounded uppercase tracking-widest z-40 animate-pulse shadow-sm">Live Broadcast</div>
+            <div className="absolute top-2 right-2 flex items-center space-x-1 z-40">
+              <div className={`w-2 h-2 rounded-full ${isTvActive ? 'bg-red-500' : 'bg-gray-500'}`}></div>
+              <span className="text-white text-[6px] font-black uppercase tracking-tighter shadow-black">{isTvActive ? 'On Air' : 'Off Air'}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* --- MASTER BROADCAST HUB --- */}
+      <div className="bg-white p-3 rounded-2xl border border-green-100 shadow-lg flex items-center justify-between gap-4 shrink-0">
+        <div className="flex-1 grid grid-cols-2 gap-3">
+          {/* TV CONTROL BLOCK */}
+          <div className="space-y-1">
+            <label className="text-[7px] font-black text-indigo-700 uppercase ml-1">TV Station Management</label>
+            <button
+              onClick={() => onToggleTv?.(!isTvActive)}
+              className={`w-full py-4 rounded-xl text-white font-black text-[11px] uppercase shadow-md transition-all active:scale-95 flex items-center justify-center space-x-3 ${isTvActive ? 'bg-red-600 hover:bg-red-700 border-red-800' : 'bg-indigo-600 hover:bg-indigo-700 border-indigo-800'} border-b-4`}
+            >
+              <i className={`fas ${isTvActive ? 'fa-video-slash' : 'fa-video'} text-lg`}></i>
+              <span>{isTvActive ? 'Stop TV Broadcast' : 'Go Live on TV'}</span>
+            </button>
+          </div>
+
+          {/* RADIO CONTROL BLOCK */}
+          <div className="space-y-1">
+            <label className="text-[7px] font-black text-green-700 uppercase ml-1">Radio Station Management</label>
+            <button
+              onClick={() => onToggleRadio(!isRadioPlaying)}
+              className={`w-full py-4 rounded-xl text-white font-black text-[11px] uppercase shadow-md transition-all active:scale-95 flex items-center justify-center space-x-3 ${isRadioPlaying ? 'bg-red-500 hover:bg-red-600 border-red-700' : 'bg-[#008751] hover:bg-green-700 border-green-900'} border-b-4`}
+            >
+              <i className={`fas ${isRadioPlaying ? 'fa-microphone-slash' : 'fa-microphone'} text-lg`}></i>
+              <span>{isRadioPlaying ? 'Stop Radio Broadcast' : 'Start Radio Music'}</span>
+            </button>
+          </div>
+        </div>
+
+        <div className="flex flex-col space-y-2">
+          <button
+            onClick={onResetSync}
+            className="px-3 py-2 bg-red-50 text-red-700 rounded-lg shadow-sm border border-red-100 hover:bg-red-100 transition-colors text-[7px] font-black uppercase flex items-center gap-2"
+          >
+            <i className="fas fa-sync"></i> Re-Sync
+          </button>
+          <button
+            onClick={() => window.location.reload()}
+            className="px-3 py-2 bg-blue-600 text-white rounded-lg shadow-sm border border-blue-500 hover:bg-blue-700 transition-colors text-[7px] font-black uppercase flex items-center gap-2"
+          >
+            <i className="fas fa-cloud-download-alt"></i> Update
+          </button>
+        </div>
+      </div>
+
+      {/* Navigation Tabs */}
+      <nav className="flex flex-wrap items-center justify-between bg-white/80 backdrop-blur-sm p-1.5 rounded-xl border border-green-100 shadow-sm gap-1 shrink-0">
         <button
           onClick={() => setActiveTab('command')}
-          className={`flex-1 min-w-[50px] py-2 text-center text-[7px] font-bold uppercase transition-colors rounded ${activeTab === 'command' ? 'bg-green-600 text-white shadow-inner' : 'bg-white text-green-800 hover:bg-green-50'}`}
+          className={`flex-1 min-w-[50px] py-3 text-center text-[7px] font-bold uppercase transition-colors rounded-lg ${activeTab === 'command' ? 'bg-green-600 text-white shadow-md' : 'bg-white text-green-800 hover:bg-green-50'}`}
         >
-          Studio v2.2.9
+          Studio
         </button>
         <button
           onClick={() => setActiveTab('bulletin')}
-          className={`flex-1 min-w-[50px] py-2 text-center text-[7px] font-bold uppercase transition-colors rounded ${activeTab === 'bulletin' ? 'bg-red-600 text-white shadow-inner' : 'bg-white text-red-800 hover:bg-red-50'}`}
+          className={`flex-1 min-w-[50px] py-3 text-center text-[7px] font-bold uppercase transition-colors rounded-lg ${activeTab === 'bulletin' ? 'bg-red-600 text-white shadow-md' : 'bg-white text-red-800 hover:bg-red-50'}`}
         >
           Newsroom
         </button>
         <button
           onClick={() => setActiveTab('manual')}
-          className={`flex-1 min-w-[50px] py-2 text-center text-[7px] font-bold uppercase transition-colors rounded ${activeTab === 'manual' ? 'bg-orange-600 text-white shadow-inner' : 'bg-white text-orange-800 hover:bg-orange-50'}`}
+          className={`flex-1 min-w-[50px] py-3 text-center text-[7px] font-bold uppercase transition-colors rounded-lg ${activeTab === 'manual' ? 'bg-orange-600 text-white shadow-md' : 'bg-white text-orange-800 hover:bg-orange-50'}`}
         >
           Manual
         </button>
         <button
           onClick={() => setActiveTab('podcast')}
-          className={`flex-1 min-w-[50px] py-2 text-center text-[7px] font-bold uppercase transition-colors rounded ${activeTab === 'podcast' ? 'bg-indigo-600 text-white shadow-inner' : 'bg-white text-indigo-800 hover:bg-indigo-50'}`}
+          className={`flex-1 min-w-[50px] py-3 text-center text-[7px] font-bold uppercase transition-colors rounded-lg ${activeTab === 'podcast' ? 'bg-indigo-600 text-white shadow-md' : 'bg-white text-indigo-800 hover:bg-indigo-50'}`}
         >
           Podcast
         </button>
         <button
           onClick={() => setActiveTab('media')}
-          className={`flex-1 min-w-[50px] py-2 text-center text-[7px] font-bold uppercase transition-colors rounded ${activeTab === 'media' ? 'bg-green-600 text-white shadow-inner' : 'bg-white text-green-800 hover:bg-green-50'}`}
+          className={`flex-1 min-w-[50px] py-3 text-center text-[7px] font-bold uppercase transition-colors rounded-lg ${activeTab === 'media' ? 'bg-green-600 text-white shadow-md' : 'bg-white text-green-800 hover:bg-green-50'}`}
         >
           Media
         </button>
         <button
           onClick={() => setActiveTab('inbox')}
-          className={`flex-1 min-w-[50px] py-2 text-center text-[7px] font-bold uppercase transition-colors rounded ${activeTab === 'inbox' ? 'bg-green-600 text-white shadow-inner' : 'bg-white text-green-800 hover:bg-green-50'}`}
+          className={`flex-1 min-w-[50px] py-3 text-center text-[7px] font-bold uppercase transition-colors rounded-lg ${activeTab === 'inbox' ? 'bg-green-600 text-white shadow-md' : 'bg-white text-green-800 hover:bg-green-50'}`}
         >
           Inbox
         </button>
         <button
           onClick={() => setActiveTab('logs')}
-          className={`flex-1 min-w-[50px] py-2 text-center text-[7px] font-bold uppercase transition-colors rounded ${activeTab === 'logs' ? 'bg-green-600 text-white shadow-inner' : 'bg-white text-green-800 hover:bg-green-50'}`}
+          className={`flex-1 min-w-[50px] py-3 text-center text-[7px] font-bold uppercase transition-colors rounded-lg ${activeTab === 'logs' ? 'bg-green-600 text-white shadow-md' : 'bg-white text-green-800 hover:bg-green-50'}`}
         >
           Logs
-        </button>
-        <button
-          onClick={onToggleRadio}
-          className={`px-3 py-2 text-[8px] font-black uppercase rounded shadow-sm transition-all ${isRadioPlaying ? 'bg-red-500 text-white animate-pulse' : 'bg-[#008751] text-white hover:bg-green-700'}`}
-          title={isRadioPlaying ? 'Stop Broadcast' : 'Start Broadcast'}
-        >
-          <i className={`fas ${isRadioPlaying ? 'fa-stop' : 'fa-play'}`}></i>
         </button>
       </nav>
 
@@ -275,72 +359,11 @@ const AdminView: React.FC<AdminViewProps> = ({
         {/* COMMAND STUDIO */}
         {activeTab === 'command' && (
           <div className="space-y-4 animate-fadeIn overflow-y-auto h-full pr-1 custom-scrollbar">
-            <div className="bg-green-50 p-3 rounded-lg border border-green-100 relative overflow-hidden">
-              {/* --- DUAL MONITOR SYSTEM --- */}
-              <div className="flex justify-end space-x-2 mb-4">
-                {/* 1. PREVIEW MONITOR (Local Only) */}
-                <div className="w-28 aspect-video bg-black rounded border border-blue-400 shadow-lg relative overflow-hidden group">
-                  <TVPlayer
-                    activeVideo={mediaFiles.find(m => m.id === previewVideoId) || null}
-                    allVideos={mediaFiles.filter(v => v.type === 'video')}
-                    news={[]}
-                    adminMessages={[]}
-                    isNewsPlaying={false}
-                    isActive={true}
-                    isAdmin={true}
-                    isMuted={false}
-                    tvPlaylist={previewPlaylist}
-                  />
-                  <div className="absolute bottom-0 left-0 right-0 bg-blue-600 text-white text-[5px] font-black text-center pointer-events-none z-40 opacity-80 uppercase">Preview / Off-Air</div>
-                </div>
-
-                {/* 2. LIVE MONITOR (Synced to Listeners) */}
-                <div className="w-28 aspect-video bg-black rounded border border-red-500 shadow-lg relative overflow-hidden group">
-                  <TVPlayer
-                    activeVideo={mediaFiles.find(m => m.id === activeVideoId) || null}
-                    allVideos={mediaFiles.filter(v => v.type === 'video')}
-                    news={[]}
-                    adminMessages={[]}
-                    isNewsPlaying={false}
-                    isActive={!!isTvActive}
-                    isAdmin={true}
-                    isMuted={true}
-                    tvPlaylist={tvPlaylist}
-                  />
-                  <div className="absolute bottom-0 left-0 right-0 bg-red-600 text-white text-[5px] font-black text-center pointer-events-none z-40 opacity-80 uppercase animate-pulse">Live / On-Air</div>
-                </div>
-              </div>
-
-              <div className="flex justify-between items-center mb-2">
-                <h3 className="text-[8px] font-black uppercase text-green-800">Master Control</h3>
-                <span className={`text-[7px] font-bold px-1.5 py-0.5 rounded ${isRadioPlaying ? 'bg-red-100 text-red-600 animate-pulse' : 'bg-gray-100 text-gray-500'}`}>
-                  {isRadioPlaying ? 'ON AIR' : 'OFF AIR'}
-                </span>
-              </div>
-
-              <div className="flex items-center justify-between space-x-2">
-                <button
-                  onClick={() => onToggleTv?.(!isTvActive)}
-                  className={`flex-1 py-3 rounded-lg text-white font-black text-[10px] uppercase shadow-md transition-transform active:scale-95 ${isTvActive ? 'bg-indigo-600 hover:bg-indigo-700 border-indigo-500' : 'bg-gray-500 hover:bg-gray-600 border-gray-400'} border-b-2`}
-                >
-                  {isTvActive ? 'Stop TV' : 'Start TV'}
-                </button>
-
-                <button
-                  onClick={onResetSync}
-                  className="px-4 py-3 bg-red-50 text-red-700 rounded-lg shadow-sm border border-red-100 hover:bg-red-100 transition-colors text-[8px] font-black uppercase"
-                  title="Hard Reset App State"
-                >
-                  Hard Reset Sync
-                </button>
-
-                <button
-                  onClick={() => window.location.reload()}
-                  className="px-4 py-3 bg-blue-600 text-white rounded-lg shadow-sm border border-blue-500 hover:bg-blue-700 transition-colors text-[8px] font-black uppercase flex items-center gap-1"
-                  title="Force App Refresh"
-                >
-                  <i className="fas fa-sync-alt animate-spin-hover"></i> Update
-                </button>
+            <div className="bg-green-50 p-4 rounded-2xl border border-green-100 flex flex-col space-y-4">
+              <div className="flex justify-between items-center mb-1">
+                <h3 className="text-[9px] font-black uppercase text-green-800 flex items-center gap-2">
+                  <i className="fas fa-chart-line"></i> Station Analytics
+                </h3>
               </div>
 
               {/* LIBRARY STATS */}
@@ -1076,11 +1099,6 @@ const AdminView: React.FC<AdminViewProps> = ({
           </div>
         )}
 
-        {internalStatus && !activeTab.includes('command') && !activeTab.includes('podcast') && (
-          <div className="absolute bottom-4 left-0 right-0 text-center pointer-events-none">
-            <span className="bg-black/70 text-white px-2 py-1 rounded text-[7px] backdrop-blur-sm">{internalStatus}</span>
-          </div>
-        )}
       </div>
     </div>
   );
