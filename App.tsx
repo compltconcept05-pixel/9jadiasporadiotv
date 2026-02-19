@@ -659,15 +659,15 @@ const App: React.FC = () => {
   // --- ADMIN LOGIN LOGIC ---
   useEffect(() => {
     if (role === UserRole.ADMIN) {
-      console.log("👮 [App] Admin logged in. Clearing TV workspace and Ensuring Silence.");
-      setIsTvActive(false);
-      setIsPlaying(false); // OPTIONAL: Start silent? Or maybe keep radio if it was on? Let's start silent for safety.
+      console.log("👮 [App] Admin logged in. Ensuring TV Monitoring is active.");
+      // DO NOT deactivate TV anymore - it should stay active for the monitor
+      setIsTvActive(true);
 
       // Synchronize this change to all listeners if we have supabase
       if (supabase) {
         dbService.updateStationState({
-          is_tv_active: false,
-          is_playing: false,
+          is_tv_active: true,
+          // We don't automatically stop radio here anymore, let the exclusivity guard handle it if TV is started
           timestamp: Date.now()
         }).catch(err => console.error("❌ Admin Login TV Sync Error:", err));
       }
@@ -813,7 +813,7 @@ const App: React.FC = () => {
         />
       </div>
 
-      {/* ADMIN TV SYNC ENGINE (Invisible) */}
+      {/* ADMIN TV SYNC ENGINE (Invisible Sync) */}
       {role === UserRole.ADMIN && (
         <div className="hidden">
           <TVPlayer
@@ -821,11 +821,14 @@ const App: React.FC = () => {
             allVideos={allMedia.filter(v => v.type === 'video')}
             news={[]}
             adminMessages={[]}
-            onVideoAdvance={handlePlayVideo}
+            onVideoAdvance={(idxOrTrack) => {
+              if (typeof idxOrTrack === 'number') handlePlayVideo(idxOrTrack);
+            }}
             isNewsPlaying={false}
             isActive={isTvActive}
             isAdmin={true}
             isMuted={true}
+            tvPlaylist={tvPlaylist}
           />
         </div>
       )}

@@ -1,7 +1,24 @@
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+let supabaseUrl: string | undefined;
+let supabaseAnonKey: string | undefined;
+
+if (typeof process !== 'undefined' && process.env) {
+    supabaseUrl = process.env.VITE_SUPABASE_URL;
+    supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY;
+}
+
+if (!supabaseUrl || !supabaseAnonKey) {
+    try {
+        // @ts-ignore - Vite specific
+        if (typeof import.meta !== 'undefined' && import.meta.env) {
+            supabaseUrl = supabaseUrl || import.meta.env.VITE_SUPABASE_URL;
+            supabaseAnonKey = supabaseAnonKey || import.meta.env.VITE_SUPABASE_ANON_KEY;
+        }
+    } catch (e) {
+        // Silent catch for environments where import.meta is problematic
+    }
+}
 
 // Validation: Ensure URL is present, not a placeholder, and starts with https://
 const hasUrl = !!supabaseUrl;

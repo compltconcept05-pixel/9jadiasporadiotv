@@ -5,10 +5,10 @@ export const getAIClient = (apiKeyOverride?: string) => {
   let apiKey = apiKeyOverride;
 
   if (!apiKey) {
-    if (typeof import.meta !== 'undefined' && import.meta.env) {
-      apiKey = import.meta.env.VITE_GEMINI_API_KEY;
-    } else if (typeof process !== 'undefined' && process.env) {
+    if (typeof process !== 'undefined' && process.env && process.env.VITE_GEMINI_API_KEY) {
       apiKey = process.env.VITE_GEMINI_API_KEY;
+    } else if (typeof import.meta !== 'undefined' && import.meta.env) {
+      apiKey = import.meta.env.VITE_GEMINI_API_KEY;
     }
   }
 
@@ -46,7 +46,7 @@ export async function generateText(prompt: string, systemInstruction: string) {
   return withRetry(async () => {
     const ai = getAIClient();
     const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
+      model: 'gemini-1.5-flash',
       contents: prompt,
       config: {
         systemInstruction,

@@ -34,7 +34,7 @@ async function test() {
     try {
         console.log("Attempting to generate speech...");
         const audio = await generateSpeech("This is a test of the emergency broadcast system.", {
-            modelId: 'eleven_flash_v2_5'
+            modelId: 'eleven_multilingual_v2'
         });
 
         if (audio) {

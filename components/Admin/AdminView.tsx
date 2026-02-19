@@ -4,6 +4,7 @@ import { AdminLog, MediaFile, AdminMessage, NewsItem, ListenerReport } from '../
 import { dbService } from '../../services/dbService';
 import { NEWSCASTER_NAME } from '../../constants';
 import ModularNewsUI from './NewsRoom/ModularNewsUI';
+import TVPlayer from '../Listener/TVChannel/TVPlayer';
 
 interface AdminViewProps {
   onRefreshData: () => void;
@@ -272,20 +273,22 @@ const AdminView: React.FC<AdminViewProps> = ({
         {activeTab === 'command' && (
           <div className="space-y-4 animate-fadeIn overflow-y-auto h-full pr-1 custom-scrollbar">
             <div className="bg-green-50 p-3 rounded-lg border border-green-100 relative overflow-hidden">
-              {/* Visual Monitor for Admin (Uses Active Video ID) */}
-              {activeVideoId ? (
-                <div className="absolute top-2 right-2 w-20 aspect-video bg-black rounded border border-green-500 shadow-lg z-10 overflow-hidden">
-                  {/* Muted video mirror for admin confirmation */}
-                  <video
-                    src={mediaFiles.find(m => m.id === activeVideoId)?.url}
-                    className="w-full h-full object-cover"
-                    autoPlay
-                    muted
-                    loop
-                  />
-                  <div className="absolute bottom-0 left-0 right-0 bg-red-600 text-white text-[5px] font-black text-center">LIVE FEED</div>
-                </div>
-              ) : null}
+              {/* Visual Monitor for Admin (Integrated TV Player) */}
+              <div className="absolute top-2 right-2 w-28 aspect-video bg-black rounded border border-green-500 shadow-lg z-10 overflow-hidden group">
+                <TVPlayer
+                  activeVideo={mediaFiles.find(m => m.id === activeVideoId) || null}
+                  allVideos={mediaFiles.filter(v => v.type === 'video')}
+                  news={[]}
+                  adminMessages={[]}
+                  onVideoAdvance={onPlayVideo}
+                  isNewsPlaying={false}
+                  isActive={!!isTvActive}
+                  isAdmin={true}
+                  isMuted={true}
+                  tvPlaylist={tvPlaylist}
+                />
+                <div className="absolute bottom-0 left-0 right-0 bg-red-600 text-white text-[5px] font-black text-center pointer-events-none z-40 opacity-80 group-hover:opacity-100 transition-opacity">LIVE MONITOR</div>
+              </div>
 
               <div className="flex justify-between items-center mb-2">
                 <h3 className="text-[8px] font-black uppercase text-green-800">Master Control</h3>

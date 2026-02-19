@@ -35,10 +35,11 @@ const TVPlayer: React.FC<TVPlayerProps> = ({
     onMuteChange,
     tvPlaylist = []
 }) => {
-    const [isPlaying, setIsPlaying] = useState(false);
+    const [isPlaying, setIsPlaying] = useState(isActive);
     const [playlistIndex, setPlaylistIndex] = useState(0);
     const [currentIndex, setCurrentIndex] = useState(0);
     const prevPlaylistRef = useRef<string[]>([]);
+    const lastActiveRef = useRef(isActive);
     const [isMutedInternal, setIsMutedInternal] = useState(false);
     const isMuted = onMuteChange ? isMutedProp : isMutedInternal;
     const setIsMuted = (m: boolean) => {
@@ -48,6 +49,8 @@ const TVPlayer: React.FC<TVPlayerProps> = ({
 
     const [volume, setVolume] = useState(1.0);
     const [showControls, setShowControls] = useState(true); // Auto-hide controls
+    const [hasError, setHasError] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
     const containerRef = useRef<HTMLDivElement>(null);
     const hideTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -112,6 +115,22 @@ const TVPlayer: React.FC<TVPlayerProps> = ({
         }
     }, [tvPlaylist]);
 
+    // FALLBACK AUTO-PLAY: If active but no video is playing, start the first one
+    useEffect(() => {
+        if (isActive && !isPlaying && !hasError && !isNewsPlaying) {
+            if (activeVideo || allVideos.length > 0 || tvPlaylist.length > 0) {
+                console.log('📺 [TVPlayer] Auto-starting playback...');
+                setIsPlaying(true);
+            }
+        }
+
+        // If becoming active, force play
+        if (isActive && !lastActiveRef.current) {
+            setIsPlaying(true);
+        }
+        lastActiveRef.current = isActive;
+    }, [isActive, isPlaying, hasError, isNewsPlaying, activeVideo, allVideos, tvPlaylist]);
+
     // TIMER LOGIC: Adverts (10m) and Stingers (15m)
     useEffect(() => {
         if (!isActive || !isPlaying || isNewsPlaying || !isAdmin) return;
@@ -168,28 +187,46 @@ const TVPlayer: React.FC<TVPlayerProps> = ({
     }, [activeVideo?.id, allVideos, isActive, tvPlaylist.length]);
 
     const handleAdvance = useCallback(() => {
-        const nextIndex = (currentIndex + 1) % allVideos.length;
-        setCurrentIndex(nextIndex);
-        setIsPlaying(true);
-        if (isAdmin && onVideoAdvance) {
-            onVideoAdvance(nextIndex);
+        if (allVideos.length === 0 && tvPlaylist.length === 0) return;
+
+        if (tvPlaylist.length > 0) {
+            const nextIdx = (playlistIndex + 1) % tvPlaylist.length;
+            setPlaylistIndex(nextIdx);
+        } else if (allVideos.length > 0) {
+            const nextIndex = (currentIndex + 1) % allVideos.length;
+            setCurrentIndex(nextIndex);
+            if (isAdmin && onVideoAdvance) {
+                onVideoAdvance(nextIndex);
+            }
         }
-    }, [currentIndex, allVideos.length, isAdmin, onVideoAdvance]);
+        setIsPlaying(true);
+    }, [currentIndex, allVideos.length, isAdmin, onVideoAdvance, tvPlaylist.length, playlistIndex]);
 
     // Playback and pause are handled directly by the playing prop in ReactPlayer
+
 
     const filterSocialUrl = (url: string) => {
         if (!url) return '';
         const lowercase = url.toLowerCase();
-        // Skip Shorts or Stories
-        if (lowercase.includes('/shorts/') || lowercase.includes('/stories/')) {
-            console.warn("🚫 [TVPlayer] Filtering out Short/Story:", url);
+
+        // 1. YouTube Shorts Transformation
+        // shorts/VIDEO_ID -> watch?v=VIDEO_ID
+        if (lowercase.includes('youtube.com/shorts/')) {
+            console.log("📺 [TVPlayer] Transforming YouTube Short to Watch URL:", url);
+            return url.replace('shorts/', 'watch?v=');
+        }
+
+        // 2. Stories filtering (usually vertical/unstable)
+        if (lowercase.includes('/stories/')) {
+            console.warn("🚫 [TVPlayer] Filtering out Story:", url);
             return '';
         }
         return url;
     };
 
     const handleEnded = () => {
+        setHasError(false);
+        setIsLoading(true);
         if (isAdvertPlaying) {
             console.log("📺 [TVPlayer] Advert completed, returning to main sequence...");
             setCurrentIndex(originalTrackIndex);
@@ -217,6 +254,7 @@ const TVPlayer: React.FC<TVPlayerProps> = ({
         if (newIsPlaying && isMuted) {
             setIsMuted(false);
         }
+        if (hasError) setHasError(false); // Retry on play
     };
 
     const toggleMute = () => {
@@ -236,6 +274,22 @@ const TVPlayer: React.FC<TVPlayerProps> = ({
         currentVideoUrl = track?.url || '';
     }
 
+    // BROADCAST SYNC: If admin just switched track, ensure we follow
+    useEffect(() => {
+        if (activeVideo && !isAdmin) {
+            const idx = allVideos.findIndex(v => v.id === activeVideo.id);
+            if (idx !== -1 && idx !== currentIndex) {
+                setCurrentIndex(idx);
+            }
+        }
+    }, [activeVideo, isAdmin, allVideos]);
+
+    // Reset error state if URL changes
+    useEffect(() => {
+        setHasError(false);
+        setIsLoading(true);
+    }, [currentVideoUrl]);
+
     return (
         <div ref={containerRef} className="relative w-full h-full bg-black overflow-hidden group select-none shadow-2xl">
             {/* 1. TV SECTION */}
@@ -252,17 +306,49 @@ const TVPlayer: React.FC<TVPlayerProps> = ({
                             muted={isMuted}
                             volume={volume}
                             onEnded={handleEnded}
-                            onPlay={() => setIsPlaying(true)}
+                            onPlay={() => { setIsPlaying(true); setIsLoading(false); }}
                             onPause={() => setIsPlaying(false)}
+                            onBuffer={() => setIsLoading(true)}
+                            onBufferEnd={() => setIsLoading(false)}
+                            onReady={() => setIsLoading(false)}
+                            onError={(e: any) => {
+                                console.error("❌ [TVPlayer] ReactPlayer Error:", e);
+                                setHasError(true);
+                                setIsLoading(false);
+                            }}
                             playsinline
                             config={{
-                                youtube: { playerVars: { autoplay: 1, rel: 0 } },
+                                youtube: { playerVars: { autoplay: 1, rel: 0, modestbranding: 1 } },
                                 facebook: { appId: '966242223397117' }
                             }}
                         />
 
+                        {/* ERROR OVERLAY */}
+                        {hasError && (
+                            <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/80 backdrop-blur-md z-30 p-6 text-center">
+                                <i className="fas fa-exclamation-triangle text-red-500 text-4xl mb-4"></i>
+                                <h3 className="text-white font-black uppercase tracking-widest text-sm mb-2">Signal Lost</h3>
+                                <p className="text-white/60 text-[10px] leading-relaxed max-w-[200px]">
+                                    Unable to stream this source. It may be restricted or private.
+                                </p>
+                                <button
+                                    onClick={() => handleEnded()}
+                                    className="mt-4 px-6 py-2 bg-red-600 text-white text-[9px] font-black uppercase rounded-full shadow-lg"
+                                >
+                                    Try Next Channel
+                                </button>
+                            </div>
+                        )}
+
+                        {/* LOADING OVERLAY */}
+                        {isLoading && isPlaying && !hasError && (
+                            <div className="absolute inset-0 flex items-center justify-center bg-black/20 backdrop-blur-[2px] z-20">
+                                <div className="w-12 h-12 border-4 border-[#008751]/30 border-t-[#008751] rounded-full animate-spin"></div>
+                            </div>
+                        )}
+
                         {/* PLAY BUTTON OVERLAY */}
-                        {!isPlaying && (
+                        {!isPlaying && !hasError && (
                             <div
                                 onClick={() => setIsPlaying(true)}
                                 className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-[2px] cursor-pointer hover:bg-black/20 transition-all z-20"
