@@ -254,11 +254,21 @@ const AdminView: React.FC<AdminViewProps> = ({
               isMuted={true}
               tvPlaylist={tvPlaylist}
             />
-            <div className="absolute top-2 left-2 px-2 py-0.5 bg-red-600 text-white text-[7px] font-black rounded uppercase tracking-widest z-40 animate-pulse shadow-sm">Live Broadcast</div>
-            <div className="absolute top-2 right-2 flex items-center space-x-1 z-40">
-              <div className={`w-2 h-2 rounded-full ${isTvActive ? 'bg-red-500' : 'bg-gray-500'}`}></div>
-              <span className="text-white text-[6px] font-black uppercase tracking-tighter shadow-black">{isTvActive ? 'On Air' : 'Off Air'}</span>
-            </div>
+            {isTvActive && (
+              <>
+                <div className="absolute top-2 left-2 px-2 py-0.5 bg-red-600 text-white text-[7px] font-black rounded uppercase tracking-widest z-40 animate-pulse shadow-sm">Live Broadcast</div>
+                <div className="absolute top-2 right-2 flex items-center space-x-1 z-40">
+                  <div className="w-2 h-2 rounded-full bg-red-500"></div>
+                  <span className="text-white text-[6px] font-black uppercase tracking-tighter shadow-black">On Air</span>
+                </div>
+              </>
+            )}
+            {!isTvActive && (
+              <div className="absolute top-2 right-2 flex items-center space-x-1 z-40">
+                <div className="w-2 h-2 rounded-full bg-gray-500"></div>
+                <span className="text-white text-[6px] font-black uppercase tracking-tighter shadow-black">Off Air</span>
+              </div>
+            )}
           </div>
         </div>
       </div>

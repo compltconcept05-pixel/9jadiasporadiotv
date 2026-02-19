@@ -40,7 +40,7 @@ const App: React.FC = () => {
   const [isShuffle, setIsShuffle] = useState(true);
   const [hasInteracted, setHasInteracted] = useState(false);
   const [audioStatus, setAudioStatus] = useState<string>('Ready');
-  const [isTvActive, setIsTvActive] = useState(true); // TV Active State (Default: TRUE)
+  const [isTvActive, setIsTvActive] = useState(false); // TV Active State (Default: FALSE)
   const [isTvMuted, setIsTvMuted] = useState(false); // TV Audio Exclusivity State
   const [lastError, setLastError] = useState<string>('');
   const [isDuckingNDR, setIsDuckingNDR] = useState(false);
@@ -603,18 +603,16 @@ const App: React.FC = () => {
   }, [handleStopNews, handlePlayAll, role, supabase]);
 
   const handleVideoToggle = useCallback((active: boolean) => {
+    console.log(`📡 [App] TV Toggle Request: ${active ? 'ON' : 'OFF'}`);
     setIsTvActive(active);
-    console.log(`📺 TV Broadcast Hub: ${active ? 'GOING LIVE' : 'STOPPING BROADCAST'}`);
 
     if (active) {
-      // If TV becomes active, stop radio IMMEDIATELY
-      if (role !== UserRole.ADMIN) {
-        setIsPlaying(false);
-        setListenerHasPlayed(false);
-      }
+      console.log("📺 TV Activated - Stopping Radio Globally for Exclusivity");
+      setIsPlaying(false);
+      setListenerHasPlayed(false);
       setIsTvMuted(false);
     } else {
-      // CLEAR STATES ON STOP
+      console.log("⏹️ TV Deactivated - Clearing Board State");
       if (role === UserRole.ADMIN) {
         setActiveVideoId(null);
         setTvPlaylist([]);
@@ -623,9 +621,10 @@ const App: React.FC = () => {
 
     // Broadcaster sync
     if (role === UserRole.ADMIN && supabase) {
+      console.log("☁️ [Supabase] Syncing Station State (Live TV)...");
       dbService.updateStationState({
         is_tv_active: active,
-        is_playing: (active && !isTvMuted) ? false : isPlaying,
+        is_playing: active ? false : isPlaying,
         current_video_id: active ? activeVideoId : null,
         tv_playlist: active ? tvPlaylist : [],
         timestamp: Date.now()

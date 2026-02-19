@@ -277,7 +277,8 @@ const TVPlayer: React.FC<TVPlayerProps> = ({
             currentVideoUrl = filterSocialUrl(tvPlaylist[nextIdx]);
         }
     } else {
-        const track = allVideos.find(v => v.id === activeVideo?.id) || activeVideo || allVideos.find(v => v.type === 'video');
+        // Only fallback to first video if we are strictly in broadcast/preview mode with specific context
+        const track = allVideos.find(v => v.id === activeVideo?.id) || activeVideo;
         currentVideoUrl = track?.url || '';
     }
 
@@ -364,8 +365,11 @@ const TVPlayer: React.FC<TVPlayerProps> = ({
                         {/* PLAY BUTTON OVERLAY */}
                         {!isPlaying && !hasError && (
                             <div
-                                onClick={() => setIsPlaying(true)}
-                                className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-[2px] cursor-pointer hover:bg-black/20 transition-all z-20"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    setIsPlaying(true);
+                                }}
+                                className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-[2px] cursor-pointer hover:bg-black/20 transition-all z-[45] group"
                             >
                                 <div className="w-20 h-20 bg-[#008751] rounded-full flex items-center justify-center shadow-2xl border-4 border-white/20 transform hover:scale-110 transition-transform">
                                     <i className="fas fa-play text-white text-3xl ml-1"></i>
