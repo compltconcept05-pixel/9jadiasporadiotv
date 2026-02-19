@@ -173,10 +173,14 @@ const TVPlayer: React.FC<TVPlayerProps> = ({
 
     // 2. Sync with Admin Broadcast & Active State
     useEffect(() => {
-        // Only stop if inactive AND no social playlist is running
-        if (!isActive && tvPlaylist.length === 0) {
+        // If inactive, stop EVERYTHING immediately
+        if (!isActive) {
             setIsPlaying(false);
-        } else if (isActive && activeVideo) {
+            return;
+        }
+
+        // If active and we have a specific video from parent
+        if (activeVideo) {
             const idx = allVideos.findIndex(v => v.id === activeVideo.id);
             if (idx !== -1) {
                 if (currentIndex !== idx || !isPlaying) {
@@ -186,7 +190,7 @@ const TVPlayer: React.FC<TVPlayerProps> = ({
                 }
             }
         }
-    }, [activeVideo?.id, allVideos, isActive, tvPlaylist.length]);
+    }, [activeVideo?.id, allVideos, isActive]);
 
     const handleAdvance = useCallback(() => {
         if (allVideos.length === 0 && tvPlaylist.length === 0) return;

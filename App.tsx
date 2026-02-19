@@ -604,24 +604,34 @@ const App: React.FC = () => {
 
   const handleVideoToggle = useCallback((active: boolean) => {
     setIsTvActive(active);
+    console.log(`📺 TV Broadcast Hub: ${active ? 'GOING LIVE' : 'STOPPING BROADCAST'}`);
+
     if (active) {
       // If TV becomes active, stop radio IMMEDIATELY
-      console.log("📺 TV Activated - Initializing exclusivity check");
       if (role !== UserRole.ADMIN) {
         setIsPlaying(false);
         setListenerHasPlayed(false);
       }
-      setIsTvMuted(false); // Unmute TV by default when explicitly toggled on
+      setIsTvMuted(false);
+    } else {
+      // CLEAR STATES ON STOP
+      if (role === UserRole.ADMIN) {
+        setActiveVideoId(null);
+        setTvPlaylist([]);
+      }
     }
+
     // Broadcaster sync
     if (role === UserRole.ADMIN && supabase) {
       dbService.updateStationState({
         is_tv_active: active,
         is_playing: (active && !isTvMuted) ? false : isPlaying,
+        current_video_id: active ? activeVideoId : null,
+        tv_playlist: active ? tvPlaylist : [],
         timestamp: Date.now()
       }).catch(err => console.error("❌ Video Toggle Sync error", err));
     }
-  }, [role, isPlaying, supabase, isTvMuted]);
+  }, [role, isPlaying, supabase, isTvMuted, activeVideoId, tvPlaylist]);
 
   const handlePlayVideo = useCallback((track: MediaFile | number | string, isLive: boolean = true) => {
     handleStopNews();

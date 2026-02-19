@@ -415,16 +415,38 @@ const AdminView: React.FC<AdminViewProps> = ({
               </button>
             </div>
 
-            {/* Separate Social Media Link Control */}
-            <div className="border border-indigo-100 rounded-lg p-3 bg-indigo-50/50">
-              <h4 className="text-[7px] font-black uppercase text-indigo-800 mb-2">Broadcasting Social Link</h4>
+            {/* Separate Social Media Link Control with Guide */}
+            <div className="border-2 border-indigo-200 rounded-2xl p-4 bg-indigo-50/70 shadow-inner">
+              <div className="flex items-center justify-between mb-3">
+                <h4 className="text-[9px] font-black uppercase text-indigo-900 flex items-center gap-2">
+                  <i className="fas fa-link text-indigo-600"></i> Social Media Hub
+                </h4>
+                <span className="text-[6px] font-bold bg-indigo-200 text-indigo-800 px-1.5 py-0.5 rounded-full uppercase tracking-tighter">Youtube • Facebook • Instagram</span>
+              </div>
+
+              {/* Step-by-Step Instructions */}
+              <div className="grid grid-cols-3 gap-2 mb-3">
+                <div className="bg-white/60 p-1.5 rounded-lg border border-indigo-100 flex flex-col items-center">
+                  <span className="text-[6px] font-black text-indigo-400 uppercase">Step 1</span>
+                  <span className="text-[7px] font-bold text-indigo-800">Paste Link</span>
+                </div>
+                <div className="bg-white/60 p-1.5 rounded-lg border border-indigo-100 flex flex-col items-center">
+                  <span className="text-[6px] font-black text-indigo-400 uppercase">Step 2</span>
+                  <span className="text-[7px] font-bold text-indigo-800">Preview It</span>
+                </div>
+                <div className="bg-white/60 p-1.5 rounded-lg border border-indigo-100 flex flex-col items-center">
+                  <span className="text-[6px] font-black text-indigo-400 uppercase">Step 3</span>
+                  <span className="text-[7px] font-bold text-indigo-800">Go Live</span>
+                </div>
+              </div>
+
               <div className="flex gap-2">
                 <input
                   type="text"
                   value={socialLink}
                   onChange={(e) => setSocialLink(e.target.value)}
-                  placeholder="Paste YouTube/FB link here..."
-                  className="flex-1 text-[8px] p-2 bg-white rounded border border-indigo-100 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                  placeholder="Paste YouTube, Facebook, or Instagram link..."
+                  className="flex-1 text-[9px] p-2.5 bg-white rounded-xl border-2 border-indigo-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-sm"
                 />
               </div>
               <div className="flex gap-2 mt-2">
