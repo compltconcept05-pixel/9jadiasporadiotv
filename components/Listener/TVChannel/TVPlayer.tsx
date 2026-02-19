@@ -108,9 +108,17 @@ const TVPlayer: React.FC<TVPlayerProps> = ({
             return id ? `https://www.youtube.com/watch?v=${id}` : url;
         }
 
-        // 2. Facebook/Instagram Reels & Watch
-        if (lowercase.includes('/reels/') || lowercase.includes('/reel/')) {
-            console.log("🎬 [TVPlayer] Detected Reel, attempting embed transformation");
+        // 2. Facebook/Instagram Reels & Watch Transformations
+        // Instagram Reels -> Standard Posts (more embeddable)
+        if (lowercase.includes('instagram.com/reels/') || lowercase.includes('instagram.com/reel/')) {
+            console.log("🎬 [TVPlayer] Transforming Instagram Reel for compatibility...");
+            return url.replace('/reels/', '/p/').replace('/reel/', '/p/');
+        }
+
+        // Facebook Watch & Reels
+        if (lowercase.includes('facebook.com/watch') || lowercase.includes('fb.watch')) {
+            console.log("🎬 [TVPlayer] Processing Facebook Watch/Reel URL");
+            // Standard FB player handles watch URLs okay, but we ensure clean formatting
         }
 
         // 3. Stories filtering
@@ -136,18 +144,18 @@ const TVPlayer: React.FC<TVPlayerProps> = ({
         if (onPlayStateChange) onPlayStateChange(isPlaying);
     }, [isPlaying]);
 
-    // 2. Loading Watchdog (15s)
+    // 2. Loading Watchdog (25s)
     useEffect(() => {
         let timer: NodeJS.Timeout;
         if (isLoading && isPlaying && currentVideoUrl) {
-            console.log(`⏳ [TVPlayer] Starting loading watchdog for: ${currentVideoUrl}`);
+            console.log(`⏳ [TVPlayer] Starting loading watchdog (25s) for: ${currentVideoUrl}`);
             timer = setTimeout(() => {
                 if (isLoading) {
-                    console.warn("⚠️ [TVPlayer] Loading timeout (15s) reached.");
+                    console.warn("⚠️ [TVPlayer] Loading timeout (25s) reached.");
                     setHasError(true);
                     setIsLoading(false);
                 }
-            }, 15000);
+            }, 25000); // Increased to 25s for slow social SDKs
         }
         return () => clearTimeout(timer);
     }, [isLoading, isPlaying, currentVideoUrl]);
@@ -367,12 +375,26 @@ const TVPlayer: React.FC<TVPlayerProps> = ({
                                     </div>
                                 )}
 
-                                <button
-                                    onClick={() => handleEnded()}
-                                    className="px-6 py-2 bg-red-600 text-white text-[9px] font-black uppercase rounded-full shadow-lg hover:bg-red-700 transition-colors"
-                                >
-                                    Try Next Channel
-                                </button>
+                                <div className="flex gap-3 justify-center">
+                                    <button
+                                        onClick={() => {
+                                            setHasError(false);
+                                            setIsLoading(true);
+                                            // Trigger a state change to force-reload the player
+                                            setIsPlaying(false);
+                                            setTimeout(() => setIsPlaying(true), 100);
+                                        }}
+                                        className="px-6 py-2 bg-indigo-600 text-white text-[9px] font-black uppercase rounded-full shadow-lg hover:bg-indigo-700 transition-colors"
+                                    >
+                                        Retry Link
+                                    </button>
+                                    <button
+                                        onClick={() => handleEnded()}
+                                        className="px-6 py-2 bg-red-600 text-white text-[9px] font-black uppercase rounded-full shadow-lg hover:bg-red-700 transition-colors"
+                                    >
+                                        Try Next Channel
+                                    </button>
+                                </div>
                             </div>
                         )}
 
