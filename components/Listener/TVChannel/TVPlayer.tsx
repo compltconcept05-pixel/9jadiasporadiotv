@@ -18,6 +18,7 @@ interface TVPlayerProps {
     isMuted?: boolean;
     onMuteChange?: (muted: boolean) => void;
     tvPlaylist?: string[];
+    isPreview?: boolean;
 }
 
 const TVPlayer: React.FC<TVPlayerProps> = ({
@@ -33,7 +34,8 @@ const TVPlayer: React.FC<TVPlayerProps> = ({
     isAdmin = false,
     isMuted: isMutedProp = false,
     onMuteChange,
-    tvPlaylist = []
+    tvPlaylist = [],
+    isPreview = false
 }) => {
     const [isPlaying, setIsPlaying] = useState(isActive);
     const [playlistIndex, setPlaylistIndex] = useState(0);
@@ -133,7 +135,7 @@ const TVPlayer: React.FC<TVPlayerProps> = ({
 
     // TIMER LOGIC: Adverts (10m) and Stingers (15m)
     useEffect(() => {
-        if (!isActive || !isPlaying || isNewsPlaying || !isAdmin) return;
+        if (!isActive || !isPlaying || isNewsPlaying || !isAdmin || isPreview) return;
 
         const interval = setInterval(() => {
             const now = Date.now();
@@ -195,7 +197,8 @@ const TVPlayer: React.FC<TVPlayerProps> = ({
         } else if (allVideos.length > 0) {
             const nextIndex = (currentIndex + 1) % allVideos.length;
             setCurrentIndex(nextIndex);
-            if (isAdmin && onVideoAdvance) {
+            setPlaylistIndex(nextIndex); // This is local, okay for preview
+            if (isAdmin && onVideoAdvance && !isPreview) {
                 onVideoAdvance(nextIndex);
             }
         }
@@ -318,7 +321,14 @@ const TVPlayer: React.FC<TVPlayerProps> = ({
                             }}
                             playsinline
                             config={{
-                                youtube: { playerVars: { autoplay: 1, rel: 0, modestbranding: 1 } },
+                                youtube: {
+                                    playerVars: {
+                                        autoplay: 1,
+                                        rel: 0,
+                                        modestbranding: 1,
+                                        origin: window.location.origin
+                                    }
+                                },
                                 facebook: { appId: '966242223397117' }
                             }}
                         />

@@ -53,6 +53,8 @@ const App: React.FC = () => {
   const [stopTriggerCount, setStopTriggerCount] = useState(0);
   const [activeVideoId, setActiveVideoId] = useState<string | null>(null);
   const [tvPlaylist, setTvPlaylist] = useState<string[]>([]);
+  const [previewVideoId, setPreviewVideoId] = useState<string | null>(null);
+  const [previewPlaylist, setPreviewPlaylist] = useState<string[]>([]);
   const [showJoinPrompt, setShowJoinPrompt] = useState(false);
   const [cloudStatus, setCloudStatus] = useState<string>('Initializing Satellite...');
   const [sessionId] = useState(() => Math.random().toString(36).substring(7));
@@ -621,40 +623,52 @@ const App: React.FC = () => {
     }
   }, [role, isPlaying, supabase, isTvMuted]);
 
-  const handlePlayVideo = useCallback((track: MediaFile | number) => {
-    handleStopNews(); // Ensure news stops
+  const handlePlayVideo = useCallback((track: MediaFile | number | string, isLive: boolean = true) => {
+    handleStopNews();
 
     let video: MediaFile | undefined;
-    const videoFiles = allMediaRef.current.filter(v => v.type === 'video');
+    let socialUrl: string | undefined;
 
-    if (typeof track === 'number') {
-      video = videoFiles[track];
+    if (typeof track === 'string') {
+      socialUrl = track;
     } else {
-      video = track;
+      const videoFiles = allMediaRef.current.filter(v => v.type === 'video');
+      video = typeof track === 'number' ? videoFiles[track] : track;
     }
 
-    if (!video) return;
+    if (isLive) {
+      if (video) {
+        setActiveVideoId(video.id);
+        setTvPlaylist([]); // Clear playlist when playing specific file
+      } else if (socialUrl) {
+        setActiveVideoId(null);
+        setTvPlaylist([socialUrl]);
+      }
 
-    setActiveVideoId(video.id);
-    if (role !== UserRole.ADMIN) {
       setIsTvActive(true);
-      setIsTvMuted(false);
-      setListenerHasPlayed(false); // Switch to TV mode locally
+
+      if (role === UserRole.ADMIN && supabase) {
+        dbService.updateStationState({
+          is_playing: false,
+          is_tv_active: true,
+          current_video_id: video?.id || null,
+          tv_playlist: socialUrl ? [socialUrl] : [],
+          timestamp: Date.now()
+        }).catch(err => console.error("❌ TV Sync error", err));
+      }
+      handleLogAdd(`TV Feed: Now Broadcasting ${video?.name || 'Social Link'}`);
     } else {
-      setIsTvActive(true);
+      // PREVIEW MODE (Local Only)
+      if (video) {
+        setPreviewVideoId(video.id);
+        setPreviewPlaylist([]);
+      } else if (socialUrl) {
+        setPreviewVideoId(null);
+        setPreviewPlaylist([socialUrl]);
+      }
+      console.log("📺 [App] Admin Preview Loaded:", video?.name || socialUrl);
     }
-
-    // Explicitly update cloud so listeners switch
-    if (role === UserRole.ADMIN && supabase) {
-      dbService.updateStationState({
-        is_playing: false,
-        is_tv_active: true,
-        current_video_id: video.id,
-        timestamp: Date.now()
-      }).catch(err => console.error("❌ TV Sync error", err));
-    }
-    handleLogAdd(`TV Feed: Now Broadcasting ${video.name}`);
-  }, [handleRadioToggle, handleLogAdd, handleStopNews, role]);
+  }, [handleStopNews, role, supabase, handleLogAdd]);
 
   // --- ADMIN LOGIN LOGIC ---
   useEffect(() => {
@@ -913,6 +927,8 @@ const App: React.FC = () => {
             }}
             activeVideoId={activeVideoId}
             onPlayVideo={handlePlayVideo}
+            previewVideoId={previewVideoId}
+            previewPlaylist={previewPlaylist}
             tvPlaylist={tvPlaylist}
             onUpdatePlaylist={setTvPlaylist}
             isTvActive={isTvActive}

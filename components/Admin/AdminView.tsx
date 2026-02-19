@@ -38,7 +38,9 @@ interface AdminViewProps {
   status?: string;
   onRefreshWire?: () => void;
   activeVideoId?: string | null;
-  onPlayVideo?: (track: MediaFile) => void;
+  onPlayVideo?: (track: MediaFile | number | string, isLive?: boolean) => void;
+  previewVideoId?: string | null;
+  previewPlaylist?: string[];
   tvPlaylist?: string[];
   onUpdatePlaylist?: (playlist: string[]) => void;
   isTvActive?: boolean;
@@ -80,7 +82,7 @@ const AdminView: React.FC<AdminViewProps> = ({
   onAddNews,
   onUpdateNews,
   onDeleteNews,
-  mediaFiles = [], status, onRefreshWire, activeVideoId, onPlayVideo, tvPlaylist = [], onUpdatePlaylist, isTvActive, onToggleTv, onResetSync, onDeleteMedia, onLogAdd, reports
+  mediaFiles = [], status, onRefreshWire, activeVideoId, onPlayVideo, previewVideoId, previewPlaylist, tvPlaylist = [], onUpdatePlaylist, isTvActive, onToggleTv, onResetSync, onDeleteMedia, onLogAdd, reports
 }) => {
   const [activeTab, setActiveTab] = useState<Tab>('command');
   const [mediaSubTab, setMediaSubTab] = useState<MediaSubTab>('audio');
@@ -94,6 +96,7 @@ const AdminView: React.FC<AdminViewProps> = ({
   const [newItem, setNewItem] = useState<{ title: string; content: string; category: NewsItem['category'] }>({ title: '', content: '', category: 'Manual' });
   const [selectedJingleUrl, setSelectedJingleUrl] = useState<string>('');
   const [uploadedAppUrl, setUploadedAppUrl] = useState<string>('');
+  const [socialLink, setSocialLink] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const appFileInputRef = useRef<HTMLInputElement>(null);
   const folderInputRef = useRef<HTMLSelectElement>(null);
@@ -273,21 +276,39 @@ const AdminView: React.FC<AdminViewProps> = ({
         {activeTab === 'command' && (
           <div className="space-y-4 animate-fadeIn overflow-y-auto h-full pr-1 custom-scrollbar">
             <div className="bg-green-50 p-3 rounded-lg border border-green-100 relative overflow-hidden">
-              {/* Visual Monitor for Admin (Integrated TV Player) */}
-              <div className="absolute top-2 right-2 w-28 aspect-video bg-black rounded border border-green-500 shadow-lg z-10 overflow-hidden group">
-                <TVPlayer
-                  activeVideo={mediaFiles.find(m => m.id === activeVideoId) || null}
-                  allVideos={mediaFiles.filter(v => v.type === 'video')}
-                  news={[]}
-                  adminMessages={[]}
-                  onVideoAdvance={onPlayVideo}
-                  isNewsPlaying={false}
-                  isActive={!!isTvActive}
-                  isAdmin={true}
-                  isMuted={true}
-                  tvPlaylist={tvPlaylist}
-                />
-                <div className="absolute bottom-0 left-0 right-0 bg-red-600 text-white text-[5px] font-black text-center pointer-events-none z-40 opacity-80 group-hover:opacity-100 transition-opacity">LIVE MONITOR</div>
+              {/* --- DUAL MONITOR SYSTEM --- */}
+              <div className="flex justify-end space-x-2 mb-4">
+                {/* 1. PREVIEW MONITOR (Local Only) */}
+                <div className="w-28 aspect-video bg-black rounded border border-blue-400 shadow-lg relative overflow-hidden group">
+                  <TVPlayer
+                    activeVideo={mediaFiles.find(m => m.id === previewVideoId) || null}
+                    allVideos={mediaFiles.filter(v => v.type === 'video')}
+                    news={[]}
+                    adminMessages={[]}
+                    isNewsPlaying={false}
+                    isActive={true}
+                    isAdmin={true}
+                    isMuted={false}
+                    tvPlaylist={previewPlaylist}
+                  />
+                  <div className="absolute bottom-0 left-0 right-0 bg-blue-600 text-white text-[5px] font-black text-center pointer-events-none z-40 opacity-80 uppercase">Preview / Off-Air</div>
+                </div>
+
+                {/* 2. LIVE MONITOR (Synced to Listeners) */}
+                <div className="w-28 aspect-video bg-black rounded border border-red-500 shadow-lg relative overflow-hidden group">
+                  <TVPlayer
+                    activeVideo={mediaFiles.find(m => m.id === activeVideoId) || null}
+                    allVideos={mediaFiles.filter(v => v.type === 'video')}
+                    news={[]}
+                    adminMessages={[]}
+                    isNewsPlaying={false}
+                    isActive={!!isTvActive}
+                    isAdmin={true}
+                    isMuted={true}
+                    tvPlaylist={tvPlaylist}
+                  />
+                  <div className="absolute bottom-0 left-0 right-0 bg-red-600 text-white text-[5px] font-black text-center pointer-events-none z-40 opacity-80 uppercase animate-pulse">Live / On-Air</div>
+                </div>
               </div>
 
               <div className="flex justify-between items-center mb-2">
@@ -369,6 +390,37 @@ const AdminView: React.FC<AdminViewProps> = ({
               >
                 Jingle 2
               </button>
+            </div>
+
+            {/* Separate Social Media Link Control */}
+            <div className="border border-indigo-100 rounded-lg p-3 bg-indigo-50/50">
+              <h4 className="text-[7px] font-black uppercase text-indigo-800 mb-2">Broadcasting Social Link</h4>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={socialLink}
+                  onChange={(e) => setSocialLink(e.target.value)}
+                  placeholder="Paste YouTube/FB link here..."
+                  className="flex-1 text-[8px] p-2 bg-white rounded border border-indigo-100 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                />
+              </div>
+              <div className="flex gap-2 mt-2">
+                <button
+                  onClick={() => onPlayVideo?.(socialLink, false)}
+                  className="flex-1 py-1.5 bg-blue-100 text-blue-700 rounded-md text-[7px] font-black uppercase hover:bg-blue-200 transition-colors"
+                >
+                  Preview Link
+                </button>
+                <button
+                  onClick={() => {
+                    onPlayVideo?.(socialLink, true);
+                    setSocialLink('');
+                  }}
+                  className="flex-1 py-1.5 bg-indigo-600 text-white rounded-md text-[7px] font-black uppercase hover:bg-indigo-700 transition-colors shadow-sm"
+                >
+                  Go Live (Social)
+                </button>
+              </div>
             </div>
 
             {/* Text-to-Speech Broadcast */}
@@ -913,19 +965,38 @@ const AdminView: React.FC<AdminViewProps> = ({
                     </div>
                   </div>
                   <div className="flex items-center space-x-1">
-                    <button
-                      onClick={() => {
-                        if (file.type === 'audio') {
+                    {file.type === 'video' ? (
+                      <>
+                        <button
+                          onClick={() => onPlayVideo?.(file, false)}
+                          className="w-6 h-6 rounded-full bg-blue-50 text-blue-600 hover:bg-blue-100 flex items-center justify-center transition-colors"
+                          title="Preview Locally"
+                        >
+                          <i className="fas fa-eye text-[8px]"></i>
+                        </button>
+                        <button
+                          onClick={() => {
+                            onPlayVideo?.(file, true);
+                            setInternalStatus('✅ Broadcasting to TV!');
+                            setTimeout(() => setInternalStatus(''), 3000);
+                          }}
+                          className="w-6 h-6 rounded-full bg-red-50 text-red-600 hover:bg-red-100 flex items-center justify-center transition-colors shadow-sm"
+                          title="Go Live (Broadcast)"
+                        >
+                          <i className="fas fa-broadcast-tower text-[8px]"></i>
+                        </button>
+                      </>
+                    ) : (
+                      <button
+                        onClick={() => {
                           onPlayTrack(file);
-                        } else {
-                          onPlayVideo?.(file);
-                        }
-                      }}
-                      className="w-6 h-6 rounded-full bg-green-50 text-green-600 hover:bg-green-100 flex items-center justify-center transition-colors"
-                      title="Play Globally"
-                    >
-                      <i className="fas fa-play text-[8px]"></i>
-                    </button>
+                        }}
+                        className="w-6 h-6 rounded-full bg-green-50 text-green-600 hover:bg-green-100 flex items-center justify-center transition-colors"
+                        title="Play Globally"
+                      >
+                        <i className="fas fa-play text-[8px]"></i>
+                      </button>
+                    )}
                     <button
                       onClick={() => {
                         const link = document.createElement('a');
