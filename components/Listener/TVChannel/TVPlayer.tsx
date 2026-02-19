@@ -99,32 +99,43 @@ const TVPlayer: React.FC<TVPlayerProps> = ({
 
     const filterSocialUrl = (url: string) => {
         if (!url) return '';
-        const lowercase = url.toLowerCase();
+        let cleanUrl = url.trim();
 
-        // 1. YouTube Short URLs & Shorts
-        if (lowercase.includes('youtube.com/shorts/')) return url.replace('shorts/', 'watch?v=');
-        if (lowercase.includes('youtu.be/')) {
-            const id = url.split('youtu.be/')[1]?.split(/[?#]/)[0];
-            return id ? `https://www.youtube.com/watch?v=${id}` : url;
+        // 1. Mobile Translation & Parameter Cleaning
+        // Strip tracking junk first (?fbclid, ?ref, etc.)
+        try {
+            const urlObj = new URL(cleanUrl);
+            const paramsToStrip = ['fbclid', 'ref', 'app', 'utm_source', 'utm_medium', 'utm_campaign', 'mibextid'];
+            paramsToStrip.forEach(p => urlObj.searchParams.delete(p));
+
+            // Translate Mobile Hostnames
+            if (urlObj.hostname === 'm.facebook.com') urlObj.hostname = 'www.facebook.com';
+            if (urlObj.hostname === 'm.youtube.com') urlObj.hostname = 'www.youtube.com';
+
+            cleanUrl = urlObj.toString();
+        } catch (e) {
+            console.warn("⚠️ [TVPlayer] URL Parse error, using original:", cleanUrl);
         }
 
-        // 2. Facebook/Instagram Reels & Watch Transformations
-        // Instagram Reels -> Standard Posts (more embeddable)
+        const lowercase = cleanUrl.toLowerCase();
+
+        // 2. YouTube Short URLs & Shorts
+        if (lowercase.includes('youtube.com/shorts/')) return cleanUrl.replace('shorts/', 'watch?v=');
+        if (lowercase.includes('youtu.be/')) {
+            const id = cleanUrl.split('youtu.be/')[1]?.split(/[?#]/)[0];
+            return id ? `https://www.youtube.com/watch?v=${id}` : cleanUrl;
+        }
+
+        // 3. Facebook/Instagram Reels & Watch Transformations
         if (lowercase.includes('instagram.com/reels/') || lowercase.includes('instagram.com/reel/')) {
             console.log("🎬 [TVPlayer] Transforming Instagram Reel for compatibility...");
-            return url.replace('/reels/', '/p/').replace('/reel/', '/p/');
+            return cleanUrl.replace('/reels/', '/p/').replace('/reel/', '/p/');
         }
 
-        // Facebook Watch & Reels
-        if (lowercase.includes('facebook.com/watch') || lowercase.includes('fb.watch')) {
-            console.log("🎬 [TVPlayer] Processing Facebook Watch/Reel URL");
-            // Standard FB player handles watch URLs okay, but we ensure clean formatting
-        }
-
-        // 3. Stories filtering
+        // 4. Stories filtering
         if (lowercase.includes('/stories/')) return '';
 
-        return url;
+        return cleanUrl;
     };
 
     let currentVideoUrl = '';
@@ -160,12 +171,21 @@ const TVPlayer: React.FC<TVPlayerProps> = ({
         return () => clearTimeout(timer);
     }, [isLoading, isPlaying, currentVideoUrl]);
 
-    // 3. Auto-play trigger for Preview or Broadcast activation
+    // 3. Auto-play trigger & Aggressive Loading Bypass
     useEffect(() => {
         if (currentVideoUrl && (isActive || isPreview)) {
             setIsPlaying(true);
             setHasError(false);
             setIsLoading(true);
+
+            // AGGRESSIVE BYPASS: Force hide spinner after 2s to show native player
+            const bypassTimer = setTimeout(() => {
+                if (isLoading) {
+                    console.log("🚀 [TVPlayer] Aggressive Bypass: Hiding spinner to show native player");
+                    setIsLoading(false);
+                }
+            }, 2000);
+            return () => clearTimeout(bypassTimer);
         }
     }, [currentVideoUrl, isActive, isPreview]);
 
