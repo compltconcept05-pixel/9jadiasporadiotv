@@ -96,15 +96,21 @@ const AdminView: React.FC<AdminViewProps> = ({
   const [newItem, setNewItem] = useState<{ title: string; content: string; category: NewsItem['category'] }>({ title: '', content: '', category: 'Manual' });
   const [selectedJingleUrl, setSelectedJingleUrl] = useState<string>('');
   const [uploadedAppUrl, setUploadedAppUrl] = useState<string>('');
+  const [socialLinks, setSocialLinks] = useState<string[]>(['', '', '']);
   const [socialLink, setSocialLink] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const appFileInputRef = useRef<HTMLInputElement>(null);
   const folderInputRef = useRef<HTMLSelectElement>(null);
 
-  // Auto-sync manualText when prop changes
+  // Auto-sync manualText and socialLinks when props change
   React.useEffect(() => {
     setManualText(manualScript);
-  }, [manualScript]);
+    if (tvPlaylist && tvPlaylist.length > 0) {
+      const newLinks = [...socialLinks];
+      tvPlaylist.forEach((link, i) => { if (i < 3) newLinks[i] = link; });
+      setSocialLinks(newLinks);
+    }
+  }, [manualScript, tvPlaylist]);
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>, isFolder: boolean = false) => {
     const files = event.target.files;
@@ -785,24 +791,22 @@ const AdminView: React.FC<AdminViewProps> = ({
                   <div key={i} className="flex items-center gap-2">
                     <input
                       type="text"
-                      id={`social-link-input-${i}`}
-                      defaultValue={tvPlaylist[i] || ''}
+                      value={socialLinks[i]}
+                      onChange={(e) => {
+                        const newLinks = [...socialLinks];
+                        newLinks[i] = e.target.value;
+                        setSocialLinks(newLinks);
+                      }}
                       placeholder={`Paste video link ${i + 1} here...`}
                       className="flex-1 text-[9px] p-2 border border-indigo-200 rounded outline-none focus:ring-1 focus:ring-indigo-500 bg-white"
                     />
                     <button
-                      title="Play all links on TV"
+                      title="Play this link on TV"
                       onClick={() => {
-                        // Collect ALL filled inputs and broadcast to TV
-                        const links: string[] = [];
-                        for (let j = 0; j < 3; j++) {
-                          const inp = document.getElementById(`social-link-input-${j}`) as HTMLInputElement;
-                          if (inp?.value.trim()) links.push(inp.value.trim());
-                        }
-                        if (links.length === 0) return;
-                        onUpdatePlaylist?.(links);
+                        if (!socialLinks[i].trim()) return;
+                        onUpdatePlaylist?.([socialLinks[i].trim()]);
                         onToggleTv?.(true);
-                        setInternalStatus('✅ Playing on TV!');
+                        setInternalStatus('✅ Broadcasting to TV...');
                         setTimeout(() => setInternalStatus(''), 3000);
                       }}
                       className="shrink-0 w-8 h-8 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg flex items-center justify-center shadow transition-all active:scale-90"
@@ -813,24 +817,14 @@ const AdminView: React.FC<AdminViewProps> = ({
                 ))}
                 <button
                   onClick={async () => {
-                    const links: string[] = [];
-                    for (let i = 0; i < 3; i++) {
-                      const input = document.getElementById(`social-link-input-${i}`) as HTMLInputElement;
-                      if (input?.value.trim()) {
-                        links.push(input.value.trim());
-                      }
-                    }
-
+                    const links = socialLinks.map(l => l.trim()).filter(l => l !== '');
                     if (links.length === 0) return;
 
                     setIsProcessing(true);
                     setInternalStatus('Broadcasting Playlist...');
                     try {
-                      // Update playlist state in App.tsx
                       onUpdatePlaylist?.(links);
-
-                      // Also add to media library if it's new (optional, but requested to play content)
-                      // For now, we trust the playlist state will reach TVPlayer
+                      onToggleTv?.(true);
                       setInternalStatus('✅ Playlist Live on TV!');
                       onRefreshData();
                     } catch (e: any) {
@@ -1132,7 +1126,7 @@ const AdminView: React.FC<AdminViewProps> = ({
         )}
 
       </div>
-    </div>
+    </div >
   );
 };
 

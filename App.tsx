@@ -602,15 +602,20 @@ const App: React.FC = () => {
     }
   }, [handleStopNews, handlePlayAll, role, supabase]);
 
-  const handleVideoToggle = useCallback((active: boolean) => {
-    console.log(`📡 [App] TV Toggle Request: ${active ? 'ON' : 'OFF'}`);
+  const handleVideoToggle = useCallback((active: boolean, overrideData?: { videoId?: string | null, playlist?: string[] }) => {
+    console.log(`📡 [App] TV Toggle Request: ${active ? 'ON' : 'OFF'}${overrideData ? ' (with override data)' : ''}`);
     setIsTvActive(active);
+
+    const targetVideoId = overrideData?.videoId !== undefined ? overrideData.videoId : activeVideoId;
+    const targetPlaylist = overrideData?.playlist !== undefined ? overrideData.playlist : tvPlaylist;
 
     if (active) {
       console.log("📺 TV Activated - Stopping Radio Globally for Exclusivity");
       setIsPlaying(false);
       setListenerHasPlayed(false);
       setIsTvMuted(false);
+      if (overrideData?.videoId) setActiveVideoId(overrideData.videoId);
+      if (overrideData?.playlist) setTvPlaylist(overrideData.playlist);
     } else {
       console.log("⏹️ TV Deactivated - Clearing Board State");
       if (role === UserRole.ADMIN) {
@@ -625,8 +630,8 @@ const App: React.FC = () => {
       dbService.updateStationState({
         is_tv_active: active,
         is_playing: active ? false : isPlaying,
-        current_video_id: active ? activeVideoId : null,
-        tv_playlist: active ? tvPlaylist : [],
+        current_video_id: active ? targetVideoId : null,
+        tv_playlist: active ? targetPlaylist : [],
         timestamp: Date.now()
       }).catch(err => console.error("❌ Video Toggle Sync error", err));
     }
@@ -646,25 +651,10 @@ const App: React.FC = () => {
     }
 
     if (isLive) {
-      if (video) {
-        setActiveVideoId(video.id);
-        setTvPlaylist([]); // Clear playlist when playing specific file
-      } else if (socialUrl) {
-        setActiveVideoId(null);
-        setTvPlaylist([socialUrl]);
-      }
-
-      setIsTvActive(true);
-
-      if (role === UserRole.ADMIN && supabase) {
-        dbService.updateStationState({
-          is_playing: false,
-          is_tv_active: true,
-          current_video_id: video?.id || null,
-          tv_playlist: socialUrl ? [socialUrl] : [],
-          timestamp: Date.now()
-        }).catch(err => console.error("❌ TV Sync error", err));
-      }
+      handleVideoToggle(true, {
+        videoId: video?.id || null,
+        playlist: socialUrl ? [socialUrl] : []
+      });
       handleLogAdd(`TV Feed: Now Broadcasting ${video?.name || 'Social Link'}`);
     } else {
       // PREVIEW MODE (Local Only)
