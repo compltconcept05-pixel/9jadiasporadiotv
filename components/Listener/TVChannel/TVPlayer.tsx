@@ -100,8 +100,22 @@ const TVPlayer: React.FC<TVPlayerProps> = ({
     const filterSocialUrl = (url: string) => {
         if (!url) return '';
         const lowercase = url.toLowerCase();
+
+        // 1. YouTube Short URLs & Shorts
         if (lowercase.includes('youtube.com/shorts/')) return url.replace('shorts/', 'watch?v=');
+        if (lowercase.includes('youtu.be/')) {
+            const id = url.split('youtu.be/')[1]?.split(/[?#]/)[0];
+            return id ? `https://www.youtube.com/watch?v=${id}` : url;
+        }
+
+        // 2. Facebook/Instagram Reels & Watch
+        if (lowercase.includes('/reels/') || lowercase.includes('/reel/')) {
+            console.log("🎬 [TVPlayer] Detected Reel, attempting embed transformation");
+        }
+
+        // 3. Stories filtering
         if (lowercase.includes('/stories/')) return '';
+
         return url;
     };
 
@@ -330,7 +344,7 @@ const TVPlayer: React.FC<TVPlayerProps> = ({
                                         autoplay: 1,
                                         rel: 0,
                                         modestbranding: 1,
-                                        origin: window.location.origin
+                                        origin: window.location.origin.includes('localhost') ? 'http://localhost:3000' : window.location.origin
                                     }
                                 },
                                 facebook: { appId: '966242223397117' }
@@ -339,15 +353,23 @@ const TVPlayer: React.FC<TVPlayerProps> = ({
 
                         {/* ERROR OVERLAY */}
                         {hasError && (
-                            <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/80 backdrop-blur-md z-30 p-6 text-center">
-                                <i className="fas fa-exclamation-triangle text-red-500 text-4xl mb-4"></i>
+                            <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/90 backdrop-blur-xl z-30 p-6 text-center">
+                                <i className="fas fa-exclamation-triangle text-red-500 text-4xl mb-4 animate-pulse"></i>
                                 <h3 className="text-white font-black uppercase tracking-widest text-sm mb-2">Signal Lost</h3>
-                                <p className="text-white/60 text-[10px] leading-relaxed max-w-[200px]">
-                                    Unable to stream this source. It may be restricted or private.
+                                <p className="text-white/60 text-[10px] leading-relaxed max-w-[200px] mb-4">
+                                    Unable to stream this source. The link might be private, restricted, or in an unsupported format (like some Reels).
                                 </p>
+
+                                {isAdmin && (
+                                    <div className="bg-white/5 p-2 rounded border border-white/10 mb-4 w-full overflow-hidden">
+                                        <p className="text-[7px] text-white/40 uppercase mb-1 font-bold">Admin Diagnostic URL:</p>
+                                        <p className="text-[8px] text-indigo-400 break-all font-mono">{currentVideoUrl}</p>
+                                    </div>
+                                )}
+
                                 <button
                                     onClick={() => handleEnded()}
-                                    className="mt-4 px-6 py-2 bg-red-600 text-white text-[9px] font-black uppercase rounded-full shadow-lg"
+                                    className="px-6 py-2 bg-red-600 text-white text-[9px] font-black uppercase rounded-full shadow-lg hover:bg-red-700 transition-colors"
                                 >
                                     Try Next Channel
                                 </button>
