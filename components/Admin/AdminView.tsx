@@ -97,7 +97,6 @@ const AdminView: React.FC<AdminViewProps> = ({
   const [selectedJingleUrl, setSelectedJingleUrl] = useState<string>('');
   const [uploadedAppUrl, setUploadedAppUrl] = useState<string>('');
   const [socialLinks, setSocialLinks] = useState<string[]>(['', '', '']);
-  const [socialLink, setSocialLink] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const appFileInputRef = useRef<HTMLInputElement>(null);
   const folderInputRef = useRef<HTMLSelectElement>(null);
@@ -431,11 +430,11 @@ const AdminView: React.FC<AdminViewProps> = ({
               </button>
             </div>
 
-            {/* Separate Social Media Link Control with Guide */}
+            {/* Consolidated Social Media Link Control with Guide */}
             <div className="border-2 border-indigo-200 rounded-2xl p-4 bg-indigo-50/70 shadow-inner">
               <div className="flex items-center justify-between mb-3">
                 <h4 className="text-[9px] font-black uppercase text-indigo-900 flex items-center gap-2">
-                  <i className="fas fa-link text-indigo-600"></i> Social Media Hub
+                  <i className="fas fa-satellite-dish text-indigo-600"></i> Social Media Hub
                 </h4>
                 <span className="text-[6px] font-bold bg-indigo-200 text-indigo-800 px-1.5 py-0.5 rounded-full uppercase tracking-tighter">Youtube • Facebook • Instagram</span>
               </div>
@@ -456,30 +455,70 @@ const AdminView: React.FC<AdminViewProps> = ({
                 </div>
               </div>
 
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={socialLink}
-                  onChange={(e) => setSocialLink(e.target.value)}
-                  placeholder="Paste YouTube, Facebook, or Instagram link..."
-                  className="flex-1 text-[9px] p-2.5 bg-white rounded-xl border-2 border-indigo-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-sm"
-                />
-              </div>
-              <div className="flex gap-2 mt-2">
+              <div className="space-y-2">
+                {[0, 1, 2].map((i) => (
+                  <div key={i} className="flex items-center gap-2">
+                    <input
+                      type="text"
+                      value={socialLinks[i]}
+                      onChange={(e) => {
+                        const newLinks = [...socialLinks];
+                        newLinks[i] = e.target.value;
+                        setSocialLinks(newLinks);
+                      }}
+                      placeholder={`Paste video link ${i + 1} here...`}
+                      className="flex-1 text-[8px] p-2 bg-white rounded-lg border border-indigo-100 focus:outline-none focus:ring-1 focus:ring-indigo-500 shadow-sm"
+                    />
+                    <div className="flex gap-1">
+                      <button
+                        title="Preview this link"
+                        onClick={() => {
+                          if (!socialLinks[i].trim()) return;
+                          onPlayVideo?.(socialLinks[i].trim(), false);
+                          setInternalStatus('👀 Previewing Link...');
+                          setTimeout(() => setInternalStatus(''), 2000);
+                        }}
+                        className="w-8 h-8 bg-blue-100 text-blue-700 rounded-lg flex items-center justify-center hover:bg-blue-200 transition-all active:scale-95"
+                      >
+                        <i className="fas fa-eye text-[9px]"></i>
+                      </button>
+                      <button
+                        title="Go Live with this link"
+                        onClick={() => {
+                          if (!socialLinks[i].trim()) return;
+                          onPlayVideo?.(socialLinks[i].trim(), true);
+                          setInternalStatus('🚀 Broadcasting Live!');
+                          setTimeout(() => setInternalStatus(''), 3000);
+                        }}
+                        className="w-8 h-8 bg-indigo-600 text-white rounded-lg flex items-center justify-center hover:bg-indigo-700 shadow-md transition-all active:scale-95"
+                      >
+                        <i className="fas fa-paper-plane text-[9px]"></i>
+                      </button>
+                    </div>
+                  </div>
+                ))}
+
                 <button
-                  onClick={() => onPlayVideo?.(socialLink, false)}
-                  className="flex-1 py-1.5 bg-blue-100 text-blue-700 rounded-md text-[7px] font-black uppercase hover:bg-blue-200 transition-colors"
-                >
-                  Preview Link
-                </button>
-                <button
-                  onClick={() => {
-                    onPlayVideo?.(socialLink, true);
-                    setSocialLink('');
+                  onClick={async () => {
+                    const links = socialLinks.map(l => l.trim()).filter(l => l !== '');
+                    if (links.length === 0) return;
+                    setIsProcessing(true);
+                    setInternalStatus('Broadcasting Playlist...');
+                    try {
+                      onUpdatePlaylist?.(links);
+                      onToggleTv?.(true);
+                      setInternalStatus('✅ Playlist Live on TV!');
+                      onRefreshData();
+                    } catch (e: any) {
+                      setInternalStatus('❌ Error: ' + e.message);
+                    } finally {
+                      setIsProcessing(false);
+                      setTimeout(() => setInternalStatus(''), 3000);
+                    }
                   }}
-                  className="flex-1 py-1.5 bg-indigo-600 text-white rounded-md text-[7px] font-black uppercase hover:bg-indigo-700 transition-colors shadow-sm"
+                  className="w-full mt-2 py-2 bg-indigo-600 text-white text-[8px] font-black uppercase rounded shadow-lg hover:bg-indigo-700 transition-all border-b-2 border-indigo-800"
                 >
-                  Go Live (Social)
+                  Broadcast All as Playlist
                 </button>
               </div>
             </div>
@@ -783,63 +822,6 @@ const AdminView: React.FC<AdminViewProps> = ({
               </button>
             </div>
 
-            {/* Social Media Link Integration */}
-            <div className="mb-4 p-3 bg-indigo-50 rounded-xl border border-indigo-100">
-              <h4 className="text-[8px] font-black uppercase text-indigo-800 mb-2">Post Social Media Links (FB, IG, YT) - Up to 3</h4>
-              <div className="space-y-2">
-                {[0, 1, 2].map((i) => (
-                  <div key={i} className="flex items-center gap-2">
-                    <input
-                      type="text"
-                      value={socialLinks[i]}
-                      onChange={(e) => {
-                        const newLinks = [...socialLinks];
-                        newLinks[i] = e.target.value;
-                        setSocialLinks(newLinks);
-                      }}
-                      placeholder={`Paste video link ${i + 1} here...`}
-                      className="flex-1 text-[9px] p-2 border border-indigo-200 rounded outline-none focus:ring-1 focus:ring-indigo-500 bg-white"
-                    />
-                    <button
-                      title="Play this link on TV"
-                      onClick={() => {
-                        if (!socialLinks[i].trim()) return;
-                        onUpdatePlaylist?.([socialLinks[i].trim()]);
-                        onToggleTv?.(true);
-                        setInternalStatus('✅ Broadcasting to TV...');
-                        setTimeout(() => setInternalStatus(''), 3000);
-                      }}
-                      className="shrink-0 w-8 h-8 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg flex items-center justify-center shadow transition-all active:scale-90"
-                    >
-                      <i className="fas fa-play text-[9px] ml-0.5"></i>
-                    </button>
-                  </div>
-                ))}
-                <button
-                  onClick={async () => {
-                    const links = socialLinks.map(l => l.trim()).filter(l => l !== '');
-                    if (links.length === 0) return;
-
-                    setIsProcessing(true);
-                    setInternalStatus('Broadcasting Playlist...');
-                    try {
-                      onUpdatePlaylist?.(links);
-                      onToggleTv?.(true);
-                      setInternalStatus('✅ Playlist Live on TV!');
-                      onRefreshData();
-                    } catch (e: any) {
-                      setInternalStatus('❌ Error: ' + e.message);
-                    } finally {
-                      setIsProcessing(false);
-                      setTimeout(() => setInternalStatus(''), 3000);
-                    }
-                  }}
-                  className="w-full py-2.5 bg-indigo-600 text-white text-[8px] font-black uppercase rounded shadow-lg hover:bg-indigo-700 transition-all border-b-2 border-indigo-800"
-                >
-                  Broadcast Playlist
-                </button>
-              </div>
-            </div>
 
             {/* Folder Selection for Upload */}
             {mediaSubTab === 'video' && (

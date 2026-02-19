@@ -97,25 +97,55 @@ const TVPlayer: React.FC<TVPlayerProps> = ({
     const [isAdvertPlaying, setIsAdvertPlaying] = useState(false);
     const [originalTrackIndex, setOriginalTrackIndex] = useState(0);
 
+    const filterSocialUrl = (url: string) => {
+        if (!url) return '';
+        const lowercase = url.toLowerCase();
+        if (lowercase.includes('youtube.com/shorts/')) return url.replace('shorts/', 'watch?v=');
+        if (lowercase.includes('/stories/')) return '';
+        return url;
+    };
+
+    let currentVideoUrl = '';
+    if (tvPlaylist.length > 0) {
+        currentVideoUrl = filterSocialUrl(tvPlaylist[playlistIndex]);
+        if (!currentVideoUrl && tvPlaylist.length > 1) {
+            const nextIdx = (playlistIndex + 1) % tvPlaylist.length;
+            currentVideoUrl = filterSocialUrl(tvPlaylist[nextIdx]);
+        }
+    } else {
+        const track = allVideos.find(v => v.id === activeVideo?.id) || activeVideo;
+        currentVideoUrl = track?.url || '';
+    }
+
     // 1. Sync Play State to Parent
     useEffect(() => {
-        onPlayStateChange?.(isPlaying);
-    }, [isPlaying, onPlayStateChange]);
+        if (onPlayStateChange) onPlayStateChange(isPlaying);
+    }, [isPlaying]);
 
-    // AUTO-START: When a new social media playlist arrives, reset index and start playing
+    // 2. Loading Watchdog (15s)
     useEffect(() => {
-        const prev = prevPlaylistRef.current;
-        const isNewPlaylist = tvPlaylist.length > 0 && (
-            prev.length !== tvPlaylist.length ||
-            tvPlaylist.some((url, i) => url !== prev[i])
-        );
-        if (isNewPlaylist) {
-            console.log('📺 [TVPlayer] New playlist received, auto-starting:', tvPlaylist);
-            prevPlaylistRef.current = tvPlaylist;
-            setPlaylistIndex(0);
-            setIsPlaying(true);
+        let timer: NodeJS.Timeout;
+        if (isLoading && isPlaying && currentVideoUrl) {
+            console.log(`⏳ [TVPlayer] Starting loading watchdog for: ${currentVideoUrl}`);
+            timer = setTimeout(() => {
+                if (isLoading) {
+                    console.warn("⚠️ [TVPlayer] Loading timeout (15s) reached.");
+                    setHasError(true);
+                    setIsLoading(false);
+                }
+            }, 15000);
         }
-    }, [tvPlaylist]);
+        return () => clearTimeout(timer);
+    }, [isLoading, isPlaying, currentVideoUrl]);
+
+    // 3. Auto-play trigger for Preview or Broadcast activation
+    useEffect(() => {
+        if (currentVideoUrl && (isActive || isPreview)) {
+            setIsPlaying(true);
+            setHasError(false);
+            setIsLoading(true);
+        }
+    }, [currentVideoUrl, isActive, isPreview]);
 
     // FALLBACK AUTO-PLAY: If active but no video is playing, start the first one
     useEffect(() => {
@@ -212,24 +242,6 @@ const TVPlayer: React.FC<TVPlayerProps> = ({
     // Playback and pause are handled directly by the playing prop in ReactPlayer
 
 
-    const filterSocialUrl = (url: string) => {
-        if (!url) return '';
-        const lowercase = url.toLowerCase();
-
-        // 1. YouTube Shorts Transformation
-        // shorts/VIDEO_ID -> watch?v=VIDEO_ID
-        if (lowercase.includes('youtube.com/shorts/')) {
-            console.log("📺 [TVPlayer] Transforming YouTube Short to Watch URL:", url);
-            return url.replace('shorts/', 'watch?v=');
-        }
-
-        // 2. Stories filtering (usually vertical/unstable)
-        if (lowercase.includes('/stories/')) {
-            console.warn("🚫 [TVPlayer] Filtering out Story:", url);
-            return '';
-        }
-        return url;
-    };
 
     const handleEnded = () => {
         setHasError(false);
@@ -268,19 +280,6 @@ const TVPlayer: React.FC<TVPlayerProps> = ({
         setIsMuted(!isMuted);
     };
 
-    let currentVideoUrl = '';
-    if (tvPlaylist.length > 0) {
-        currentVideoUrl = filterSocialUrl(tvPlaylist[playlistIndex]);
-        // If current is filtered, try next
-        if (!currentVideoUrl && tvPlaylist.length > 1) {
-            const nextIdx = (playlistIndex + 1) % tvPlaylist.length;
-            currentVideoUrl = filterSocialUrl(tvPlaylist[nextIdx]);
-        }
-    } else {
-        // Only fallback to first video if we are strictly in broadcast/preview mode with specific context
-        const track = allVideos.find(v => v.id === activeVideo?.id) || activeVideo;
-        currentVideoUrl = track?.url || '';
-    }
 
     // BROADCAST SYNC: If admin just switched track, ensure we follow
     useEffect(() => {
