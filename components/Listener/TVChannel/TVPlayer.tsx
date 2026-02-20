@@ -270,17 +270,16 @@ const TVPlayer: React.FC<TVPlayerProps> = ({
     // 5. Auto-play trigger & Aggressive Loading Bypass
     useEffect(() => {
         if (currentVideoUrl && (isActive || isPreview)) {
+            console.log("🎬 [TVPlayer] New URL detected, resetting states:", currentVideoUrl);
             setIsPlaying(true);
             setHasError(false);
             setIsLoading(true);
 
-            // AGGRESSIVE BYPASS: Force hide spinner after 2s to show native player
+            // AGGRESSIVE BYPASS: Force hide spinner after 3s to show native player
+            // This prevents "infinite turning" if the SDK takes too long to report ready
             const bypassTimer = setTimeout(() => {
-                if (isLoading) {
-                    console.log("🚀 [TVPlayer] Aggressive Bypass: Hiding spinner to show native player");
-                    setIsLoading(false);
-                }
-            }, 2000);
+                setIsLoading(false);
+            }, 3000);
             return () => clearTimeout(bypassTimer);
         }
     }, [currentVideoUrl, isActive, isPreview]);
