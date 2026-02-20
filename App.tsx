@@ -16,6 +16,7 @@ import ThompsonEngine from './components/Admin/NewsRoom/ThompsonEngine';
 import FavourEngine from './components/Admin/NewsRoom/FavourEngine';
 import { supabase } from './services/supabaseClient';
 import TVPlayer from './components/Listener/TVChannel/TVPlayer';
+import TVHub from './components/Listener/TVChannel/TVHub';
 
 const App: React.FC = () => {
   const [role, setRole] = useState<UserRole>(UserRole.LISTENER);
@@ -59,6 +60,7 @@ const App: React.FC = () => {
   const [cloudStatus, setCloudStatus] = useState<string>('Initializing Satellite...');
   const [sessionId] = useState(() => Math.random().toString(36).substring(7));
   const [adminConflict, setAdminConflict] = useState(false);
+  const [isTvMode, setIsTvMode] = useState(false); // Cinematic Receiver Mode
 
   const isPlayingRef = useRef(isPlaying);
   const isTvActiveRef = useRef(isTvActive);
@@ -638,6 +640,14 @@ const App: React.FC = () => {
     }
   }, [role, supabase, activeVideoId, tvPlaylist]);
 
+  const toggleTvMode = useCallback(() => {
+    setIsTvMode(prev => !prev);
+    if (!isTvMode) {
+      setIsTvActive(true);
+      setListenerHasPlayed(false); // Stop radio for TV Mode
+    }
+  }, [isTvMode]);
+
   const handlePlayVideo = useCallback((track: MediaFile | number | string, isLive: boolean = true) => {
     handleStopNews();
 
@@ -805,6 +815,22 @@ const App: React.FC = () => {
           {lastError && <span className="text-[7px] bg-red-600 text-white px-1.5 py-0.5 rounded ml-2 font-black uppercase animate-bounce">{lastError}</span>}
         </div>
       </header>
+
+      {/* --- CINEMATIC TV HUB (RECEIVER MODE) --- */}
+      {isTvMode && (
+        <TVHub
+          activeVideo={allMediaRef.current.find(m => m.id === activeVideoId) || null}
+          allVideos={allMedia.filter(v => v.type === 'video')}
+          news={news}
+          adminMessages={adminMessages}
+          isNewsPlaying={isDucking}
+          isTvActive={isTvActive}
+          tvPlaylist={tvPlaylist}
+          onVideoAdvance={(idx) => handlePlayVideo(idx)}
+          isAdmin={role === UserRole.ADMIN}
+          isMuted={isTvMuted}
+        />
+      )}
 
       {/* --- MASTER RADIO PLAYER (AUDIO ENGINE) --- */}
       <div className={`transition-all duration-700 ${(!isTvActive || (role === UserRole.LISTENER && !isPlaying)) ? 'opacity-100 max-h-[400px] visible py-4' : 'opacity-0 max-h-0 invisible overflow-hidden'}`}>
@@ -988,6 +1014,15 @@ const App: React.FC = () => {
         title={role === UserRole.ADMIN ? 'Logout' : 'Admin Login'}
       >
         <i className={`fas ${role === UserRole.ADMIN ? 'fa-sign-out-alt' : 'fa-lock'} text-sm`}></i>
+      </button>
+
+      {/* TV MODE TOGGLE */}
+      <button
+        onClick={toggleTvMode}
+        className={`fixed bottom-6 left-6 z-[600] w-12 h-12 rounded-full border shadow-xl flex items-center justify-center transition-all ${isTvMode ? 'bg-red-600 border-red-700 text-white' : 'bg-white/80 backdrop-blur-md border-indigo-200 text-indigo-600 hover:scale-110'}`}
+        title={isTvMode ? 'Exit TV Mode' : 'Enter TV Mode'}
+      >
+        <i className={`fas ${isTvMode ? 'fa-times' : 'fa-tv'} text-sm`}></i>
       </button>
     </div>
   );

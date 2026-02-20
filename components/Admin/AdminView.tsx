@@ -86,6 +86,17 @@ const AdminView: React.FC<AdminViewProps> = ({
 }) => {
   const [activeTab, setActiveTab] = useState<Tab>('command');
   const [mediaSubTab, setMediaSubTab] = useState<MediaSubTab>('audio');
+  const [reportsSearch, setReportsSearch] = useState('');
+  const [reportFilter, setReportFilter] = useState<'all' | 'unresolved' | 'resolved'>('all');
+
+  const TV_PRESETS = [
+    { name: 'Channels TV', url: 'https://www.youtube.com/watch?v=vv_8S9C2m1Q', icon: '📺' },
+    { name: 'NTA News 24', url: 'https://www.youtube.com/watch?v=FjS6oExf_Bw', icon: '🇳🇬' },
+    { name: 'Arise News', url: 'https://www.youtube.com/watch?v=tI9eO9rYq9I', icon: '🌍' },
+    { name: 'TVC News', url: 'https://www.youtube.com/watch?v=gT5_yK4N8A0', icon: '📡' },
+    { name: 'France 24', url: 'https://www.youtube.com/watch?v=g25G1mL2t9w', icon: '🇫🇷' },
+    { name: 'Al Jazeera', url: 'https://www.youtube.com/watch?v=gCneWGVz8a8', icon: '🌙' }
+  ];
   const [isProcessing, setIsProcessing] = useState(false);
   const [internalStatus, setInternalStatus] = useState('');
   const [broadcastText, setBroadcastText] = useState('');
@@ -575,6 +586,47 @@ const AdminView: React.FC<AdminViewProps> = ({
               >
                 {isProcessing ? 'Transmitting...' : 'Push Live Alert'}
               </button>
+            </div>
+
+            {/* TV HUB REMOTE - INSTANT ZAP */}
+            <div className="bg-slate-900 rounded-xl p-4 border border-slate-700 shadow-2xl">
+              <div className="flex items-center justify-between mb-3">
+                <h4 className="text-[10px] font-black uppercase text-indigo-400 flex items-center gap-2">
+                  <i className="fas fa-tv text-indigo-300 animate-pulse"></i> TV Hub Remote
+                </h4>
+                <div className="flex gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-green-500"></span>
+                  <span className="w-1.5 h-1.5 rounded-full bg-indigo-500"></span>
+                </div>
+              </div>
+
+              <p className="text-[7px] text-slate-400 font-bold uppercase mb-3 tracking-widest italic opacity-60">Push Live Channels Instantly</p>
+
+              <div className="grid grid-cols-2 gap-2">
+                {TV_PRESETS.map((preset, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => {
+                      onPlayVideo?.(preset.url, true);
+                      onToggleTv?.(true);
+                      setInternalStatus(`📡 Zapped to ${preset.name}`);
+                      setTimeout(() => setInternalStatus(''), 2000);
+                    }}
+                    className="flex flex-col items-center justify-center p-3 bg-slate-800 hover:bg-indigo-600 rounded-lg border border-slate-700 hover:border-indigo-400 transition-all active:scale-95 group"
+                  >
+                    <span className="text-xl mb-1 group-hover:scale-125 transition-transform">{preset.icon}</span>
+                    <span className="text-[8px] font-black text-white uppercase tracking-tighter">{preset.name}</span>
+                    <div className="mt-1 w-full flex items-center justify-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <span className="text-[6px] font-black text-white/50 bg-white/10 px-1 rounded uppercase">Push Live</span>
+                    </div>
+                  </button>
+                ))}
+              </div>
+
+              <div className="mt-4 flex items-center justify-center gap-2 py-2 bg-indigo-950/50 rounded-lg border border-indigo-500/20">
+                <i className="fas fa-info-circle text-indigo-400 text-[8px]"></i>
+                <span className="text-[7px] font-black text-indigo-300/80 uppercase">Pushing overrides active TV content</span>
+              </div>
             </div>
           </div>
         )}

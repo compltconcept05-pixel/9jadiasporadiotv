@@ -238,7 +238,8 @@ const TVPlayer: React.FC<TVPlayerProps> = ({
     }, [isLoading, isPlaying, currentVideoUrl]);
 
     // 3. Engine Detection Logic
-    const isDirectVideo = currentVideoUrl.match(/\.(mp4|webm|ogv|mov)$/) || currentVideoUrl.includes('supabase.co') || currentVideoUrl.startsWith('blob:');
+    const isHLS = currentVideoUrl.includes('.m3u8') || currentVideoUrl.includes('iptv');
+    const isDirectVideo = isHLS || currentVideoUrl.match(/\.(mp4|webm|ogv|mov)$/) || currentVideoUrl.includes('supabase.co') || currentVideoUrl.startsWith('blob:');
     const isSocial = currentVideoUrl.includes('youtube.com') ||
         currentVideoUrl.includes('youtu.be') ||
         currentVideoUrl.includes('facebook.com') ||
@@ -478,7 +479,13 @@ const TVPlayer: React.FC<TVPlayerProps> = ({
                                             origin: window.location.origin.includes('localhost') ? 'http://localhost:3000' : window.location.origin
                                         }
                                     },
-                                    facebook: { appId: '966242223397117' }
+                                    facebook: { appId: '966242223397117' },
+                                    file: {
+                                        forceHLS: isHLS,
+                                        attributes: {
+                                            style: { width: '100%', height: '100%', objectFit: 'contain' }
+                                        }
+                                    }
                                 }}
                             />
                         ) : (
