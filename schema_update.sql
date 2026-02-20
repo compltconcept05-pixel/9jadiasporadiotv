@@ -13,6 +13,7 @@ ALTER TABLE station_state ADD COLUMN IF NOT EXISTS is_tv_active BOOLEAN DEFAULT 
 ALTER TABLE station_state ADD COLUMN IF NOT EXISTS current_track_id TEXT;
 ALTER TABLE station_state ADD COLUMN IF NOT EXISTS current_track_url TEXT;
 ALTER TABLE station_state ADD COLUMN IF NOT EXISTS current_video_id TEXT;
+ALTER TABLE station_state ADD COLUMN IF NOT EXISTS tv_playlist TEXT[] DEFAULT '{}';
 ALTER TABLE station_state ADD COLUMN IF NOT EXISTS timestamp BIGINT DEFAULT 0;
 ALTER TABLE station_state ADD COLUMN IF NOT EXISTS last_updated BIGINT DEFAULT 0;
 
