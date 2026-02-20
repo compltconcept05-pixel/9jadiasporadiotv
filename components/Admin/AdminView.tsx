@@ -92,10 +92,10 @@ const AdminView: React.FC<AdminViewProps> = ({
   const TV_PRESETS = [
     { name: 'Channels TV', url: 'https://www.youtube.com/watch?v=vv_8S9C2m1Q', icon: '🇳🇬', cat: 'News' },
     { name: 'Arise News', url: 'https://www.youtube.com/watch?v=tI9eO9rYq9I', icon: '🌍', cat: 'News' },
+    { name: 'NTA News', url: 'https://www.youtube.com/watch?v=FjS6oExf_Bw', icon: '📡', cat: 'News' },
     { name: 'Red Bull TV', url: 'https://rbmn-live.akamaized.net/hls/live/590964/flodotcom/master.m3u8', icon: '🚴', cat: 'Sports' },
-    { name: 'Sport News', url: 'https://www.youtube.com/watch?v=vVj_N3K_6Uo', icon: '⚽', cat: 'Sports' },
     { name: 'Movie Central', url: 'https://www.youtube.com/watch?v=5_XSaFBZ2bg', icon: '🍿', cat: 'Movies' },
-    { name: 'NTA News 24', url: 'https://www.youtube.com/watch?v=FjS6oExf_Bw', icon: '📡', cat: 'News' }
+    { name: 'Live Music', url: 'https://www.youtube.com/watch?v=hS5CfP8n_js', icon: '🎵', cat: 'Music' }
   ];
   const [isProcessing, setIsProcessing] = useState(false);
   const [internalStatus, setInternalStatus] = useState('');
@@ -107,20 +107,15 @@ const AdminView: React.FC<AdminViewProps> = ({
   const [newItem, setNewItem] = useState<{ title: string; content: string; category: NewsItem['category'] }>({ title: '', content: '', category: 'Manual' });
   const [selectedJingleUrl, setSelectedJingleUrl] = useState<string>('');
   const [uploadedAppUrl, setUploadedAppUrl] = useState<string>('');
-  const [socialLinks, setSocialLinks] = useState<string[]>(['', '', '']);
+  const [socialLink, setSocialLink] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const appFileInputRef = useRef<HTMLInputElement>(null);
   const folderInputRef = useRef<HTMLSelectElement>(null);
 
-  // Auto-sync manualText and socialLinks when props change
+  // Auto-sync manualText when props change
   React.useEffect(() => {
     setManualText(manualScript);
-    if (tvPlaylist && tvPlaylist.length > 0) {
-      const newLinks = [...socialLinks];
-      tvPlaylist.forEach((link, i) => { if (i < 3) newLinks[i] = link; });
-      setSocialLinks(newLinks);
-    }
-  }, [manualScript, tvPlaylist]);
+  }, [manualScript]);
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>, isFolder: boolean = false) => {
     const files = event.target.files;
@@ -455,119 +450,64 @@ const AdminView: React.FC<AdminViewProps> = ({
               </button>
             </div>
 
-            {/* Consolidated Social Media Link Control with Guide */}
-            <div className="border-2 border-indigo-200 rounded-2xl p-4 bg-indigo-50/70 shadow-inner">
-              <div className="flex items-center justify-between mb-3">
-                <h4 className="text-[9px] font-black uppercase text-indigo-900 flex items-center gap-2">
-                  <i className="fas fa-satellite-dish text-indigo-600"></i> Social Media Hub
+            {/* Simplified Social Media Zap Tool */}
+            <div className="border-2 border-indigo-600 rounded-2xl p-5 bg-indigo-900 shadow-2xl">
+              <div className="flex items-center justify-between mb-4">
+                <h4 className="text-[11px] font-black uppercase text-white flex items-center gap-2">
+                  <i className="fas fa-bolt text-yellow-400 animate-pulse"></i> Instant TV Zap
                 </h4>
-                <span className="text-[6px] font-bold bg-indigo-200 text-indigo-800 px-1.5 py-0.5 rounded-full uppercase tracking-tighter">Youtube • Facebook • Instagram</span>
-              </div>
-
-              {/* Step-by-Step Instructions */}
-              <div className="grid grid-cols-3 gap-2 mb-3">
-                <div className="bg-white/60 p-1.5 rounded-lg border border-indigo-100 flex flex-col items-center">
-                  <span className="text-[6px] font-black text-indigo-400 uppercase">Step 1</span>
-                  <span className="text-[7px] font-bold text-indigo-800">Paste Link</span>
-                </div>
-                <div className="bg-white/60 p-1.5 rounded-lg border border-indigo-100 flex flex-col items-center">
-                  <span className="text-[6px] font-black text-indigo-400 uppercase">Step 2</span>
-                  <span className="text-[7px] font-bold text-indigo-800">Preview It</span>
-                </div>
-                <div className="bg-white/60 p-1.5 rounded-lg border border-indigo-100 flex flex-col items-center">
-                  <span className="text-[6px] font-black text-indigo-400 uppercase">Step 3</span>
-                  <span className="text-[7px] font-bold text-indigo-800">Go Live</span>
+                <div className="flex gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-ping"></span>
+                  <span className="text-[8px] text-red-500 font-black tracking-widest uppercase">High Priority</span>
                 </div>
               </div>
 
-              <div className="space-y-2">
-                {[0, 1, 2].map((i) => (
-                  <div key={i} className="flex items-center gap-2">
-                    <div className="relative flex-1">
-                      <input
-                        type="text"
-                        value={socialLinks[i]}
-                        onChange={(e) => {
-                          const newLinks = [...socialLinks];
-                          newLinks[i] = e.target.value;
-                          setSocialLinks(newLinks);
-                        }}
-                        placeholder={`Paste video link ${i + 1} here...`}
-                        className="w-full text-[8px] p-2 bg-white rounded-lg border border-indigo-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-sm pr-8 transition-all"
-                      />
-                      {socialLinks[i] && (
-                        <button
-                          onClick={() => {
-                            const newLinks = [...socialLinks];
-                            newLinks[i] = '';
-                            setSocialLinks(newLinks);
-                          }}
-                          className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-300 hover:text-gray-500"
-                        >
-                          <i className="fas fa-times-circle text-[9px]"></i>
-                        </button>
-                      )}
-                    </div>
-                    <div className="flex gap-1">
-                      <button
-                        title="Preview Only"
-                        onClick={() => {
-                          if (!socialLinks[i].trim()) return;
-                          onPlayVideo?.(socialLinks[i].trim(), false);
-                          setInternalStatus('👀 Previewing Link...');
-                          setTimeout(() => setInternalStatus(''), 2000);
-                        }}
-                        className="w-8 h-8 bg-blue-100 text-blue-700 rounded-lg flex items-center justify-center hover:bg-blue-200 transition-all active:scale-95"
-                      >
-                        <i className="fas fa-eye text-[9px]"></i>
-                      </button>
-                      <button
-                        title="Instant Go Live!"
-                        onClick={() => {
-                          if (!socialLinks[i].trim()) return;
-                          onPlayVideo?.(socialLinks[i].trim(), true);
-                          onToggleTv?.(true); // Force TV ON
-                          setInternalStatus('🚀 INSTANT LIVE!');
-                          setTimeout(() => setInternalStatus(''), 3000);
-                        }}
-                        className="w-8 h-8 bg-[#008751] text-white rounded-lg flex items-center justify-center hover:bg-green-700 shadow-md transition-all active:scale-95 border-b-2 border-green-900"
-                      >
-                        <i className="fas fa-bolt text-[9px]"></i>
-                      </button>
-                    </div>
-                  </div>
-                ))}
+              <div className="space-y-4">
+                <div className="relative group">
+                  <input
+                    type="text"
+                    value={socialLink}
+                    onChange={(e) => setSocialLink(e.target.value)}
+                    placeholder="Paste YouTube/Facebook/HLS Link Here..."
+                    className="w-full text-[10px] p-4 bg-white/10 text-white rounded-xl border-2 border-white/20 focus:outline-none focus:border-yellow-400 transition-all placeholder:text-white/20 font-bold"
+                  />
+                  {socialLink && (
+                    <button
+                      onClick={() => setSocialLink('')}
+                      className="absolute right-4 top-1/2 -translate-y-1/2 text-white/30 hover:text-white"
+                    >
+                      <i className="fas fa-times-circle"></i>
+                    </button>
+                  )}
+                </div>
 
-                <div className="flex gap-2 mt-2">
+                <div className="grid grid-cols-2 gap-3">
                   <button
-                    onClick={async () => {
-                      const links = socialLinks.map(l => l.trim()).filter(l => l !== '');
-                      if (links.length === 0) return;
-                      setIsProcessing(true);
-                      setInternalStatus('Broadcasting Playlist...');
-                      try {
-                        onUpdatePlaylist?.(links);
-                        onToggleTv?.(true);
-                        setInternalStatus('✅ Playlist Live on TV!');
-                        onRefreshData();
-                      } catch (e: any) {
-                        setInternalStatus('❌ Error: ' + e.message);
-                      } finally {
-                        setIsProcessing(false);
-                        setTimeout(() => setInternalStatus(''), 3000);
-                      }
+                    onClick={() => {
+                      if (!socialLink.trim()) return;
+                      onPlayVideo?.(socialLink.trim(), false);
+                      setInternalStatus('👀 Previewing on Admin Monitor...');
                     }}
-                    className="flex-1 py-2 bg-indigo-600 text-white text-[8px] font-black uppercase rounded shadow-lg hover:bg-indigo-700 transition-all border-b-2 border-indigo-800"
+                    className="py-3 bg-white/5 text-white/60 text-[9px] font-black uppercase rounded-xl border border-white/10 hover:bg-white/10 transition-all flex items-center justify-center gap-2"
                   >
-                    Broadcast Playlist
+                    <i className="fas fa-eye"></i> Local Preview
                   </button>
                   <button
-                    onClick={() => setSocialLinks(['', '', ''])}
-                    className="px-4 py-2 bg-gray-100 text-gray-500 text-[8px] font-black uppercase rounded hover:bg-gray-200 transition-all"
+                    onClick={() => {
+                      if (!socialLink.trim()) return;
+                      onPlayVideo?.(socialLink.trim(), true);
+                      onToggleTv?.(true);
+                      setInternalStatus('🚀 INSTANT LIVE ON TV!');
+                    }}
+                    className="py-3 bg-yellow-400 text-indigo-950 text-[10px] font-black uppercase rounded-xl border-b-4 border-yellow-600 hover:bg-yellow-300 transition-all flex items-center justify-center gap-2 shadow-xl active:translate-y-1 active:border-b-0"
                   >
-                    Clear All
+                    <i className="fas fa-broadcast-tower"></i> Push Live
                   </button>
                 </div>
+
+                <p className="text-[7px] text-white/30 text-center font-bold uppercase tracking-widest px-4">
+                  Forces current TV content to sync with this link immediately
+                </p>
               </div>
             </div>
 
