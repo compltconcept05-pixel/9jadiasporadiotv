@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import ReactPlayer from 'react-player';
 import { MediaFile, NewsItem, AdminMessage } from '../../../types';
 import TVOverlay from './TVOverlay';
@@ -9,7 +9,7 @@ interface TVPlayerProps {
     news: NewsItem[];
     adminMessages: AdminMessage[];
     onPlayStateChange?: (isPlaying: boolean) => void;
-    onVideoAdvance?: (index: number) => void;
+    onVideoAdvance?: (index: number | MediaFile) => void;
     isNewsPlaying: boolean;
     isActive: boolean;
     isAdmin?: boolean;
@@ -17,7 +17,7 @@ interface TVPlayerProps {
     onMuteChange?: (muted: boolean) => void;
     tvPlaylist?: string[];
     isPreview?: boolean;
-    lastZap?: number; // Force sync timestamp
+    lastZap?: number;
 }
 
 const TVPlayer: React.FC<TVPlayerProps> = ({
@@ -36,229 +36,168 @@ const TVPlayer: React.FC<TVPlayerProps> = ({
     isPreview = false,
     lastZap = 0
 }) => {
-    // ── BASIC STATE ──
-    const [isPlaying, setIsPlaying] = useState(isActive);
-    const [isLoading, setIsLoading] = useState(true);
-    const [hasError, setHasError] = useState(false);
-    const [interactionRequired, setInteractionRequired] = useState(false);
+    const [playerKey, setPlayerKey] = useState(0);
+    const [status, setStatus] = useState<'idle' | 'loading' | 'playing' | 'error' | 'blocked'>('idle');
     const [volume, setVolume] = useState(1.0);
     const [showControls, setShowControls] = useState(true);
-    const [playlistIndex, setPlaylistIndex] = useState(0);
-    const [engineKey, setEngineKey] = useState(0); // Force full remount on zap
+    const blockTimerRef = useRef<NodeJS.Timeout | null>(null);
+    const controlsTimerRef = useRef<NodeJS.Timeout | null>(null);
 
-    const containerRef = useRef<HTMLDivElement>(null);
-    const hideTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+    // ── URL RESOLUTION — Priority: playlist > uploaded video
+    const resolvedUrl = (() => {
+        if (tvPlaylist && tvPlaylist.length > 0) return tvPlaylist[0];
+        if (activeVideo?.url) return activeVideo.url;
+        return '';
+    })();
 
-    const isMuted = onMuteChange ? isMutedProp : false;
+    // ── FORCE NEW PLAYER MOUNT on source change
+    useEffect(() => {
+        if (resolvedUrl) {
+            console.log('📺 [TVPlayer] NEW SOURCE → Mounting fresh player:', resolvedUrl);
+            setStatus('loading');
+            setPlayerKey(k => k + 1);
 
-    // ── URL RESOLUTION ──
-    const getActiveUrl = () => {
-        if (tvPlaylist && tvPlaylist.length > 0) {
-            return tvPlaylist[playlistIndex] || '';
-        }
-        return activeVideo?.url || '';
-    };
-
-    const currentUrl = getActiveUrl();
-
-    // ── ACTIONS ──
-    const handleEnded = () => {
-        console.log("🎬 [TVPlayer] Stream Ended");
-        if (tvPlaylist && tvPlaylist.length > 1) {
-            setPlaylistIndex(prev => (prev + 1) % tvPlaylist.length);
-        } else if (allVideos.length > 0 && onVideoAdvance) {
-            onVideoAdvance((allVideos.findIndex(v => v.id === activeVideo?.id) + 1) % allVideos.length);
+            // Autoplay block safety net
+            if (blockTimerRef.current) clearTimeout(blockTimerRef.current);
+            blockTimerRef.current = setTimeout(() => {
+                setStatus(s => s === 'loading' ? 'blocked' : s);
+            }, 8000);
         } else {
-            setIsPlaying(false);
+            setStatus('idle');
         }
-    };
+        return () => { if (blockTimerRef.current) clearTimeout(blockTimerRef.current); };
+    }, [resolvedUrl, lastZap]);
 
-    const togglePlay = () => {
-        setIsPlaying(!isPlaying);
-        setHasError(false);
-    };
-
-    const resetHideTimer = () => {
+    // ── CONTROLS HIDE
+    const resetControlsTimer = () => {
         setShowControls(true);
-        if (hideTimeoutRef.current) clearTimeout(hideTimeoutRef.current);
-        if (isPlaying) {
-            hideTimeoutRef.current = setTimeout(() => setShowControls(false), 5000);
+        if (controlsTimerRef.current) clearTimeout(controlsTimerRef.current);
+        if (status === 'playing') {
+            controlsTimerRef.current = setTimeout(() => setShowControls(false), 4000);
         }
     };
+    useEffect(() => resetControlsTimer(), [status]);
 
-    // COMMAND SYNC: Force reload on any URL change
+    // ── KEYBOARD for D-Pad
     useEffect(() => {
-        if (tvPlaylist && tvPlaylist.length > 0) {
-            setPlaylistIndex(0); // Always start from beginning on new zap
-        }
-    }, [tvPlaylist?.length, tvPlaylist?.[0]]);
-
-    // COMMAND SYNC: Force reload on any URL change
-    useEffect(() => {
-        if (currentUrl || lastZap > 0) {
-            console.log("🚀 [TVPlayer] ZAP RECEIVED:", { url: currentUrl, zap: lastZap });
-            setIsLoading(true);
-            setHasError(false);
-            setInteractionRequired(false);
-            setIsPlaying(true);
-            setEngineKey(prev => prev + 1); // Forced Atomic Reset
-        }
-    }, [currentUrl, activeVideo?.id, lastZap]);
-
-    useEffect(() => {
-        if (isPlaying) resetHideTimer();
-        else setShowControls(true);
-        return () => { if (hideTimeoutRef.current) clearTimeout(hideTimeoutRef.current); };
-    }, [isPlaying]);
-
-    // Interaction bridge: longer timeout for Android TV hardware slowness
-    useEffect(() => {
-        let timer: NodeJS.Timeout;
-        if (isLoading && isPlaying && currentUrl && !hasError) {
-            timer = setTimeout(() => {
-                if (isLoading) {
-                    console.warn("🆘 [TVPlayer] Autoplay Blocked - Interaction Required");
-                    setInteractionRequired(true);
-                    setIsLoading(false);
-                }
-            }, 8000); // 8s wait before showing bridge
-        }
-        return () => clearTimeout(timer);
-    }, [isLoading, isPlaying, currentUrl, hasError]);
-
-    // Keyboard/D-Pad Listener for TV remotes
-    useEffect(() => {
-        const handleKeys = (e: KeyboardEvent) => {
-            if (interactionRequired) {
-                console.log("⌨️ [TVPlayer] Key Interaction Detected:", e.key);
-                setInteractionRequired(false);
-                setIsLoading(true);
-                setEngineKey(prev => prev + 1);
-            }
+        if (status !== 'blocked') return;
+        const handler = (e: KeyboardEvent) => {
+            console.log('⌨️ [TVPlayer] Key pressed, retrying:', e.key);
+            setStatus('loading');
+            setPlayerKey(k => k + 1);
         };
-        window.addEventListener('keydown', handleKeys);
-        return () => window.removeEventListener('keydown', handleKeys);
-    }, [interactionRequired]);
+        window.addEventListener('keydown', handler);
+        return () => window.removeEventListener('keydown', handler);
+    }, [status]);
 
     return (
         <div
-            ref={containerRef}
-            className="relative w-full h-full bg-black overflow-hidden group select-none"
-            onClick={resetHideTimer}
-            onMouseMove={resetHideTimer}
+            className="relative w-full h-full bg-black overflow-hidden select-none"
+            onClick={resetControlsTimer}
+            onMouseMove={resetControlsTimer}
         >
-            {/* THE ENGINE LAYER */}
-            <div className="absolute inset-0 z-0">
-                {currentUrl ? (
-                    <div className="w-full h-full relative" key={`engine-${engineKey}`}>
-                        <ReactPlayer
-                            url={currentUrl}
-                            width="100%"
-                            height="100%"
-                            playing={isPlaying && !isNewsPlaying}
-                            muted={isMuted}
-                            volume={volume}
-                            onReady={() => {
-                                console.log("✅ [TVPlayer] Engine Ready");
-                                setIsLoading(false);
-                                setInteractionRequired(false);
-                            }}
-                            onBuffer={() => setIsLoading(true)}
-                            onBufferEnd={() => setIsLoading(false)}
-                            onPlay={() => {
-                                setIsLoading(false);
-                                setInteractionRequired(false);
-                            }}
-                            onEnded={handleEnded}
-                            onError={(e) => {
-                                console.error("❌ [TVPlayer] Engine Error:", e);
-                                setHasError(true);
-                                setIsLoading(false);
-                            }}
-                            playsinline
-                            config={{
-                                youtube: { playerVars: { autoplay: 1, rel: 0, modestbranding: 1 } } as any,
-                                file: {
-                                    forceHLS: currentUrl.includes('.m3u8'),
-                                    attributes: {
-                                        style: { width: '100%', height: '100%', objectFit: 'contain' },
-                                        playsInline: true
-                                    }
-                                }
-                            } as any}
-                        />
+            {/* ── PLAYER LAYER ── */}
+            {resolvedUrl ? (
+                <div key={`tv-${playerKey}`} className="absolute inset-0">
+                    <ReactPlayer
+                        key={`rp-${playerKey}`}
+                        url={resolvedUrl}
+                        width="100%"
+                        height="100%"
+                        playing={!isNewsPlaying}
+                        muted={isMutedProp}
+                        volume={volume}
+                        playsinline
+                        config={{
+                            youtube: { playerVars: { autoplay: 1, rel: 0, modestbranding: 1, origin: window.location.origin } } as any,
+                            file: { forceHLS: resolvedUrl.includes('.m3u8'), attributes: { playsInline: true, style: { width: '100%', height: '100%', objectFit: 'cover' } } }
+                        } as any}
+                        onReady={() => {
+                            console.log('✅ [TVPlayer] Ready');
+                            if (blockTimerRef.current) clearTimeout(blockTimerRef.current);
+                            setStatus('playing');
+                            onPlayStateChange?.(true);
+                        }}
+                        onPlay={() => {
+                            if (blockTimerRef.current) clearTimeout(blockTimerRef.current);
+                            setStatus('playing');
+                        }}
+                        onBuffer={() => setStatus('loading')}
+                        onBufferEnd={() => setStatus('playing')}
+                        onEnded={() => {
+                            if (tvPlaylist && tvPlaylist.length > 1) {
+                                console.log('⏭️ [TVPlayer] Playlist ended item, advancing');
+                            } else if (allVideos.length > 0 && onVideoAdvance) {
+                                const idx = allVideos.findIndex(v => v.id === activeVideo?.id);
+                                onVideoAdvance((idx + 1) % allVideos.length);
+                            } else {
+                                setStatus('idle');
+                                onPlayStateChange?.(false);
+                            }
+                        }}
+                        onError={(e) => {
+                            console.error('❌ [TVPlayer] Error:', e);
+                            if (blockTimerRef.current) clearTimeout(blockTimerRef.current);
+                            setStatus('error');
+                            onPlayStateChange?.(false);
+                        }}
+                    />
 
-                        {/* STATUS OVERLAYS */}
-                        {isLoading && isPlaying && !hasError && !interactionRequired && (
-                            <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/60 backdrop-blur-md z-10 transition-opacity">
-                                <div className="w-16 h-16 border-4 border-white/5 border-t-[#008751] rounded-full animate-spin"></div>
-                                <span className="mt-6 text-[11px] text-white/50 font-black uppercase tracking-[0.4em] animate-pulse">Establishing Signal...</span>
-                            </div>
-                        )}
-
-                        {interactionRequired && isPlaying && !hasError && (
-                            <div
-                                onClick={() => {
-                                    setInteractionRequired(false);
-                                    setIsLoading(true);
-                                    setEngineKey(prev => prev + 1); // Attempt restart with gesture
-                                }}
-                                className="absolute inset-0 flex flex-col items-center justify-center bg-black/90 z-20 cursor-pointer animate-fade-in"
-                            >
-                                <div className="w-32 h-32 bg-[#008751] rounded-full flex items-center justify-center shadow-[0_0_100px_rgba(0,135,81,0.6)] border-8 border-white/10 animate-bounce">
-                                    <i className="fas fa-play text-white text-5xl ml-2"></i>
-                                </div>
-                                <h2 className="mt-10 text-white font-black text-3xl uppercase tracking-tighter text-center px-10">
-                                    Tap to Wake Signal
-                                </h2>
-                                <p className="mt-3 text-white/40 text-[10px] uppercase font-black tracking-widest text-center px-20">
-                                    Browser is blocking automatic playback with sound
-                                </p>
-                            </div>
-                        )}
-
-                        {hasError && (
-                            <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/95 z-30 p-10 text-center animate-fade-in">
-                                <div className="w-24 h-24 bg-red-600/10 rounded-full flex items-center justify-center border border-red-600/20 mb-6 shadow-2xl">
-                                    <i className="fas fa-satellite-dish text-red-600 text-5xl"></i>
-                                </div>
-                                <h3 className="text-white font-black uppercase text-2xl tracking-[0.2em] mb-3">Signal Lost</h3>
-                                <p className="text-white/30 text-[10px] mb-10 max-w-sm font-bold uppercase tracking-widest">{currentUrl}</p>
-                                <div className="flex flex-col gap-4 w-full max-w-xs">
-                                    <button
-                                        onClick={() => { setHasError(false); setIsLoading(true); setEngineKey(prev => prev + 1); }}
-                                        className="w-full py-5 bg-white text-black font-black uppercase tracking-widest text-sm rounded-xl shadow-2xl hover:bg-[#008751] hover:text-white transition-all transform active:scale-95"
-                                    >
-                                        Reconnect Satellite
-                                    </button>
-                                    <button
-                                        onClick={handleEnded}
-                                        className="w-full py-4 bg-white/5 text-white/40 font-black uppercase tracking-widest text-[9px] rounded-xl border border-white/5 hover:bg-white/10"
-                                    >
-                                        Skip Channel
-                                    </button>
-                                </div>
-                            </div>
-                        )}
-                    </div>
-                ) : (
-                    <div className="w-full h-full flex flex-col items-center justify-center space-y-8 animate-pulse">
-                        <i className="fas fa-broadcast-tower text-[#008751]/20 text-8xl"></i>
-                        <div className="flex flex-col items-center">
-                            <span className="text-white/20 font-black italic text-3xl tracking-[0.3em]">NDR TV HUB</span>
-                            <span className="mt-4 text-[10px] text-white/10 font-black uppercase tracking-[0.5em]">Awaiting Admin Command</span>
+                    {/* LOADING SPINNER */}
+                    {status === 'loading' && (
+                        <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/70 z-10">
+                            <div className="w-14 h-14 border-4 border-white/10 border-t-[#008751] rounded-full animate-spin" />
+                            <span className="mt-5 text-[10px] text-white/40 font-black uppercase tracking-[0.4em] animate-pulse">Establishing Signal...</span>
+                            <span className="mt-2 text-[7px] text-white/20 font-mono truncate max-w-[80%]">{resolvedUrl}</span>
                         </div>
-                    </div>
-                )}
-            </div>
+                    )}
 
-            {/* OVERLAY LAYER (Controls & Ticker) */}
-            {isActive && (
-                <div className={`transition-opacity duration-1000 ${showControls ? 'opacity-100' : 'opacity-0'}`}>
+                    {/* AUTOPLAY BLOCKED */}
+                    {status === 'blocked' && (
+                        <div
+                            onClick={() => { setStatus('loading'); setPlayerKey(k => k + 1); }}
+                            className="absolute inset-0 flex flex-col items-center justify-center bg-black/95 z-20 cursor-pointer"
+                        >
+                            <div className="w-28 h-28 bg-[#008751] rounded-full flex items-center justify-center shadow-[0_0_80px_rgba(0,135,81,0.5)] border-8 border-white/10 animate-bounce">
+                                <i className="fas fa-play text-white text-4xl ml-2" />
+                            </div>
+                            <h2 className="mt-8 text-white font-black text-2xl uppercase tracking-tight text-center px-8">Tap to Watch</h2>
+                            <p className="mt-2 text-white/30 text-[9px] uppercase font-black tracking-widest text-center px-16">Browser blocked autoplay — tap or press OK</p>
+                        </div>
+                    )}
+
+                    {/* ERROR */}
+                    {status === 'error' && (
+                        <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/95 z-20 p-8 text-center">
+                            <i className="fas fa-satellite-dish text-red-500 text-5xl mb-6" />
+                            <h3 className="text-white font-black uppercase text-xl mb-2">Signal Lost</h3>
+                            <p className="text-white/30 text-[8px] mb-8 font-mono break-all">{resolvedUrl}</p>
+                            <button
+                                onClick={() => { setStatus('loading'); setPlayerKey(k => k + 1); }}
+                                className="px-8 py-3 bg-white text-black font-black uppercase rounded-xl text-sm hover:bg-[#008751] hover:text-white transition-all"
+                            >
+                                Reconnect
+                            </button>
+                        </div>
+                    )}
+                </div>
+            ) : (
+                /* STANDBY */
+                <div className="absolute inset-0 flex flex-col items-center justify-center space-y-6">
+                    <i className="fas fa-broadcast-tower text-[#008751]/15 text-8xl animate-pulse" />
+                    <div className="flex flex-col items-center">
+                        <span className="text-white/15 font-black italic text-3xl tracking-[0.3em]">NDR TV HUB</span>
+                        <span className="mt-3 text-[9px] text-white/10 font-black uppercase tracking-[0.5em]">Awaiting Admin Command</span>
+                    </div>
+                </div>
+            )}
+
+            {/* ── TV OVERLAY (Bug / Ticker / Controls) ── */}
+            {isActive && resolvedUrl && (
+                <div className={`transition-opacity duration-700 ${showControls ? 'opacity-100' : 'opacity-0'}`}>
                     <TVOverlay
-                        isPlaying={isPlaying}
-                        onTogglePlay={togglePlay}
-                        onToggleFullscreen={() => { }}
+                        isPlaying={status === 'playing'}
+                        onTogglePlay={() => { setStatus('loading'); setPlayerKey(k => k + 1); }}
                         channelName="NDR DIGITAL HUB"
                         news={news}
                         adminMessages={adminMessages}
@@ -272,8 +211,8 @@ const TVPlayer: React.FC<TVPlayerProps> = ({
             <style dangerouslySetInnerHTML={{
                 __html: `
                 @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
-                .animate-fade-in { animation: fade-in 0.5s ease-out forwards; }
-            `}} />
+                .animate-fade-in { animation: fade-in 0.4s ease-out forwards; }
+            ` }} />
         </div>
     );
 };
