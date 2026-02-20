@@ -476,7 +476,7 @@ const RadioPlayer: React.FC<RadioPlayerProps> = ({
       const shouldBePlaying = forcePlaying && !isDucking;
 
       if (!shouldBePlaying && !audioRef.current.paused) {
-        console.log('📡 [RadioPlayer] EXCLUSIVITY LOCK: Pausing Radio audio (TV or Manual Pause active).');
+        console.log('📡 [RadioPlayer] Stopping Radio audio (Master Pause or News active).');
         audioRef.current.pause();
         setIsPlaying(false);
         onStateChange(false);
@@ -487,7 +487,7 @@ const RadioPlayer: React.FC<RadioPlayerProps> = ({
           return;
         }
 
-        console.log('📡 [RadioPlayer] EXCLUSIVITY UNLOCKED: Playing Radio audio.');
+        console.log('📡 [RadioPlayer] Starting Radio audio.');
         // Only init audio context for local files
         if (!isStreamRef.current) {
           initAudioContext();
@@ -502,7 +502,7 @@ const RadioPlayer: React.FC<RadioPlayerProps> = ({
         });
       }
     }
-  }, [forcePlaying, isDucking, onStateChange]);
+  }, [forcePlaying, isDucking]);
 
   useEffect(() => {
     // Apply volume settings - FULL SILENCE during News as requested

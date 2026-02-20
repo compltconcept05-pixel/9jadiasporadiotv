@@ -578,46 +578,48 @@ const App: React.FC = () => {
   }, [allMedia]);
 
   const handleRadioToggle = useCallback((play: boolean) => {
-    console.log(`📻 Radio Master Control: ${play ? 'ON' : 'OFF'}`);
-    handleStopNews(); // Stop any pending news on toggle
+    console.log(`📻 master Radio Control: ${play ? 'ON' : 'OFF'}`);
+    handleStopNews();
 
     if (play) {
+      // EXCLUSIVITY: Stop TV first
+      setIsTvActive(false);
+      setIsTvMuted(true);
+
       if (role !== UserRole.ADMIN) {
-        setIsTvMuted(true);
-        setIsTvActive(false);
-        setListenerHasPlayed(true); // Listeners just "join" the current broadcast
+        setListenerHasPlayed(true);
       } else {
-        handlePlayAll(true); // Admins start/reset the broadcast
+        handlePlayAll(true);
       }
     } else {
       setIsPlaying(false);
       setListenerHasPlayed(false);
-      // Sync STOP state to cloud
-      if (role === UserRole.ADMIN && supabase) {
-        dbService.updateStationState({
-          is_playing: false,
-          timestamp: Date.now()
-        }).catch(err => console.error("❌ Radio Stop Sync error", err));
-      }
     }
-  }, [handleStopNews, handlePlayAll, role, supabase]);
+
+    // Sync state to cloud
+    if (role === UserRole.ADMIN && supabase) {
+      dbService.updateStationState({
+        is_playing: play,
+        is_tv_active: play ? false : isTvActive,
+        timestamp: Date.now()
+      }).catch(err => console.error("❌ Radio Toggle Sync error", err));
+    }
+  }, [handleStopNews, handlePlayAll, role, supabase, isTvActive]);
 
   const handleVideoToggle = useCallback((active: boolean, overrideData?: { videoId?: string | null, playlist?: string[] }) => {
     console.log(`📡 [App] TV Toggle Request: ${active ? 'ON' : 'OFF'}${overrideData ? ' (with override data)' : ''}`);
-    setIsTvActive(active);
-
-    const targetVideoId = overrideData?.videoId !== undefined ? overrideData.videoId : activeVideoId;
-    const targetPlaylist = overrideData?.playlist !== undefined ? overrideData.playlist : tvPlaylist;
 
     if (active) {
-      console.log("📺 TV Activated - Stopping Radio Globally for Exclusivity");
+      // EXCLUSIVITY: Stop Radio first
       setIsPlaying(false);
       setListenerHasPlayed(false);
       setIsTvMuted(false);
+      setIsTvActive(true);
+
       if (overrideData?.videoId) setActiveVideoId(overrideData.videoId);
       if (overrideData?.playlist) setTvPlaylist(overrideData.playlist);
     } else {
-      console.log("⏹️ TV Deactivated - Clearing Board State");
+      setIsTvActive(false);
       if (role === UserRole.ADMIN) {
         setActiveVideoId(null);
         setTvPlaylist([]);
@@ -626,16 +628,15 @@ const App: React.FC = () => {
 
     // Broadcaster sync
     if (role === UserRole.ADMIN && supabase) {
-      console.log("☁️ [Supabase] Syncing Station State (Live TV)...");
       dbService.updateStationState({
         is_tv_active: active,
-        is_playing: active ? false : isPlaying,
-        current_video_id: active ? targetVideoId : null,
-        tv_playlist: active ? targetPlaylist : [],
+        is_playing: false, // Always stop radio when TV is controlled (either starting TV or stopping it)
+        current_video_id: active ? (overrideData?.videoId || activeVideoId) : null,
+        tv_playlist: active ? (overrideData?.playlist || tvPlaylist) : [],
         timestamp: Date.now()
       }).catch(err => console.error("❌ Video Toggle Sync error", err));
     }
-  }, [role, isPlaying, supabase, isTvMuted, activeVideoId, tvPlaylist]);
+  }, [role, supabase, activeVideoId, tvPlaylist]);
 
   const handlePlayVideo = useCallback((track: MediaFile | number | string, isLive: boolean = true) => {
     handleStopNews();

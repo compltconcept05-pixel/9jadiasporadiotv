@@ -301,7 +301,7 @@ const AdminView: React.FC<AdminViewProps> = ({
               className={`w-full py-4 rounded-xl text-white font-black text-[11px] uppercase shadow-md transition-all active:scale-95 flex items-center justify-center space-x-3 ${isRadioPlaying ? 'bg-red-500 hover:bg-red-600 border-red-700' : 'bg-[#008751] hover:bg-green-700 border-green-900'} border-b-4`}
             >
               <i className={`fas ${isRadioPlaying ? 'fa-microphone-slash' : 'fa-microphone'} text-lg`}></i>
-              <span>{isRadioPlaying ? 'Stop Radio Broadcast' : 'Start Radio Music'}</span>
+              <span>{isRadioPlaying ? 'Stop Radio' : 'Start Radio'}</span>
             </button>
           </div>
         </div>
@@ -313,12 +313,26 @@ const AdminView: React.FC<AdminViewProps> = ({
           >
             <i className="fas fa-sync"></i> Re-Sync
           </button>
-          <button
-            onClick={() => window.location.reload()}
-            className="px-3 py-2 bg-blue-600 text-white rounded-lg shadow-sm border border-blue-500 hover:bg-blue-700 transition-colors text-[7px] font-black uppercase flex items-center gap-2"
-          >
-            <i className="fas fa-cloud-download-alt"></i> Update
-          </button>
+          <div className="relative group">
+            <button
+              onClick={async () => {
+                setInternalStatus('Generating Update Link...');
+                try {
+                  const url = await dbService.getAppDownloadUrl();
+                  if (url) {
+                    onLogAdd?.(`System: Android App update broadcasted to all users.`);
+                    setInternalStatus('✅ Update Link Shared!');
+                  }
+                } catch (e) {
+                  setInternalStatus('❌ Update Error');
+                }
+                setTimeout(() => setInternalStatus(''), 3000);
+              }}
+              className="px-3 py-2 bg-[#3DDC84] text-white rounded-lg shadow-sm border border-[#2fb86c] hover:bg-[#32c072] transition-colors text-[7px] font-black uppercase flex items-center gap-2"
+            >
+              <i className="fab fa-android"></i> App Update
+            </button>
+          </div>
         </div>
       </div>
 
@@ -458,20 +472,34 @@ const AdminView: React.FC<AdminViewProps> = ({
               <div className="space-y-2">
                 {[0, 1, 2].map((i) => (
                   <div key={i} className="flex items-center gap-2">
-                    <input
-                      type="text"
-                      value={socialLinks[i]}
-                      onChange={(e) => {
-                        const newLinks = [...socialLinks];
-                        newLinks[i] = e.target.value;
-                        setSocialLinks(newLinks);
-                      }}
-                      placeholder={`Paste video link ${i + 1} here...`}
-                      className="flex-1 text-[8px] p-2 bg-white rounded-lg border border-indigo-100 focus:outline-none focus:ring-1 focus:ring-indigo-500 shadow-sm"
-                    />
+                    <div className="relative flex-1">
+                      <input
+                        type="text"
+                        value={socialLinks[i]}
+                        onChange={(e) => {
+                          const newLinks = [...socialLinks];
+                          newLinks[i] = e.target.value;
+                          setSocialLinks(newLinks);
+                        }}
+                        placeholder={`Paste video link ${i + 1} here...`}
+                        className="w-full text-[8px] p-2 bg-white rounded-lg border border-indigo-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-sm pr-8 transition-all"
+                      />
+                      {socialLinks[i] && (
+                        <button
+                          onClick={() => {
+                            const newLinks = [...socialLinks];
+                            newLinks[i] = '';
+                            setSocialLinks(newLinks);
+                          }}
+                          className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-300 hover:text-gray-500"
+                        >
+                          <i className="fas fa-times-circle text-[9px]"></i>
+                        </button>
+                      )}
+                    </div>
                     <div className="flex gap-1">
                       <button
-                        title="Preview this link"
+                        title="Preview Only"
                         onClick={() => {
                           if (!socialLinks[i].trim()) return;
                           onPlayVideo?.(socialLinks[i].trim(), false);
@@ -483,43 +511,52 @@ const AdminView: React.FC<AdminViewProps> = ({
                         <i className="fas fa-eye text-[9px]"></i>
                       </button>
                       <button
-                        title="Go Live with this link"
+                        title="Instant Go Live!"
                         onClick={() => {
                           if (!socialLinks[i].trim()) return;
                           onPlayVideo?.(socialLinks[i].trim(), true);
-                          setInternalStatus('🚀 Broadcasting Live!');
+                          onToggleTv?.(true); // Force TV ON
+                          setInternalStatus('🚀 INSTANT LIVE!');
                           setTimeout(() => setInternalStatus(''), 3000);
                         }}
-                        className="w-8 h-8 bg-indigo-600 text-white rounded-lg flex items-center justify-center hover:bg-indigo-700 shadow-md transition-all active:scale-95"
+                        className="w-8 h-8 bg-[#008751] text-white rounded-lg flex items-center justify-center hover:bg-green-700 shadow-md transition-all active:scale-95 border-b-2 border-green-900"
                       >
-                        <i className="fas fa-paper-plane text-[9px]"></i>
+                        <i className="fas fa-bolt text-[9px]"></i>
                       </button>
                     </div>
                   </div>
                 ))}
 
-                <button
-                  onClick={async () => {
-                    const links = socialLinks.map(l => l.trim()).filter(l => l !== '');
-                    if (links.length === 0) return;
-                    setIsProcessing(true);
-                    setInternalStatus('Broadcasting Playlist...');
-                    try {
-                      onUpdatePlaylist?.(links);
-                      onToggleTv?.(true);
-                      setInternalStatus('✅ Playlist Live on TV!');
-                      onRefreshData();
-                    } catch (e: any) {
-                      setInternalStatus('❌ Error: ' + e.message);
-                    } finally {
-                      setIsProcessing(false);
-                      setTimeout(() => setInternalStatus(''), 3000);
-                    }
-                  }}
-                  className="w-full mt-2 py-2 bg-indigo-600 text-white text-[8px] font-black uppercase rounded shadow-lg hover:bg-indigo-700 transition-all border-b-2 border-indigo-800"
-                >
-                  Broadcast All as Playlist
-                </button>
+                <div className="flex gap-2 mt-2">
+                  <button
+                    onClick={async () => {
+                      const links = socialLinks.map(l => l.trim()).filter(l => l !== '');
+                      if (links.length === 0) return;
+                      setIsProcessing(true);
+                      setInternalStatus('Broadcasting Playlist...');
+                      try {
+                        onUpdatePlaylist?.(links);
+                        onToggleTv?.(true);
+                        setInternalStatus('✅ Playlist Live on TV!');
+                        onRefreshData();
+                      } catch (e: any) {
+                        setInternalStatus('❌ Error: ' + e.message);
+                      } finally {
+                        setIsProcessing(false);
+                        setTimeout(() => setInternalStatus(''), 3000);
+                      }
+                    }}
+                    className="flex-1 py-2 bg-indigo-600 text-white text-[8px] font-black uppercase rounded shadow-lg hover:bg-indigo-700 transition-all border-b-2 border-indigo-800"
+                  >
+                    Broadcast Playlist
+                  </button>
+                  <button
+                    onClick={() => setSocialLinks(['', '', ''])}
+                    className="px-4 py-2 bg-gray-100 text-gray-500 text-[8px] font-black uppercase rounded hover:bg-gray-200 transition-all"
+                  >
+                    Clear All
+                  </button>
+                </div>
               </div>
             </div>
 
