@@ -496,7 +496,6 @@ const AdminView: React.FC<AdminViewProps> = ({
                     onClick={() => {
                       if (!socialLink.trim()) return;
                       onPlayVideo?.(socialLink.trim(), true);
-                      onToggleTv?.(true);
                       setInternalStatus('🚀 INSTANT LIVE ON TV!');
                     }}
                     className="py-3 bg-yellow-400 text-indigo-950 text-[10px] font-black uppercase rounded-xl border-b-4 border-yellow-600 hover:bg-yellow-300 transition-all flex items-center justify-center gap-2 shadow-xl active:translate-y-1 active:border-b-0"
@@ -548,8 +547,8 @@ const AdminView: React.FC<AdminViewProps> = ({
                     key={idx}
                     onClick={() => {
                       onPlayVideo?.(preset.url, true);
-                      onToggleTv?.(true);
-                      setInternalStatus(`📡 Zapped to ${preset.name}`);
+                      onRefreshData();
+                      setInternalStatus(`📺 Zapped to ${preset.name}!`);
                       setTimeout(() => setInternalStatus(''), 2000);
                     }}
                     className="flex items-center gap-3 p-2.5 bg-slate-800 hover:bg-indigo-600 rounded-lg border border-slate-700 hover:border-indigo-400 transition-all active:scale-95 group text-left"
