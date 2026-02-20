@@ -84,10 +84,12 @@ const TVPlayer: React.FC<TVPlayerProps> = ({
         }
     };
 
-    // ── SYNC EFFECTS ──
+    // COMMAND SYNC: Force reload on any URL change
     useEffect(() => {
-        if (onPlayStateChange) onPlayStateChange(isPlaying);
-    }, [isPlaying, onPlayStateChange]);
+        if (tvPlaylist && tvPlaylist.length > 0) {
+            setPlaylistIndex(0); // Always start from beginning on new zap
+        }
+    }, [tvPlaylist?.length, tvPlaylist?.[0]]);
 
     // COMMAND SYNC: Force reload on any URL change
     useEffect(() => {
