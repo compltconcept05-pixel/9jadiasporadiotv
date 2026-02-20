@@ -116,18 +116,24 @@ const TVPlayer: React.FC<TVPlayerProps> = ({
 
             // 2. Facebook Share/Video Link Expansion
             // Handles: facebook.com/share/v/[ID]/ or facebook.com/share/r/[ID]/
-            if (urlObj.pathname.includes('/share/v/') || urlObj.pathname.includes('/share/r/')) {
-                const parts = urlObj.pathname.split('/');
-                const idIndex = parts.findIndex(p => p === 'v' || p === 'r') + 1;
-                const videoId = parts[idIndex];
+            if (urlObj.pathname.includes('/share/v/')) {
+                const parts = urlObj.pathname.split('/share/v/');
+                const videoId = parts[1]?.split('/')[0];
                 if (videoId) {
-                    console.log("🎬 [TVPlayer] Expanding Facebook Share link:", videoId);
-                    return `https://www.facebook.com/watch/?v=${videoId}`;
+                    console.log("🎬 [TVPlayer] Expanding Facebook Share Video link:", videoId);
+                    return `https://www.facebook.com/watch?v=${videoId}`;
+                }
+            }
+            if (urlObj.pathname.includes('/share/r/')) {
+                const parts = urlObj.pathname.split('/share/r/');
+                const reelId = parts[1]?.split('/')[0];
+                if (reelId) {
+                    console.log("🎬 [TVPlayer] Expanding Facebook Share Reel link:", reelId);
+                    return `https://www.facebook.com/reel/${reelId}`;
                 }
             }
 
             // 3. YouTube Studio & Channel Handling
-            // YouTube Studio: studio.youtube.com/video/[ID]/edit -> watch?v=[ID]
             if (urlObj.hostname === 'studio.youtube.com') {
                 if (urlObj.pathname.includes('/video/')) {
                     const videoId = urlObj.pathname.split('/video/')[1]?.split('/')[0];
@@ -137,27 +143,30 @@ const TVPlayer: React.FC<TVPlayerProps> = ({
                     const channelId = urlObj.pathname.split('/channel/')[1]?.split('/')[0];
                     if (channelId && channelId.startsWith('UC')) {
                         const uploadPlaylistId = channelId.replace('UC', 'UU');
+                        console.log("🎬 [TVPlayer] YouTube Studio Channel -> Uploads Playlist:", uploadPlaylistId);
                         return `https://www.youtube.com/playlist?list=${uploadPlaylistId}`;
                     }
                 }
             }
 
-            // YouTube Channels (The user wants to "play all" - we point to the uploads playlist)
-            // Detect /channel/UC[ID]
+            // Regular YouTube Channels/Handles
             if (urlObj.hostname.includes('youtube.com') && (urlObj.pathname.includes('/channel/') || urlObj.pathname.includes('/c/') || urlObj.pathname.includes('/@'))) {
                 const channelId = urlObj.pathname.split('/channel/')[1]?.split('/')[0];
                 if (channelId && channelId.startsWith('UC')) {
                     const uploadPlaylistId = channelId.replace('UC', 'UU');
-                    console.log("🎬 [TVPlayer] Converting Channel to Uploads Playlist:", uploadPlaylistId);
+                    console.log("🎬 [TVPlayer] YouTube Channel -> Uploads Playlist:", uploadPlaylistId);
                     return `https://www.youtube.com/playlist?list=${uploadPlaylistId}`;
                 }
-                // For handles (@name) or custom IDs, we try to pass them through as is, 
-                // but usually they need a specific ID for the UU trick.
+                // For handles (@name), we let ReactPlayer attempt it as it sometimes works for shorts/streams
             }
 
-            // 4. Facebook Profile Detection (Informative only)
-            if (urlObj.hostname.includes('facebook.com') && (urlObj.pathname.includes('profile.php') || !urlObj.pathname.includes('/videos/'))) {
-                console.warn("⚠️ [TVPlayer] Profile link detected. Specific video links are recommended.");
+            // 4. Facebook Profile Logic
+            if (urlObj.hostname.includes('facebook.com') && urlObj.pathname.includes('profile.php')) {
+                console.warn("⚠️ [TVPlayer] Profile link detected. Converting to videos tab if possible.");
+                if (!urlObj.searchParams.has('sk')) {
+                    urlObj.searchParams.set('sk', 'videos');
+                    return urlObj.toString();
+                }
             }
 
             cleanUrl = urlObj.toString();
@@ -336,29 +345,16 @@ const TVPlayer: React.FC<TVPlayerProps> = ({
 
     // Playback and pause are handled directly by the playing prop in ReactPlayer
 
-
-
     const handleEnded = () => {
-        setHasError(false);
-        setIsLoading(true);
-        if (isAdvertPlaying) {
-            console.log("📺 [TVPlayer] Advert completed, returning to main sequence...");
-            setCurrentIndex(originalTrackIndex);
-            setIsAdvertPlaying(false);
-            handleAdvance();
-        } else if (tvPlaylist.length > 0) {
-            const nextIdx = playlistIndex + 1;
-            if (nextIdx < tvPlaylist.length) {
-                console.log("⏭️ [TVPlayer] Advancing Playlist:", nextIdx);
-                setPlaylistIndex(nextIdx);
-                setIsPlaying(true);
-            } else {
-                console.log("⏹️ [TVPlayer] Playlist completed.");
-                setPlaylistIndex(0); // Loop or Stop? Let's loop for now unless user said otherwise
-                setIsPlaying(true);
-            }
-        } else if (allVideos.length > 0) {
-            handleAdvance();
+        console.log("🎬 [TVPlayer] Media ended.");
+        if (tvPlaylist.length > 1) {
+            setPlaylistIndex((prev) => (prev + 1) % tvPlaylist.length);
+        } else if (currentVideoUrl.includes('playlist') || currentVideoUrl.includes('list=')) {
+            // If it's a playlist, let the player handle internal advancement
+            console.log("🎬 [TVPlayer] Playlist item ended, staying active for next item.");
+        } else {
+            console.log("🎬 [TVPlayer] Single item finished. Stopping.");
+            setIsPlaying(false);
         }
     };
 
@@ -466,6 +462,32 @@ const TVPlayer: React.FC<TVPlayerProps> = ({
                                     {currentVideoUrl.includes('studio.youtube') && " This looks like an internal studio link. Use a public watch link."}
                                 </p>
 
+                                <div className="flex flex-col gap-3 w-full px-8">
+                                    <button
+                                        onClick={() => {
+                                            setHasError(false);
+                                            setIsLoading(true); // Re-enable loading state
+                                            // Trigger a state change to force-reload the player
+                                            setIsPlaying(false);
+                                            setTimeout(() => setIsPlaying(true), 100);
+                                        }}
+                                        className="w-full bg-white/20 hover:bg-white/30 text-white py-3 rounded-xl font-bold transition-all border border-white/10 flex items-center justify-center gap-2"
+                                    >
+                                        <i className="fas fa-redo-alt text-xs"></i>
+                                        Retry Connection
+                                    </button>
+
+                                    <a
+                                        href={currentVideoUrl}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="w-full bg-green-500 hover:bg-green-600 text-white py-3 rounded-xl font-bold transition-all flex items-center justify-center gap-2 shadow-lg"
+                                    >
+                                        <i className="fas fa-external-link-alt text-xs"></i>
+                                        Open with Device Player
+                                    </a>
+                                </div>
+
                                 {isAdmin && (
                                     <div className="bg-white/5 p-3 rounded-xl border border-white/10 mb-6 w-full max-w-[300px] overflow-hidden">
                                         <p className="text-[7px] text-white/40 uppercase mb-1.5 font-bold tracking-widest">Admin Diagnostic Link:</p>
@@ -478,7 +500,6 @@ const TVPlayer: React.FC<TVPlayerProps> = ({
                                         onClick={() => {
                                             setHasError(false);
                                             setIsLoading(true);
-                                            // Trigger a state change to force-reload the player
                                             setIsPlaying(false);
                                             setTimeout(() => setIsPlaying(true), 100);
                                         }}
@@ -538,19 +559,21 @@ const TVPlayer: React.FC<TVPlayerProps> = ({
             </div>
 
             {/* Overlays (ON AIR MODE: Integrated news ticker) */}
-            {isActive && (
-                <TVOverlay
-                    isPlaying={isPlaying}
-                    onTogglePlay={togglePlay}
-                    onToggleFullscreen={toggleFullscreen}
-                    channelName="NDRTV"
-                    news={news}
-                    adminMessages={adminMessages}
-                    isVisible={showControls}
-                    volume={volume}
-                    onVolumeChange={setVolume}
-                />
-            )}
+            {
+                isActive && (
+                    <TVOverlay
+                        isPlaying={isPlaying}
+                        onTogglePlay={togglePlay}
+                        onToggleFullscreen={toggleFullscreen}
+                        channelName="NDRTV"
+                        news={news}
+                        adminMessages={adminMessages}
+                        isVisible={showControls}
+                        volume={volume}
+                        onVolumeChange={setVolume}
+                    />
+                )
+            }
 
             {/* Tap surface to show controls */}
             <div
@@ -558,7 +581,7 @@ const TVPlayer: React.FC<TVPlayerProps> = ({
                 onClick={resetHideTimer}
                 onMouseMove={resetHideTimer}
             />
-        </div>
+        </div >
     );
 };
 
