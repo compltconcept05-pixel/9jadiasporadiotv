@@ -189,13 +189,17 @@ const TVPlayer: React.FC<TVPlayerProps> = ({
             return cleanUrl.replace('/reels/', '/p/').replace('/reel/', '/p/');
         }
 
-        if (lowercase.includes('facebook.com/reels/')) {
-            console.log("🎬 [TVPlayer] Transforming Facebook Reel...");
-            // FB Reels often work best if we just let ReactPlayer attempt it with the clean URL
+        // 6. Direct URL Optimization
+        // If it looks like a direct video file, return it as is but ensure it's absolute
+        if (lowercase.match(/\.(mp4|webm|ogv|mov)$/)) {
+            console.log("🎬 [TVPlayer] Direct video file detected.");
+            return cleanUrl;
         }
 
-        // 6. Stories filtering
-        if (lowercase.includes('/stories/')) return '';
+        // 7. Stories filtering (usually private/temporary)
+        if (lowercase.includes('/stories/')) {
+            console.warn("⚠️ [TVPlayer] Stories are usually private or expired. Stream might fail.");
+        }
 
         return cleanUrl;
     };
@@ -233,7 +237,23 @@ const TVPlayer: React.FC<TVPlayerProps> = ({
         return () => clearTimeout(timer);
     }, [isLoading, isPlaying, currentVideoUrl]);
 
-    // 3. Auto-play trigger & Aggressive Loading Bypass
+    // 4. Standby Recovery Watchdog
+    useEffect(() => {
+        let standbyTimer: NodeJS.Timeout;
+        if (isActive && !currentVideoUrl && allVideos.length > 0) {
+            console.log("📡 [TVPlayer] stuck in standby. Starting recovery timer...");
+            standbyTimer = setTimeout(() => {
+                if (!currentVideoUrl) {
+                    console.warn("⚠️ [TVPlayer] Standby timeout. Playing latest broadcast video as fallback.");
+                    // Notify parent to advance or pick a video
+                    if (onVideoAdvance) onVideoAdvance(0);
+                }
+            }, 8000); // 8s standby limit
+        }
+        return () => clearTimeout(standbyTimer);
+    }, [isActive, currentVideoUrl, allVideos, onVideoAdvance]);
+
+    // 5. Auto-play trigger & Aggressive Loading Bypass
     useEffect(() => {
         if (currentVideoUrl && (isActive || isPreview)) {
             setIsPlaying(true);
@@ -430,10 +450,13 @@ const TVPlayer: React.FC<TVPlayerProps> = ({
                                 onBufferEnd={() => setIsLoading(false)}
                                 onReady={() => setIsLoading(false)}
                                 onError={(e: any) => {
-                                    console.error("❌ [TVPlayer] ReactPlayer Error:", e);
+                                    console.error("❌ [TVPlayer] ReactPlayer Error. Attempting universal fallback...", e);
+                                    // If ReactPlayer fails, it might be a direct link it doesn't like or a restricted embed
+                                    // We let the error state handle it with the "Open with Device" button
                                     setHasError(true);
                                     setIsLoading(false);
                                 }}
+                                fallback={<div className="text-white text-[8px]">Connecting Universal Hub...</div>}
                                 playsinline
                                 config={{
                                     youtube: {

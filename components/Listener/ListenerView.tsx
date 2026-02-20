@@ -56,14 +56,21 @@ const ListenerView: React.FC<ListenerViewProps> = ({
   const [isTvPlaying, setIsTvPlaying] = useState(false);
   const [channelMode, setChannelMode] = useState<'broadcast' | 'social'>('broadcast');
 
-  // AUTO-SWITCH: When admin broadcasts a social playlist, switch to social mode automatically
+  // AUTO-SWITCH: Coordinate between Broadcast and Social modes
   useEffect(() => {
-    if (tvPlaylist.length > 0) {
-      setChannelMode('social');
-      onTvToggle(true);
-      console.log('📺 [ListenerView] Auto-switching to Social Stream mode');
+    if (tvPlaylist && tvPlaylist.length > 0) {
+      if (channelMode !== 'social') {
+        console.log('📺 [ListenerView] Auto-switching to Social Stream mode');
+        setChannelMode('social');
+        onTvToggle(true);
+      }
+    } else if (activeVideo) {
+      if (channelMode !== 'broadcast') {
+        console.log('📺 [ListenerView] Social ended, returning to Broadcast mode');
+        setChannelMode('broadcast');
+      }
     }
-  }, [tvPlaylist]);
+  }, [tvPlaylist, activeVideo, channelMode, onTvToggle]);
 
   // COORDINATION: TV audio starts -> Radio pauses
   const handleTvMuteChange = (muted: boolean) => {
