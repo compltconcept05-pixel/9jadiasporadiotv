@@ -688,9 +688,12 @@ const App: React.FC = () => {
     }
 
     if (isLive) {
+      // For uploaded video files, put the direct URL in the playlist too
+      // so TVPlayer always gets a URL it can play
+      const videoPlaylist = video?.url ? [video.url] : (socialUrl ? [socialUrl] : []);
       handleVideoToggle(true, {
         videoId: video?.id || null,
-        playlist: socialUrl ? [socialUrl] : []
+        playlist: videoPlaylist
       });
       handleLogAdd(`TV Feed: Now Broadcasting ${video?.name || 'Social Link'}`);
     } else {
@@ -709,21 +712,13 @@ const App: React.FC = () => {
   // --- ADMIN LOGIN LOGIC ---
   useEffect(() => {
     if (role === UserRole.ADMIN) {
-      console.log("👮 [App] Admin logged in. Ensuring TV Monitoring is active.");
-      // DO NOT deactivate TV anymore - it should stay active for the monitor
-      setIsTvActive(true);
-
-      // Synchronize this change to all listeners if we have supabase
-      if (supabase) {
-        dbService.updateStationState({
-          is_tv_active: true,
-          // We don't automatically stop radio here anymore, let the exclusivity guard handle it if TV is started
-          timestamp: Date.now()
-        }).catch(err => console.error("❌ Admin Login TV Sync Error:", err));
-      }
-      setIsTvMuted(true); // Ensure admin is muted locally
+      console.log('👮 [App] Admin logged in. Monitoring mode active (TV NOT auto-started).');
+      // ✅ DO NOT force isTvActive = true here.
+      // TV should only become active when Admin explicitly ZAPs a channel.
+      // Forcing it here causes all listeners to see a blank screen.
+      setIsTvMuted(true); // Admin is muted locally by default
     }
-  }, [role, supabase]);
+  }, [role]);
 
   // --- TRIPLE-LOCK AUDIO EXCLUSIVITY ENFORCEMENT ---
   useEffect(() => {
