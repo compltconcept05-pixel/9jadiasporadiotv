@@ -219,7 +219,7 @@ const TVPlayer: React.FC<TVPlayerProps> = ({
     // 1. Sync Play State to Parent
     useEffect(() => {
         if (onPlayStateChange) onPlayStateChange(isPlaying);
-    }, [isPlaying]);
+    }, [isPlaying, onPlayStateChange]);
 
     // 2. Loading Watchdog (25s)
     useEffect(() => {
@@ -232,10 +232,23 @@ const TVPlayer: React.FC<TVPlayerProps> = ({
                     setHasError(true);
                     setIsLoading(false);
                 }
-            }, 25000); // Increased to 25s for slow social SDKs
+            }, 25000);
         }
         return () => clearTimeout(timer);
     }, [isLoading, isPlaying, currentVideoUrl]);
+
+    // 3. Engine Detection Logic
+    const isDirectVideo = currentVideoUrl.match(/\.(mp4|webm|ogv|mov)$/) || currentVideoUrl.includes('supabase.co') || currentVideoUrl.startsWith('blob:');
+    const isSocial = currentVideoUrl.includes('youtube.com') ||
+        currentVideoUrl.includes('youtu.be') ||
+        currentVideoUrl.includes('facebook.com') ||
+        currentVideoUrl.includes('fb.watch') ||
+        currentVideoUrl.includes('instagram.com') ||
+        currentVideoUrl.includes('twitch.tv') ||
+        currentVideoUrl.includes('vimeo.com') ||
+        currentVideoUrl.includes('dailymotion.com');
+
+    // 4. Standby Recovery Watchdog
 
     // 4. Standby Recovery Watchdog
     useEffect(() => {
@@ -415,8 +428,8 @@ const TVPlayer: React.FC<TVPlayerProps> = ({
                 {currentVideoUrl ? (
                     /* ── HAS A URL: show the embedded player ── */
                     <div className="w-full h-full relative group">
-                        {/* DUAL-ENGINE: If URL contains supabase or is direct file, use native video tag */}
-                        {(currentVideoUrl.includes('supabase.co') || currentVideoUrl.includes('.mp4') || currentVideoUrl.includes('.webm') || currentVideoUrl.startsWith('blob:')) ? (
+                        {/* TRIPLE-ENGINE: Native > Social > Universal Frame */}
+                        {isDirectVideo ? (
                             <video
                                 src={currentVideoUrl}
                                 className="w-full h-full object-contain"
@@ -434,7 +447,7 @@ const TVPlayer: React.FC<TVPlayerProps> = ({
                                 onPlay={() => { setIsPlaying(true); setIsLoading(false); }}
                                 onPause={() => setIsPlaying(false)}
                             />
-                        ) : (
+                        ) : isSocial ? (
                             <Player
                                 url={currentVideoUrl}
                                 className="react-player"
@@ -451,8 +464,6 @@ const TVPlayer: React.FC<TVPlayerProps> = ({
                                 onReady={() => setIsLoading(false)}
                                 onError={(e: any) => {
                                     console.error("❌ [TVPlayer] ReactPlayer Error. Attempting universal fallback...", e);
-                                    // If ReactPlayer fails, it might be a direct link it doesn't like or a restricted embed
-                                    // We let the error state handle it with the "Open with Device" button
                                     setHasError(true);
                                     setIsLoading(false);
                                 }}
@@ -469,6 +480,15 @@ const TVPlayer: React.FC<TVPlayerProps> = ({
                                     },
                                     facebook: { appId: '966242223397117' }
                                 }}
+                            />
+                        ) : (
+                            /* UNIVERSAL FRAME FALLBACK: For unknown URLs */
+                            <iframe
+                                src={currentVideoUrl}
+                                className="w-full h-full border-0 bg-white"
+                                allow="autoplay; encrypted-media; fullscreen"
+                                title="Universal Media Frame"
+                                onLoad={() => setIsLoading(false)}
                             />
                         )}
 
