@@ -50,7 +50,7 @@ const HlsPlayer: React.FC<{
                 if (isPlaying) video.play().catch(e => console.warn("Autoplay blocked:", e));
             });
         }
-    }, [url, onReady, onError]);
+    }, [url, isPlaying, onReady, onError]);
 
     useEffect(() => {
         const video = videoRef.current;
@@ -160,7 +160,7 @@ const TVPlayer: React.FC<TVPlayerProps> = ({
     };
 
     let currentVideoUrl = '';
-    if (tvPlaylist.length > 0) {
+    if (tvPlaylist && tvPlaylist.length > 0) {
         currentVideoUrl = filterSocialUrl(tvPlaylist[playlistIndex]);
     } else {
         const track = allVideos.find(v => v.id === activeVideo?.id) || activeVideo;
@@ -168,8 +168,8 @@ const TVPlayer: React.FC<TVPlayerProps> = ({
     }
 
     const handleAdvance = useCallback(() => {
-        if (allVideos.length === 0 && tvPlaylist.length === 0) return;
-        if (tvPlaylist.length > 0) {
+        if (allVideos.length === 0 && (tvPlaylist?.length || 0) === 0) return;
+        if (tvPlaylist && tvPlaylist.length > 0) {
             setPlaylistIndex((prev) => (prev + 1) % tvPlaylist.length);
         } else {
             const nextIdx = (currentIndex + 1) % allVideos.length;
@@ -177,12 +177,14 @@ const TVPlayer: React.FC<TVPlayerProps> = ({
             else setCurrentIndex(nextIdx);
         }
         setIsPlaying(true);
-    }, [currentIndex, allVideos.length, onVideoAdvance, tvPlaylist.length]);
+    }, [currentIndex, allVideos, onVideoAdvance, tvPlaylist, playlistIndex]);
 
     const handleEnded = () => {
         console.log("🎬 [TVPlayer] Media ended.");
-        if (tvPlaylist.length > 1) {
+        if (tvPlaylist && tvPlaylist.length > 1) {
             setPlaylistIndex((prev) => (prev + 1) % tvPlaylist.length);
+        } else if (allVideos.length > 0) {
+            handleAdvance();
         } else {
             setIsPlaying(false);
         }
@@ -196,37 +198,45 @@ const TVPlayer: React.FC<TVPlayerProps> = ({
 
     const toggleFullscreen = () => {
         if (!containerRef.current) return;
-        if (!document.fullscreenElement) containerRef.current.requestFullscreen();
-        else if (document.exitFullscreen) document.exitFullscreen();
+        if (!document.fullscreenElement) {
+            containerRef.current.requestFullscreen().catch(() => { });
+        } else {
+            if (document.exitFullscreen) document.exitFullscreen();
+        }
     };
 
     const resetHideTimer = () => {
         setShowControls(true);
         if (hideTimeoutRef.current) clearTimeout(hideTimeoutRef.current);
-        if (isPlaying) hideTimeoutRef.current = setTimeout(() => setShowControls(false), 5000);
+        if (isPlaying) {
+            hideTimeoutRef.current = setTimeout(() => setShowControls(false), 5000);
+        }
     };
 
     // ── EFFECTS ──
 
-    // Engine Key & State Reset on URL change
+    // 1. Engine Key & State Reset on URL change
     useEffect(() => {
-        setHasError(false);
-        setIsLoading(true);
-        setPlayerKey(prev => prev + 1);
-        setInteractionRequired(false);
+        if (currentVideoUrl) {
+            setHasError(false);
+            setIsLoading(true);
+            setPlayerKey(prev => prev + 1);
+            setInteractionRequired(false);
+        }
     }, [currentVideoUrl]);
 
-    // Play State Sync
+    // 2. Play State Sync
     useEffect(() => {
         if (onPlayStateChange) onPlayStateChange(isPlaying);
     }, [isPlaying, onPlayStateChange]);
 
-    // Loading Watchdog
+    // 3. Loading Watchdog (Long timeout)
     useEffect(() => {
         let timer: NodeJS.Timeout;
-        if (isLoading && isPlaying && currentVideoUrl) {
+        if (isLoading && isPlaying && currentVideoUrl && !hasError) {
             timer = setTimeout(() => {
                 if (isLoading) {
+                    console.warn("⚠️ [TVPlayer] Loading timeout reached.");
                     setHasError(true);
                     setIsLoading(false);
                 }
@@ -235,21 +245,22 @@ const TVPlayer: React.FC<TVPlayerProps> = ({
         return () => clearTimeout(timer);
     }, [isLoading, isPlaying, currentVideoUrl, hasError]);
 
-    // Stalemate Watchdog (User Interaction)
+    // 4. Stalemate Watchdog (Interaction detection)
     useEffect(() => {
         let timer: NodeJS.Timeout;
         if (isLoading && isPlaying && currentVideoUrl && !hasError) {
             timer = setTimeout(() => {
                 if (isLoading) {
+                    console.warn("🆘 [TVPlayer] Interaction likely required.");
                     setInteractionRequired(true);
                     setIsLoading(false);
                 }
-            }, 6000); // 6s to detect blocked autoplay
+            }, 7000);
         }
         return () => clearTimeout(timer);
     }, [isLoading, isPlaying, currentVideoUrl, hasError]);
 
-    // Sync from Admin
+    // 5. Sync from Admin/Parent
     useEffect(() => {
         if (isActive && !isAdmin && activeVideo) {
             const idx = allVideos.findIndex(v => v.id === activeVideo.id);
@@ -260,14 +271,28 @@ const TVPlayer: React.FC<TVPlayerProps> = ({
         }
     }, [activeVideo?.id, allVideos, isActive, isAdmin, currentIndex]);
 
-    // Auto-hide controls
+    // 6. Auto-hide controls
     useEffect(() => {
         if (isPlaying) resetHideTimer();
         else setShowControls(true);
         return () => { if (hideTimeoutRef.current) clearTimeout(hideTimeoutRef.current); };
     }, [isPlaying]);
 
-    // Timer Logic: Adverts / Stingers
+    // 7. Standby Recovery Watchdog
+    useEffect(() => {
+        let timer: NodeJS.Timeout;
+        if (isActive && !currentVideoUrl && allVideos.length > 0) {
+            timer = setTimeout(() => {
+                if (!currentVideoUrl) {
+                    console.log("📡 [TVPlayer] Auto-recovering from Standby...");
+                    handleAdvance();
+                }
+            }, 5000);
+        }
+        return () => clearTimeout(timer);
+    }, [isActive, currentVideoUrl, allVideos, handleAdvance]);
+
+    // 8. Timer Logic: Adverts / Stingers
     useEffect(() => {
         if (!isActive || !isPlaying || isNewsPlaying || isAdmin) return;
         const interval = setInterval(() => {
@@ -299,7 +324,7 @@ const TVPlayer: React.FC<TVPlayerProps> = ({
         <div ref={containerRef} className="relative w-full h-full bg-black overflow-hidden group select-none shadow-2xl">
             <div className="absolute inset-0 z-0 flex flex-col items-center justify-center">
                 {currentVideoUrl ? (
-                    <div className="w-full h-full relative">
+                    <div className="w-full h-full relative" key={`engine-container-${playerKey}`}>
                         {isDirectVideo ? (
                             <video
                                 key={`video-${playerKey}`}
@@ -342,6 +367,7 @@ const TVPlayer: React.FC<TVPlayerProps> = ({
                             />
                         ) : (
                             <iframe
+                                key={`frame-${playerKey}`}
                                 src={currentVideoUrl}
                                 className="w-full h-full border-0 bg-white"
                                 allow="autoplay; encrypted-media; fullscreen"
@@ -349,58 +375,66 @@ const TVPlayer: React.FC<TVPlayerProps> = ({
                             />
                         )}
 
-                        {/* OVERLAYS */}
+                        {/* ERROR OVERLAY */}
                         {hasError && (
-                            <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/95 z-30 p-6 text-center">
+                            <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/95 z-30 p-6 text-center animate-fade-in">
                                 <i className="fas fa-satellite-dish text-red-500 text-5xl mb-4"></i>
-                                <h3 className="text-white font-black uppercase text-lg mb-2">Signal Lost</h3>
+                                <h3 className="text-white font-black uppercase text-lg mb-2 tracking-widest">Signal Lost</h3>
+                                <p className="text-white/40 text-[9px] mb-8 max-w-xs">{currentVideoUrl}</p>
                                 <button
                                     onClick={() => setPlayerKey(prev => prev + 1)}
-                                    className="px-8 py-3 bg-indigo-600 text-white font-black uppercase rounded-full"
+                                    className="px-10 py-4 bg-indigo-600 hover:bg-indigo-700 text-white font-black uppercase rounded-full shadow-2xl active:scale-95 transition-all"
                                 >
                                     Hard Reset Signal
                                 </button>
-                                <button onClick={handleEnded} className="mt-4 text-white/40 uppercase text-[8px]">Skip Channel</button>
+                                <button onClick={handleEnded} className="mt-6 text-white/30 hover:text-white/60 uppercase text-[9px] font-bold">Skip Source</button>
                             </div>
                         )}
 
+                        {/* LOADING OVERLAY */}
                         {isLoading && isPlaying && !hasError && (
-                            <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/40 backdrop-blur-sm z-20">
-                                <div className="w-12 h-12 border-4 border-t-white border-white/20 rounded-full animate-spin"></div>
-                                <span className="mt-4 text-[8px] text-white/60 font-black uppercase tracking-widest">Syncing Satellite...</span>
+                            <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/60 backdrop-blur-sm z-20">
+                                <div className="w-14 h-14 border-4 border-white/10 border-t-white rounded-full animate-spin"></div>
+                                <span className="mt-5 text-[9px] text-white/60 font-black uppercase tracking-[0.3em] animate-pulse">Establishing Link...</span>
                             </div>
                         )}
 
+                        {/* STALEMATE INTERACTION OVERLAY */}
                         {interactionRequired && isPlaying && !hasError && (
                             <div
                                 onClick={() => {
                                     setInteractionRequired(false);
                                     setPlayerKey(prev => prev + 1);
                                 }}
-                                className="absolute inset-0 z-[60] flex flex-col items-center justify-center bg-black/90 cursor-pointer"
+                                className="absolute inset-0 z-[60] flex flex-col items-center justify-center bg-black/90 cursor-pointer animate-fade-in"
                             >
-                                <div className="w-24 h-24 bg-[#008751] rounded-full flex items-center justify-center animate-pulse">
-                                    <i className="fas fa-satellite-dish text-white text-3xl"></i>
+                                <div className="w-28 h-28 bg-[#008751] rounded-full flex items-center justify-center shadow-[0_0_80px_rgba(0,135,81,0.5)] border-4 border-white/20 animate-pulse">
+                                    <i className="fas fa-satellite-dish text-white text-4xl"></i>
                                 </div>
-                                <h2 className="mt-6 text-white font-black text-xl uppercase tracking-tighter">Satellite Connected</h2>
-                                <p className="mt-1 text-white/60 text-[8px] uppercase font-bold">Tap to start audio reception</p>
+                                <h2 className="mt-8 text-white font-black text-2xl uppercase tracking-tighter">Connection Ready</h2>
+                                <p className="mt-2 text-white/50 text-[10px] uppercase font-bold tracking-widest">Tap Screen to Unmute Satellite</p>
                             </div>
                         )}
 
+                        {/* MANUAL PLAY (Fallback) */}
                         {!isPlaying && !hasError && (
                             <div
                                 onClick={() => setIsPlaying(true)}
-                                className="absolute inset-0 flex items-center justify-center bg-black/60 z-[45]"
+                                className="absolute inset-0 flex items-center justify-center bg-black/60 z-[45] cursor-pointer"
                             >
-                                <div className="w-20 h-20 bg-[#008751] rounded-full flex items-center justify-center shadow-2xl">
-                                    <i className="fas fa-play text-white text-3xl ml-1"></i>
+                                <div className="w-24 h-24 bg-[#008751] rounded-full flex items-center justify-center shadow-2xl hover:scale-110 transition-transform">
+                                    <i className="fas fa-play text-white text-4xl ml-2"></i>
                                 </div>
                             </div>
                         )}
                     </div>
                 ) : (
-                    <div className="flex flex-col items-center">
-                        <span className="text-xl font-black italic text-white/40 animate-pulse tracking-widest">NDR TV STANDBY</span>
+                    <div className="flex flex-col items-center space-y-6">
+                        <i className="fas fa-broadcast-tower text-white/10 text-6xl"></i>
+                        <span className="text-2xl font-black italic text-white/30 animate-pulse tracking-widest">NDR TV STANDBY</span>
+                        <div className="px-6 py-2 bg-white/5 rounded-full border border-white/5">
+                            <span className="text-[9px] text-white/40 font-bold uppercase tracking-[0.4em]">Awaiting Admin Zap</span>
+                        </div>
                     </div>
                 )}
             </div>
@@ -419,7 +453,14 @@ const TVPlayer: React.FC<TVPlayerProps> = ({
                 />
             )}
 
+            {/* Interaction Surface */}
             <div className="absolute inset-0 z-30 pointer-events-none md:pointer-events-auto" onClick={resetHideTimer} />
+
+            <style dangerouslySetInnerHTML={{
+                __html: `
+                @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+                .animate-fade-in { animation: fade-in 0.5s ease-out forwards; }
+            `}} />
         </div>
     );
 };
