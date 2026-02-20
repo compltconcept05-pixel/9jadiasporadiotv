@@ -356,7 +356,6 @@ const App: React.FC = () => {
         const statePayload: any = {
           is_playing: isPlayingRef.current,
           is_tv_active: isTvActiveRef.current,
-          is_tv_mode: isTvModeRef.current,
           current_track_id: activeTrackIdRef.current,
           current_track_name: currentTrackNameRef.current,
           current_track_url: isCloudUrl ? urlToSync : (isJingle ? urlToSync : null),
@@ -647,14 +646,13 @@ const App: React.FC = () => {
     if (role === UserRole.ADMIN && supabase) {
       dbService.updateStationState({
         is_tv_active: active,
-        is_tv_mode: active ? isTvModeRef.current : false,
         is_playing: false,
         current_video_id: active ? (overrideData?.videoId || null) : null,
         tv_playlist: active ? (overrideData?.playlist || []) : [],
         timestamp: Date.now()
       }).catch(err => console.error("❌ Video Toggle Sync error", err));
     }
-  }, [role, supabase]); // Simplified deps - dynamic values come from overrideData
+  }, [role, supabase]);
 
   const toggleTvMode = useCallback(() => {
     const nextMode = !isTvMode;
@@ -667,7 +665,6 @@ const App: React.FC = () => {
     // Sync mode to cloud so receiver follows
     if (role === UserRole.ADMIN && supabase) {
       dbService.updateStationState({
-        is_tv_mode: nextMode,
         is_tv_active: nextMode || isTvActive,
         timestamp: Date.now()
       }).catch(e => console.error("Mode sync fail", e));
