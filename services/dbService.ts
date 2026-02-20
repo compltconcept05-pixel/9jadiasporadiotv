@@ -9,6 +9,7 @@ export interface StationState {
   current_track_url: string | null;
   current_video_id: string | null;
   tv_playlist: string[]; // Support for multiple video links
+  is_tv_mode: boolean; // Cinematic Receiver Mode
   current_offset: number; // LIVE SYNC OFFSET
   timestamp: number;
   last_updated: number;

@@ -14,6 +14,7 @@ interface TVHubProps {
     isNewsPlaying: boolean;
     isAdmin?: boolean;
     isMuted?: boolean;
+    lastZap?: number;
 }
 
 const TVHub: React.FC<TVHubProps> = ({
@@ -26,7 +27,8 @@ const TVHub: React.FC<TVHubProps> = ({
     onVideoAdvance,
     isNewsPlaying,
     isAdmin = false,
-    isMuted = false
+    isMuted = false,
+    lastZap = 0
 }) => {
     const containerRef = useRef<HTMLDivElement>(null);
 
@@ -50,6 +52,7 @@ const TVHub: React.FC<TVHubProps> = ({
                     isMuted={isMuted}
                     tvPlaylist={tvPlaylist}
                     onVideoAdvance={onVideoAdvance}
+                    lastZap={lastZap}
                 />
             </div>
 

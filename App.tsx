@@ -61,6 +61,7 @@ const App: React.FC = () => {
   const [sessionId] = useState(() => Math.random().toString(36).substring(7));
   const [adminConflict, setAdminConflict] = useState(false);
   const [isTvMode, setIsTvMode] = useState(false); // Cinematic Receiver Mode
+  const [lastZap, setLastZap] = useState<number>(0); // Forced Sync Trigger
 
   const isPlayingRef = useRef(isPlaying);
   const isTvActiveRef = useRef(isTvActive);
@@ -68,13 +69,12 @@ const App: React.FC = () => {
   const currentTrackNameRef = useRef(currentTrackName);
   const activeTrackUrlRef = useRef(activeTrackUrl);
   const activeVideoIdRef = useRef(activeVideoId);
+  const tvPlaylistRef = useRef(tvPlaylist);
+  const isTvModeRef = useRef(isTvMode);
 
-  useEffect(() => { isPlayingRef.current = isPlaying; }, [isPlaying]);
-  useEffect(() => { isTvActiveRef.current = isTvActive; }, [isTvActive]);
-  useEffect(() => { activeTrackIdRef.current = activeTrackId; }, [activeTrackId]);
-  useEffect(() => { currentTrackNameRef.current = currentTrackName; }, [currentTrackName]);
-  useEffect(() => { activeTrackUrlRef.current = activeTrackUrl; }, [activeTrackUrl]);
   useEffect(() => { activeVideoIdRef.current = activeVideoId; }, [activeVideoId]);
+  useEffect(() => { tvPlaylistRef.current = tvPlaylist; }, [tvPlaylist]);
+  useEffect(() => { isTvModeRef.current = isTvMode; }, [isTvMode]);
 
   const aiAudioContextRef = useRef<AudioContext | null>(null);
   const isSyncingRef = useRef(false);
@@ -261,6 +261,10 @@ const App: React.FC = () => {
             setTvPlaylist(newState.tv_playlist);
           }
 
+          if (newState.is_tv_mode !== undefined) {
+            setIsTvMode(!!newState.is_tv_mode);
+          }
+
           if (newState.current_offset !== undefined) {
             // COMPENSATED SYNC: Add lag compensation (Now - LastUpdated)
             // timestamp is in ms, offset is in seconds
@@ -349,17 +353,20 @@ const App: React.FC = () => {
 
         console.log("📤 [App] Admin Pulsing State...", isCloudUrl ? "Cloud" : isJingle ? "Jingle" : "None");
 
-        dbService.updateStationState({
+        const statePayload: any = {
           is_playing: isPlayingRef.current,
           is_tv_active: isTvActiveRef.current,
+          is_tv_mode: isTvModeRef.current,
           current_track_id: activeTrackIdRef.current,
           current_track_name: currentTrackNameRef.current,
           current_track_url: isCloudUrl ? urlToSync : (isJingle ? urlToSync : null),
           current_video_id: activeVideoIdRef.current,
-          tv_playlist: tvPlaylist,
+          tv_playlist: tvPlaylistRef.current,
           current_offset: radioCurrentTimeRef.current,
           timestamp: Date.now()
-        }).catch(err => console.error("❌ Station Sync error", err));
+        };
+
+        dbService.updateStationState(statePayload).catch(err => console.error("❌ Station Sync error", err));
       };
 
       // Initial sync on change
@@ -618,10 +625,18 @@ const App: React.FC = () => {
       setIsTvMuted(false);
       setIsTvActive(true);
 
-      if (overrideData?.videoId) setActiveVideoId(overrideData.videoId);
-      if (overrideData?.playlist) setTvPlaylist(overrideData.playlist);
+      if (overrideData?.videoId) {
+        setActiveVideoId(overrideData.videoId);
+        setTvPlaylist([]);
+        setLastZap(Date.now());
+      } else if (overrideData?.playlist) {
+        setTvPlaylist(overrideData.playlist);
+        setActiveVideoId(null);
+        setLastZap(Date.now());
+      }
     } else {
       setIsTvActive(false);
+      setIsTvMode(false);
       if (role === UserRole.ADMIN) {
         setActiveVideoId(null);
         setTvPlaylist([]);
@@ -632,21 +647,32 @@ const App: React.FC = () => {
     if (role === UserRole.ADMIN && supabase) {
       dbService.updateStationState({
         is_tv_active: active,
-        is_playing: false, // Always stop radio when TV is controlled (either starting TV or stopping it)
-        current_video_id: active ? (overrideData?.videoId || activeVideoId) : null,
-        tv_playlist: active ? (overrideData?.playlist || tvPlaylist) : [],
+        is_tv_mode: active ? isTvModeRef.current : false,
+        is_playing: false,
+        current_video_id: active ? (overrideData?.videoId || null) : null,
+        tv_playlist: active ? (overrideData?.playlist || []) : [],
         timestamp: Date.now()
       }).catch(err => console.error("❌ Video Toggle Sync error", err));
     }
-  }, [role, supabase, activeVideoId, tvPlaylist]);
+  }, [role, supabase]); // Simplified deps - dynamic values come from overrideData
 
   const toggleTvMode = useCallback(() => {
-    setIsTvMode(prev => !prev);
-    if (!isTvMode) {
+    const nextMode = !isTvMode;
+    setIsTvMode(nextMode);
+    if (nextMode) {
       setIsTvActive(true);
       setListenerHasPlayed(false); // Stop radio for TV Mode
     }
-  }, [isTvMode]);
+
+    // Sync mode to cloud so receiver follows
+    if (role === UserRole.ADMIN && supabase) {
+      dbService.updateStationState({
+        is_tv_mode: nextMode,
+        is_tv_active: nextMode || isTvActive,
+        timestamp: Date.now()
+      }).catch(e => console.error("Mode sync fail", e));
+    }
+  }, [isTvMode, isTvActive, role, supabase]);
 
   const handlePlayVideo = useCallback((track: MediaFile | number | string, isLive: boolean = true) => {
     handleStopNews();

@@ -17,6 +17,7 @@ interface TVPlayerProps {
     onMuteChange?: (muted: boolean) => void;
     tvPlaylist?: string[];
     isPreview?: boolean;
+    lastZap?: number; // Force sync timestamp
 }
 
 const TVPlayer: React.FC<TVPlayerProps> = ({
@@ -32,7 +33,8 @@ const TVPlayer: React.FC<TVPlayerProps> = ({
     isMuted: isMutedProp = false,
     onMuteChange,
     tvPlaylist = [],
-    isPreview = false
+    isPreview = false,
+    lastZap = 0
 }) => {
     // ── BASIC STATE ──
     const [isPlaying, setIsPlaying] = useState(isActive);
@@ -93,15 +95,15 @@ const TVPlayer: React.FC<TVPlayerProps> = ({
 
     // COMMAND SYNC: Force reload on any URL change
     useEffect(() => {
-        if (currentUrl) {
-            console.log("🚀 [TVPlayer] COMMAND RECEIVED: Zapping to", currentUrl);
+        if (currentUrl || lastZap > 0) {
+            console.log("🚀 [TVPlayer] ZAP RECEIVED:", { url: currentUrl, zap: lastZap });
             setIsLoading(true);
             setHasError(false);
             setInteractionRequired(false);
             setIsPlaying(true);
-            setEngineKey(prev => prev + 1); // Atomic Reset
+            setEngineKey(prev => prev + 1); // Forced Atomic Reset
         }
-    }, [currentUrl, activeVideo?.id]);
+    }, [currentUrl, activeVideo?.id, lastZap]);
 
     useEffect(() => {
         if (isPlaying) resetHideTimer();
@@ -115,14 +117,28 @@ const TVPlayer: React.FC<TVPlayerProps> = ({
         if (isLoading && isPlaying && currentUrl && !hasError) {
             timer = setTimeout(() => {
                 if (isLoading) {
-                    console.warn("🆘 [TVPlayer] Interaction likely required to bypass Autoplay Block");
+                    console.warn("🆘 [TVPlayer] Autoplay Blocked - Interaction Required");
                     setInteractionRequired(true);
                     setIsLoading(false);
                 }
-            }, 10000); // 10s wait
+            }, 8000); // 8s wait before showing bridge
         }
         return () => clearTimeout(timer);
     }, [isLoading, isPlaying, currentUrl, hasError]);
+
+    // Keyboard/D-Pad Listener for TV remotes
+    useEffect(() => {
+        const handleKeys = (e: KeyboardEvent) => {
+            if (interactionRequired) {
+                console.log("⌨️ [TVPlayer] Key Interaction Detected:", e.key);
+                setInteractionRequired(false);
+                setIsLoading(true);
+                setEngineKey(prev => prev + 1);
+            }
+        };
+        window.addEventListener('keydown', handleKeys);
+        return () => window.removeEventListener('keydown', handleKeys);
+    }, [interactionRequired]);
 
     return (
         <div
@@ -161,7 +177,7 @@ const TVPlayer: React.FC<TVPlayerProps> = ({
                             }}
                             playsinline
                             config={{
-                                youtube: { playerVars: { autoplay: 1, rel: 0, modestbranding: 1 } },
+                                youtube: { playerVars: { autoplay: 1, rel: 0, modestbranding: 1 } } as any,
                                 file: {
                                     forceHLS: currentUrl.includes('.m3u8'),
                                     attributes: {
@@ -169,7 +185,7 @@ const TVPlayer: React.FC<TVPlayerProps> = ({
                                         playsInline: true
                                     }
                                 }
-                            }}
+                            } as any}
                         />
 
                         {/* STATUS OVERLAYS */}
