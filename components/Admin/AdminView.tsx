@@ -90,12 +90,12 @@ const AdminView: React.FC<AdminViewProps> = ({
   const [reportFilter, setReportFilter] = useState<'all' | 'unresolved' | 'resolved'>('all');
 
   const TV_PRESETS = [
-    { name: 'Channels TV', url: 'https://www.youtube.com/watch?v=vv_8S9C2m1Q', icon: '🇳🇬', cat: 'News' },
-    { name: 'Arise News', url: 'https://www.youtube.com/watch?v=tI9eO9rYq9I', icon: '🌍', cat: 'News' },
-    { name: 'NTA News', url: 'https://www.youtube.com/watch?v=FjS6oExf_Bw', icon: '📡', cat: 'News' },
-    { name: 'Red Bull TV', url: 'https://rbmn-live.akamaized.net/hls/live/590964/flodotcom/master.m3u8', icon: '🚴', cat: 'Sports' },
-    { name: 'Movie Central', url: 'https://www.youtube.com/watch?v=5_XSaFBZ2bg', icon: '🍿', cat: 'Movies' },
-    { name: 'Live Music', url: 'https://www.youtube.com/watch?v=hS5CfP8n_js', icon: '🎵', cat: 'Music' }
+    { name: 'Channels TV', url: 'https://www.youtube.com/@channelstelevision/live', icon: '🇳🇬', cat: 'News' },
+    { name: 'Arise News', url: 'https://www.youtube.com/@AriseLIVE/live', icon: '🌍', cat: 'News' },
+    { name: 'TVC News', url: 'https://www.youtube.com/@tvcnewsng/live', icon: '📡', cat: 'News' },
+    { name: 'Al Jazeera', url: 'https://www.youtube.com/@AlJazeeraEnglish/live', icon: '🌐', cat: 'News' },
+    { name: 'NTA News', url: 'https://www.youtube.com/@NTANewsNG/live', icon: '📺', cat: 'News' },
+    { name: 'France 24', url: 'https://www.youtube.com/@FRANCE24English/live', icon: '🇫🇷', cat: 'News' }
   ];
   const [isProcessing, setIsProcessing] = useState(false);
   const [internalStatus, setInternalStatus] = useState('');
